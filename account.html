@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Account Info</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Work Sans' rel='stylesheet'>
+    <link href="modular-tutorials.css" rel="stylesheet">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script type="module" src="main.js"></script>
+    <script type="module" src="account.js"></script>
+    <script type="module" src="local-storage.js"></script>
+</head>
+
+<body>
+    <div id="navbar-container"></div>
+    <form id="theForm">
+        <div id="wallet-input-container"></div>
+        <p></p>
+        <fieldset style="padding: 20px;">
+            <legend style="color: white;">Transaction Information</legend>
+                <table style="float: left;">
+                    <th>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                <label for="accountNameField">Name</label>
+                            </span>
+                        </td>
+                        <td>
+                            <!-- <div class="tooltip-container"> -->
+                                <input type="text" id="accountName1Field" size="40" readonly>
+                                <!-- <div class="tooltip-text">This field is read-only</div> -->
+                                <input type="radio" id="account1" name="accounts" value="account1">
+                                <label for="account1">Account 1</label>
+                            <!-- </div> -->
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                <label for="accountAddress1Field">Address</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="accountAddress1Field" size="40" readonly>
+                            <input type="radio" id="account2" name="accounts" value="account2">
+                            <label for="account2">Account 2</label>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                <label for="accountSeedField">Seed</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="accountSeed1Field" size="40" readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                <label for="xrpBalanceField">Balance</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="xrpBalance1Field" size="40" readonly>
+                        </td>
+                    </tr>     
+                </th>
+                </table>
+
+                <table style="float: left;">
+                    <th>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                <label for="accountNameField">Name</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="accountName2Field" size="40" readonly>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                <label for="accountAddressField">Address</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="accountAddress2Field" size="40" readonly>
+                        </td>
+                    </tr>
+                    <tr style="vertical-align: top;">
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                <label for="accountSeedField">Seed</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="accountSeed2Field" size="40" readonly>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                <label for="xrpBalanceField">Balance</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="text" id="xrpBalance2Field" size="40" readonly>
+                        </td>
+                    </tr>
+                </th>
+                </table>
+
+                <table style="float: left;">
+                    <th>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Requires a destination tag for incoming payments">
+                                <label for="asfRequireDest">Require Destination Tag</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfRequireDest">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Requires authorization for trust lines">
+                                <label for="asfRequireAuth">Require Trust Line Auth</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfRequireAuth">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Discourages incoming XRP payments (not enforced)">
+                                <label for="asfDisallowXRP">Disallow XRP Payments</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisallowXRP">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Disables the master key pair">
+                                <label for="asfDisableMaster">Disable Master Key</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisableMaster">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Prevents freezing trust lines">
+                                <label for="asfNoFreeze">Prevent Freezing Trust Lines</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfNoFreeze">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Freezes all trust lines">
+                                <label for="asfGlobalFreeze">Freeze All Trust Lines</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfGlobalFreeze">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Enables rippling by default on trust lines">
+                                <label for="asfDefaultRipple">Enable Rippling</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDefaultRipple">
+                        </td>
+                    </tr>
+                </th>
+                </table>
+
+                <table style="float: left;">
+                    <th>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Requires preauthorization for incoming deposits">
+                                <label for="asfDepositAuth">Require Deposit Auth</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDepositAuth">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Allows another account to mint NFTs">
+                                <label for="asfAllowTrustLineClawback">Allow Trust Line Clawback</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfAllowTrustLineClawback">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Blocks incoming NFT offers">
+                                <label for="asfDisallowIncomingNFTokenOffer">Block NFT Offers</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisallowIncomingNFTokenOffer">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Blocks incoming checks">
+                                <label for="asfDisallowIncomingCheck">Block Checks</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisallowIncomingCheck">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Blocks incoming payment channels">
+                                <label for="asfDisallowIncomingPayChan">Block Payment Channels</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisallowIncomingPayChan">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: right;">
+                            <span class="tooltip" tooltip-data="Blocks incoming trust lines">
+                                <label for="asfDisallowIncomingTrustline">Block Trust Lines</label>
+                            </span>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="asfDisallowIncomingTrustline">
+                        </td>
+                    </tr>
+                </th>
+                </table>
+        
+            <table style="float: left;">
+                <th>
+                    <tr>
+                        <td>
+                            <button type="button" onClick="getAccountInfo()">Get Account Info</button>
+                            <button type="button" onClick="updateFlags()">Update Flags</button>
+                            <button type="button" onClick="setDepositAuthAccounts('Y')">Set Deposit Auth</button>
+                            <button type="button" onClick="setDepositAuthAccounts('N')">Unauthorize Deposit Auth</button>
+                            <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
+                            <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <p style="text-align: left;">
+                                <textarea id="resultField" cols="200" rows="30"></textarea>
+                            </p>
+                        </td>
+                    </tr>
+                </th>
+            </table>
+        </fieldset>
+    </form>
+</body>
+<script>
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.value === 'account1') {
+                populateAccount1Only()
+            } else if (this.value === 'account2') {
+                populateAccount2Only()
+            } else if (this.value === 'accountIssuer') {
+                populate3()
+            }
+        });
+    });
+
+    fetch('navbar.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('navbar-container').innerHTML = html;
+        });
+
+    fetch('wallet-input.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('wallet-input-container').innerHTML = html;
+
+            function hideAllGenerateNewWalletButtons() {
+                const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                generateButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+                const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                generateMnemonicButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+                const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                generateNewWalletSecretButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+            }
+
+            function showAllGenerateNewWalletButtons() {
+                const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                generateButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+                const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                generateMnemonicButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+                const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                generateNewWalletSecretButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+            }
+
+            function hideAllDeriveWalletButtons() {
+                const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                derivederiveWalletSeedButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+                const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                deriveWalletMnemonicButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+                const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                deriveWalletSecretButtons.forEach(button => {
+                    button.style.display = 'none';
+                });
+            }
+
+            function showAllDeriveWalletButtons() {
+                const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                derivederiveWalletSeedButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+                const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                deriveWalletMnemonicButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+                const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                deriveWalletSecretButtons.forEach(button => {
+                    button.style.display = 'inline-block';
+                });
+            }
+
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            let pageLoad = "Y";
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    pageLoad = "N";
+                    if (this.checked) {
+                        // Checkbox was checked
+                        if (this.value === 'Y') {
+                            // Hide derive wallet buttons
+                            hideAllDeriveWalletButtons();
+                            showAllGenerateNewWalletButtons();
+                        } else if (this.value === 'N') {
+                            // Hide create wallet buttons
+                            hideAllGenerateNewWalletButtons();
+                            showAllDeriveWalletButtons();
+                        }
+                    } else {
+                        // Checkbox was unchecked
+                        console.log(`${this.value} was unchecked`);
+                        hideAllGenerateNewWalletButtons();
+                        showAllDeriveWalletButtons();
+                        // Optionally handle unchecking
+                    }
+                });
+            });
+
+            if (pageLoad === 'Y') {
+                for (const checkbox of checkboxes) {
+                    const isChecked = checkbox.checked; // true if checked, false if not
+                    const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
+                    console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+
+                    // Optionally, perform actions based on the checked state
+                    if (isChecked) {
+                        if (checkboxValue === 'Y') {
+                            hideAllDeriveWalletButtons();
+                        } else if (checkboxValue === 'N') {
+                            console.log('Account 2 checkbox is checked, calling populate2()');
+                            populate2();
+                        }
+                    }
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading wallet-input.html:', error);
+        });
+</script>
+
+</html>

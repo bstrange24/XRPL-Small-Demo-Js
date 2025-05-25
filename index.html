@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Send XRP</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href='https://fonts.googleapis.com/css?family=Work Sans' rel='stylesheet'>
+        <link href="modular-tutorials.css" rel="stylesheet">
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+        <script type="module" src="main.js"></script>
+        <script type="module" src="send-xrp.js"></script>
+        <script type="module" src="local-storage.js"></script>
+        <script type="module" src="utils.js"></script>
+    </head>
+
+    <body>
+        <div id="navbar-container"></div>
+        <form id="theForm">
+            <div id="wallet-input-container"></div>
+            <p></p>
+               <fieldset style="padding: 20px;">
+                    <legend style="color: white;">Transaction Information</legend>
+                    <table style="float: left;">
+                    <th>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                    <label for="accountNameField">Name</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="accountNameField" size="40" readonly>
+                                <input type="radio" id="account1" name="accounts" value="account1">
+                                <label for="account1">Account 1</label>
+                            </td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                    <label for="accountAddressField">Address</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="accountAddressField" size="40" readonly>
+                                <input type="radio" id="account2" name="accounts" value="account2">
+                                <label for="account2">Account 2</label>
+                            </td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                    <label for="accountSeedField">Seed</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="accountSeedField" size="40" readonly>
+                            </td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                    <label for="xrpBalanceField">Balance</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="xrpBalanceField" size="40" readonly>
+                            </td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="Amount of XRP to send.">
+                                    <label for="amountField">Amount</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="amountField" size="40">
+                                <br>
+                            </td>
+                        </tr>
+                        <tr style="vertical-align: top;">
+                            <td style="text-align: right;">
+                                <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
+                                    <label for="destinationField">Destination</label>
+                                </span>
+                            </td>
+                            <td>
+                                <input type="text" id="destinationField" size="40">
+                                <br>
+                            </td>
+                        </tr>
+                    </th>
+                    </table>
+
+                    <table>
+                         <th>
+                              <tr>
+                                   <td>
+                                        <button type="button" onclick="sendXRP()">Send XRP</button>
+                                        <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
+                                        <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
+                                        <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
+                                   </td>
+                              </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <p style="text-align: right;">
+                                        <textarea id="resultField" cols="200" rows="20"></textarea>
+                                   </p>
+                              </td>
+                         </tr>
+                         </th>
+                    </table>
+            </fieldset>
+        </form>
+    </body>
+    
+    <script>
+          const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
+          accountRadioButtons.forEach(radio => {
+               radio.addEventListener('change', function () {
+                    if (this.value === 'account1') {
+                         populate1();
+                    } else if (this.value === 'account2') {
+                         populate2();
+                    } else if (this.value === 'accountIssuer') {
+                         populate3();
+                    }
+               });
+          });
+
+          fetch('navbar.html')
+               .then(res => res.text())
+               .then(html => {document.getElementById('navbar-container').innerHTML = html;})
+               .catch(error => {console.error('Error loading wallet-input.html:', error);
+
+               });
+
+          fetch('wallet-input.html')
+               .then(res => res.text())
+               .then(html => {
+                    document.getElementById('wallet-input-container').innerHTML = html;
+
+                    function hideAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                    }
+
+                    function hideAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                         button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                         button.style.display = 'inline-block';
+                         });
+                    }
+
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    let pageLoad = "Y";
+                    checkboxes.forEach(checkbox => {
+                         checkbox.addEventListener('change', function () {
+                         pageLoad = "N";
+                         if (this.checked) {
+                              if (this.value === 'Y') {
+                                   hideAllDeriveWalletButtons();
+                                   showAllGenerateNewWalletButtons();
+                              } else if (this.value === 'N') {
+                                   hideAllGenerateNewWalletButtons();
+                                   showAllDeriveWalletButtons();
+                              }
+                         } else {
+                              console.log(`${this.value} was unchecked`);
+                              hideAllGenerateNewWalletButtons();
+                              showAllDeriveWalletButtons();
+                         }
+                         });
+                    });
+
+                    if (pageLoad === 'Y') {
+                         for (const checkbox of checkboxes) {
+                         const isChecked = checkbox.checked;
+                         const checkboxValue = checkbox.value;
+                         console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+                         if (isChecked) {
+                              if (checkboxValue === 'Y') {
+                                   hideAllDeriveWalletButtons();
+                              } else if (checkboxValue === 'N') {
+                                   console.log('Checkbox N is checked, calling populate2()');
+                                   populate2();
+                              }
+                         }
+                         }
+                    }
+               })
+               .catch(error => {console.error('Error loading wallet-input.html:', error);
+               });
+     </script>
+</html>

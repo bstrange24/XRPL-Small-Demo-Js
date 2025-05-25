@@ -1,0 +1,96 @@
+<style>
+     .navbar {
+          background-color: black;
+          color: #fff;
+          padding: 10px 20px;
+          font-family: Arial, sans-serif;
+          border-radius: 10px;
+     }
+
+     .navbar-container {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+     }
+
+     .navbar-title {
+          font-size: 1.1rem;
+          font-weight: bold;
+     }
+
+     .navbar-links a {
+          color: #fff;
+          text-decoration: none;
+          margin-left: 15px;
+          font-size: 0.9rem;
+     }
+
+     .navbar-links a:hover {
+          text-decoration: none;
+     }
+
+     .navbar-links {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+     }
+
+     .dropdown {
+          position: relative;
+     }
+
+     .dropdown-menu {
+          display: none;
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background-color: black;
+          border: 1px solid #ccc;
+          min-width: 160px;
+          z-index: 1000;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+          border-radius: 10px;
+          padding: 4px;
+          color: white;
+     }
+
+     .dropdown-menu a {
+          display: block;
+          padding: 8px 12px;
+          text-decoration: none;
+          color: white;
+          white-space: nowrap;
+     }
+
+     .dropdown-menu a:hover {
+          text-decoration: none;
+          background-color: black;
+     }
+
+     .dropdown:hover .dropdown-menu {
+          display: block;
+          background-color: black;
+          border: 1px solid #ccc;
+          color: #ccc;
+     }
+</style>
+
+<nav id="navbar" class="navbar" style="margin-bottom: 20px;">
+     <div class="navbar-container">
+          <span class="navbar-title">XRPL</span>
+          <div class="navbar-links">
+               <a href="account.html">Account Info</a>
+               <a href="index.html">Send XRP</a>
+               <div class="dropdown">
+                    <a href="#" class="dropdown-toggle">Escrows ▾</a>
+                    <div class="dropdown-menu">
+                         <a href="create-time-escrow.html">Create Time Escrow</a>
+                         <a href="create-conditional-escrow.html">Create Conditional Escrow</a>
+                    </div>
+               </div>
+               <a href="send-checks.html">Send Checks</a>
+               <a href="send-currency.html">Send Currency</a>
+               <a href="create-offer.html">Offers</a>
+          </div>
+     </div>
+</nav>

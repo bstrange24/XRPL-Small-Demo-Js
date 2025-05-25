@@ -1,0 +1,28 @@
+{
+    "name": "xrpl-wallet",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "start": "vite",
+        "build": "vite build"
+    },
+    "dependencies": {
+        "buffer": "^6.0.3",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "crypto-browserify": "^3.12.0",
+        "events": "^3.3.0",
+        "express": "^5.1.0",
+        "five-bells-condition": "^5.0.1",
+        "node-fetch": "^3.3.2",
+        "stream-browserify": "^3.0.0",
+        "ws": "^8.18.0",
+        "xrpl": "^4.2.5",
+        "xrpl-accountlib": "^8.3.1",
+        "xrpl-wallet": "file:"
+    },
+    "devDependencies": {
+        "vite": "^6.3.5",
+        "vite-plugin-node-polyfills": "^0.23.0"
+    }
+}

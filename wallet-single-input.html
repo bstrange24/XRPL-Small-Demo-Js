@@ -1,0 +1,76 @@
+<fieldset>
+        <span class="tooltip" tooltip-data="Choose the XRPL host server for your account.">Choose your ledger instance:</span>
+        <input type="radio" id="dn" name="server" value="wss://s.devnet.rippletest.net:51233" checked>
+        <label for="dn">Devnet</label>
+        <input type="radio" id="tn" name="server" value="wss://s.altnet.rippletest.net:51233">
+        <label for="tn">Testnet</label>
+        <input type="radio" id="mn" name="server" value="wss://s1.ripple.com_not">
+        <label for="mn">Mainnet</label>
+        <button type="button" onclick="clearFields()" style="margin-left: 20px;">Clear Fields</button>
+        <button type="button" onclick="closeConnection()" style="margin-left: 20px;">Close Connection</button>
+        <br><br>
+        <span class="tooltip" tooltip-data="Choose the XRPL host server for your account;">Create New Wallet:</span>
+        <label for="createWallet">Yes:</label>
+        <input type="checkbox" id="createWallet" name="server" value="Y" checked>
+</fieldset>
+
+<p></p>
+
+<fieldset>
+    <table>
+        <!-- <th> -->
+            <tr>
+                <td>
+                    <button type="button" id="generateNewWallet_1" onclick="generateNewWallet('1')">Gen New Account 1 From Seed</button>
+                    <button type="button" id="generateNewWalletMnemonic_1" onclick="generateNewWalletFromMnemonic('1')">Gen New Account 1 From Mnemonic</button>
+                    <button type="button" id="generateNewWalletSecret_1" onclick="generateNewWalletFromSecretNumbers('1')">Gen New Account 1 From Secret Numbers</button>
+                    <br>
+                    <button type="button" id="deriveWalletSeed_1" onclick="getAccountFromSeed('1')">Fetch Account 1 From Seed</button>
+                    <button type="button" id="deriveWalletMnemonic_1" onclick="getAccountFromMnemonic('1')">Fetch Account 1 From Mnemonic</button>
+                    <button type="button" id="deriveWalletSecret_1" onclick="getAccountFromSecretNumbers('1')">Fetch Account 1 From Secret Numbers</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="tooltip" tooltip-data="Arbitrary human-readable name for the account.">
+                        <label for="account1name" class="label_account">Account 1 Name</label>
+                    </span>
+                    <input type="text" id="account1name" size="40">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="tooltip" tooltip-data="Identifying address for the account.">
+                        <label for="account1address" class="label_account">Account 1 Address</label>
+                    </span>
+                    <input type="text" id="account1address" size="40">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="tooltip" tooltip-data="Seed for deriving public and private keys for the account.">
+                        <label for="account1seed" class="label_account">Account 1 Seed</label>
+                    </span>
+                    <input type="text" id="account1seed" size="40">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="tooltip" tooltip-data="Mnemonic for deriving public and private keys for the account.">
+                        <label for="account1mnemonic" class="label_account">Account 1 Mnemonic</label>
+                    </span>
+                    <input type="text" id="account1mnemonic" size="80">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="tooltip"
+                        tooltip-data="Secret numbers for deriving public and private keys for the account.">
+                        <label for="account1secretNumbers" class="label_account">Account 1 Secret Numbers</label>
+                    </span>
+                    <input type="text" id="account1secretNumbers" size="80">
+                </td>
+            </tr>
+        <!-- </th> -->
+    </table>
+</fieldset>
