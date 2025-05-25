@@ -1,23 +1,12 @@
-/* body {
-  font-family: "Inter", sans-serif;
-  padding: 20px;
-  background: #111112;
-  color: #fff;
-} */
-
 body,
 input,
 button,
 .navbar {
   font-family: "currency_symbols", "Work Sans", "system-ui", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
-  /* font-family: currency_symbols, Work Sans, system-ui, Segoe UI, Roboto, Oxygen-Sans, Ubuntu, Cantarell, Helvetica Neue, sans-serif; */
 }
 
 body {
-  /* font-family: "currency_symbols", "Work Sans", "system-ui", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif; */
-  /* font-family: "Inter", sans-serif; */
   font-size: 14px;
-  /* Smaller base font */
   /* line-height: 1.4; */
   padding: 10px;
   /* background: #8497a1; */
@@ -26,15 +15,6 @@ body {
   margin: 0 auto;
   line-height: 21px;
 }
-
-/* a {
-  text-decoration: none;
-  color: #007bff;
-}
-
-a:hover {
-  text-decoration: none;
-} */
 
 h1 {
   font-weight: bold;
@@ -159,7 +139,7 @@ table {
 }
 
 button {
-  padding: 10px 20px;
+  padding: 10px 1px;
   margin: 10px 5px;
   /* background: #686868; */
   background: #1a1c21;
@@ -171,7 +151,7 @@ button {
 
 button:hover {
   /* background-color: #8a8a8a; */
-  background: rgb(31, 31, 31);
+  background: #1a1c21;
   cursor: pointer;
 }
 

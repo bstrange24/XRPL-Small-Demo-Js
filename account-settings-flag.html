@@ -2,254 +2,263 @@
 <html lang="en">
 
 <head>
+    <title>Account Info</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XRPL Account Settings Flags</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body {
-            margin: 0;
-            background-color: #f4f4f4;
-            font-family: Arial, sans-serif;
-        }
-
-        /* Navbar Styles (from your original code, included for context) */
-        .navbar {
-            background-color: black;
-            color: #fff;
-            padding: 10px 0;
-            font-family: Arial, sans-serif;
-            width: 100vw;
-            position: relative;
-            left: 0;
-            right: 0;
-        }
-
-        .navbar-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .navbar-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-        }
-
-        .navbar-links a {
-            color: #fff;
-            text-decoration: none;
-            margin-left: 15px;
-            font-size: 0.9rem;
-        }
-
-        .navbar-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .dropdown {
-            position: relative;
-        }
-
-        .dropdown-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background-color: black;
-            border: 1px solid #ccc;
-            min-width: 160px;
-            z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
-            border-radius: 10px;
-            padding: 4px;
-            color: white;
-        }
-
-        .dropdown-menu a {
-            display: block;
-            padding: 8px 12px;
-            text-decoration: none;
-            color: white;
-        }
-
-        .dropdown:hover .dropdown-menu {
-            display: block;
-        }
-
-        /* Table Styles */
-        .flags-table-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-
-        .flags-table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: black;
-            color: white;
-            border-radius: 10px;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            font-size: 0.9rem;
-        }
-
-        .flags-table th,
-        .flags-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #333;
-        }
-
-        .flags-table th {
-            background-color: #1a1a1a;
-            font-weight: bold;
-        }
-
-        .flags-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .flags-table tr:hover {
-            background-color: #333;
-        }
-    </style>
+    <link href='https://fonts.googleapis.com/css?family=Work Sans' rel='stylesheet'>
+    <link href="modular-tutorials.css" rel="stylesheet">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+    <script type="module" src="main.js"></script>
+    <script type="module" src="account.js"></script>
+    <script type="module" src="local-storage.js"></script>
 </head>
 
 <body>
-    <!-- Navbar (unchanged from your original) -->
-    <nav id="navbar" class="navbar">
-        <div class="navbar-container">
-            <span class="navbar-title">XRPL</span>
-            <div class="navbar-links">
-                <a href="account.html">Account Info</a>
-                <a href="index.html">Send XRP</a>
-                <div class="dropdown">
-                    <a href="#" class="dropdown-toggle">Escrows ▾</a>
-                    <div class="dropdown-menu">
-                        <a href="create-time-escrow.html">Create Time Escrow</a>
-                        <a href="create-conditional-escrow.html">Create Conditional Escrow</a>
-                    </div>
-                </div>
-                <a href="send-checks.html">Send Checks</a>
-                <a href="send-currency.html">Send Currency</a>
-                <a href="create-offer.html">Offers</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Flags Table -->
-    <div class="flags-table-container">
-        <h2 style="color: #333; text-align: center;">XRPL Account Settings Flags</h2>
-        <table class="flags-table">
-            <thead>
-                <tr>
-                    <th>Flag</th>
-                    <th>Purpose</th>
-                    <th>Set Once?</th>
-                    <th>Mutually Exclusive</th>
-                    <th>Notes</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>asfRequireDest</td>
-                    <td>Requires Destination Tag for payments</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Protects against ambiguous payments</td>
-                </tr>
-                <tr>
-                    <td>asfRequireAuth</td>
-                    <td>Requires trust line authorization</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Used for compliance (e.g., KYC/AML)</td>
-                </tr>
-                <tr>
-                    <td>asfDisallowXRP</td>
-                    <td>Discourages direct XRP payments</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Not enforced by rippled; client-respected</td>
-                </tr>
-                <tr>
-                    <td>asfDisableMaster</td>
-                    <td>Disables master key pair</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Requires master key to set</td>
-                </tr>
-                <tr>
-                    <td>asfNoFreeze</td>
-                    <td>Permanently disables token freezing</td>
-                    <td>Yes</td>
-                    <td>asfGlobalFreeze</td>
-                    <td>Irreversible once set</td>
-                </tr>
-                <tr>
-                    <td>asfGlobalFreeze</td>
-                    <td>Freezes all issued tokens</td>
-                    <td>No</td>
-                    <td>asfNoFreeze</td>
-                    <td>Can be toggled unless asfNoFreeze is set</td>
-                </tr>
-                <tr>
-                    <td>asfDefaultRipple</td>
-                    <td>Enables rippling on trust lines</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Recommended for issuers</td>
-                </tr>
-                <tr>
-                    <td>asfDepositAuth</td>
-                    <td>Requires pre-auth for payments</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Controls incoming funds</td>
-                </tr>
-                <tr>
-                    <td>asfDisallowIncomingNFTokenOffer</td>
-                    <td>Blocks incoming NFT offers</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Controls NFT interactions</td>
-                </tr>
-                <tr>
-                    <td>asfDisallowIncomingCheck</td>
-                    <td>Blocks incoming checks</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Prevents check transactions</td>
-                </tr>
-                <tr>
-                    <td>asfDisallowIncomingPayChan</td>
-                    <td>Blocks incoming payment channels</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Restricts payment channels</td>
-                </tr>
-                <tr>
-                    <td>asfDisallowIncomingTrustline</td>
-                    <td>Blocks incoming trust lines</td>
-                    <td>No</td>
-                    <td>None</td>
-                    <td>Useful for token issuers</td>
-                </tr>
-                <tr>
-                    <td>asfAllowTrustLineClawback</td>
-                    <td>Enables IOU clawback</td>
-                    <td>Yes</td>
-                    <td>None</td>
-                    <td>Irreversible; for regulatory use</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <div id="navbar-container"></div>
+    <form id="theForm">
+        <!-- <div id="wallet-input-container"></div> -->
+        <p></p>
+        <fieldset style="padding: 20px;">
+            <legend style="color: white;">Account Flag Info</legend>
+                <table style="float: left;color: white;">
+                    <thead>
+                        <tr>
+                            <th>Flag</th>
+                            <th>Purpose</th>
+                            <th>Set Once?</th>
+                            <th>Mutually Exclusive</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>asfRequireDest</td>
+                            <td>Requires Destination Tag for payments</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Protects against ambiguous payments</td>
+                        </tr>
+                        <tr>
+                            <td>asfRequireAuth</td>
+                            <td>Requires trust line authorization</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Used for compliance (e.g., KYC/AML)</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisallowXRP</td>
+                            <td>Discourages direct XRP payments</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Not enforced by rippled; client-respected</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisableMaster</td>
+                            <td>Disables master key pair</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Requires master key to set</td>
+                        </tr>
+                        <tr>
+                            <td>asfNoFreeze</td>
+                            <td>Permanently disables token freezing</td>
+                            <td>Yes</td>
+                            <td>asfGlobalFreeze</td>
+                            <td>Irreversible once set</td>
+                        </tr>
+                        <tr>
+                            <td>asfGlobalFreeze</td>
+                            <td>Freezes all issued tokens</td>
+                            <td>No</td>
+                            <td>asfNoFreeze</td>
+                            <td>Can be toggled unless asfNoFreeze is set</td>
+                        </tr>
+                        <tr>
+                            <td>asfDefaultRipple</td>
+                            <td>Enables rippling on trust lines</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Recommended for issuers</td>
+                        </tr>
+                        <tr>
+                            <td>asfDepositAuth</td>
+                            <td>Requires pre-auth for payments</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Controls incoming funds</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisallowIncomingNFTokenOffer</td>
+                            <td>Blocks incoming NFT offers</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Controls NFT interactions</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisallowIncomingCheck</td>
+                            <td>Blocks incoming checks</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Prevents check transactions</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisallowIncomingPayChan</td>
+                            <td>Blocks incoming payment channels</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Restricts payment channels</td>
+                        </tr>
+                        <tr>
+                            <td>asfDisallowIncomingTrustline</td>
+                            <td>Blocks incoming trust lines</td>
+                            <td>No</td>
+                            <td>None</td>
+                            <td>Useful for token issuers</td>
+                        </tr>
+                        <tr>
+                            <td>asfAllowTrustLineClawback</td>
+                            <td>Enables IOU clawback</td>
+                            <td>Yes</td>
+                            <td>None</td>
+                            <td>Irreversible; for regulatory use</td>
+                        </tr>
+                    </tbody>
+                </table>
+        </fieldset>
+    </form>
 </body>
+<script>
+    const radioButtons = document.querySelectorAll('input[type="radio"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', function () {
+            if (this.value === 'account1') {
+                populateAccount1Only()
+            } else if (this.value === 'account2') {
+                populateAccount2Only()
+            } else if (this.value === 'accountIssuer') {
+                populate3()
+            }
+        });
+    });
+
+    fetch('navbar.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('navbar-container').innerHTML = html;
+        });
+
+    // fetch('wallet-input.html')
+    //     .then(res => res.text())
+    //     .then(html => {
+    //         document.getElementById('wallet-input-container').innerHTML = html;
+
+    //         function hideAllGenerateNewWalletButtons() {
+    //             const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+    //             generateButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //             const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+    //             generateMnemonicButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //             const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+    //             generateNewWalletSecretButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //         }
+
+    //         function showAllGenerateNewWalletButtons() {
+    //             const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+    //             generateButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //             const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+    //             generateMnemonicButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //             const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+    //             generateNewWalletSecretButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //         }
+
+    //         function hideAllDeriveWalletButtons() {
+    //             const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+    //             derivederiveWalletSeedButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //             const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+    //             deriveWalletMnemonicButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //             const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+    //             deriveWalletSecretButtons.forEach(button => {
+    //                 button.style.display = 'none';
+    //             });
+    //         }
+
+    //         function showAllDeriveWalletButtons() {
+    //             const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+    //             derivederiveWalletSeedButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //             const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+    //             deriveWalletMnemonicButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //             const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+    //             deriveWalletSecretButtons.forEach(button => {
+    //                 button.style.display = 'inline-block';
+    //             });
+    //         }
+
+    //         const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    //         let pageLoad = "Y";
+    //         checkboxes.forEach(checkbox => {
+    //             checkbox.addEventListener('change', function () {
+    //                 pageLoad = "N";
+    //                 if (this.checked) {
+    //                     // Checkbox was checked
+    //                     if (this.value === 'Y') {
+    //                         // Hide derive wallet buttons
+    //                         hideAllDeriveWalletButtons();
+    //                         showAllGenerateNewWalletButtons();
+    //                     } else if (this.value === 'N') {
+    //                         // Hide create wallet buttons
+    //                         hideAllGenerateNewWalletButtons();
+    //                         showAllDeriveWalletButtons();
+    //                     }
+    //                 } else {
+    //                     // Checkbox was unchecked
+    //                     console.log(`${this.value} was unchecked`);
+    //                     hideAllGenerateNewWalletButtons();
+    //                     showAllDeriveWalletButtons();
+    //                     // Optionally handle unchecking
+    //                 }
+    //             });
+    //         });
+
+    //         if (pageLoad === 'Y') {
+    //             for (const checkbox of checkboxes) {
+    //                 const isChecked = checkbox.checked; // true if checked, false if not
+    //                 const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
+    //                 console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+
+    //                 // Optionally, perform actions based on the checked state
+    //                 if (isChecked) {
+    //                     if (checkboxValue === 'Y') {
+    //                         hideAllDeriveWalletButtons();
+    //                     } else if (checkboxValue === 'N') {
+    //                         console.log('Account 2 checkbox is checked, calling populate2()');
+    //                         populate2();
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     })
+    //     .catch(error => {
+    //         console.error('Error loading wallet-input.html:', error);
+    //     });
+</script>
 
 </html>

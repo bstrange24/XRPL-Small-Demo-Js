@@ -81,11 +81,13 @@ async function sendCheck() {
           console.log(parseTransactionDetails(check_result.result));
 
           if (check_result.result.meta.TransactionResult == "tesSUCCESS") {
-               results += 'Transaction succeeded:\n'
-               resultField.value = results + parseTransactionDetails(check_result.result)
+               results += 'Transaction succeeded:\n';
+               resultField.value = results + parseTransactionDetails(check_result.result);
+               resultField.classList.add("success");
           } else {
-               results += `Error sending transaction: ${check_result.result.meta.TransactionResult}`
-               resultField.value = results
+               results += `Error sending transaction: ${check_result.result.meta.TransactionResult}`;
+               resultField.value = results;
+               resultField.classList.add("error");
           }
 
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address))
@@ -128,6 +130,7 @@ async function getChecks() {
           console.log("Response", check_objects);
           const transactionDetails = parseTransactionDetails(check_objects.result);
           resultField.value = displayTransactions(transactionDetails);
+          resultField.classList.add("success");
      } catch (error) {
           console.error('Error:', error);
           resultField.value = "ERROR: " + error.message || 'Unknown error';
@@ -221,11 +224,13 @@ async function cashCheck() {
           console.log("Response", check_result);
 
           if (check_result.result.meta.TransactionResult == "tesSUCCESS") {
-            results += 'Transaction succeeded:\n' + parseTransactionDetails(check_result.result);
-            resultField.value = results;
+               results += 'Transaction succeeded:\n' + parseTransactionDetails(check_result.result);
+               resultField.value = results;
+               resultField.classList.add("success");
           } else {
-            results += `Error sending transaction: ${check_result.result.meta.TransactionResult}`;
-            resultField.value = results;
+               results += `Error sending transaction: ${check_result.result.meta.TransactionResult}`;
+               resultField.value = results;
+               resultField.classList.add("error");
           }
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address));
      }  catch (error) {
@@ -281,9 +286,11 @@ async function cancelCheck() {
           if (check_result.result.meta.TransactionResult == "tesSUCCESS") {
                results += 'Transaction succeeded\n' + parseTransactionDetails(check_result.result);
                resultField.value = results;
+               resultField.classList.add("success");
           } else {
                results += `Error sending transaction ${check_result.result.meta.TransactionResult}`;
                resultField.value = results;
+               resultField.classList.add("error");
           }
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address));
      }  catch (error) {

@@ -282,6 +282,18 @@
     </form>
 </body>
 <script>
+    document.getElementById('asfAllowTrustLineClawback').addEventListener('change', function() {
+        if (this.checked) {
+            alert('Trust Line Clawback cannot be unset!');
+        }
+    });
+
+    document.getElementById('asfNoFreeze').addEventListener('change', function() {
+        if (this.checked) {
+            alert('Prevent Freezing Trust Lines (No Freeze) cannot be unset!');
+        }
+    });
+
     const radioButtons = document.querySelectorAll('input[type="radio"]');
     radioButtons.forEach(radio => {
         radio.addEventListener('change', function () {

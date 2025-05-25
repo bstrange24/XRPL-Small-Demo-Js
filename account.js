@@ -147,7 +147,7 @@ async function updateFlags() {
           resultField.value = 'ERROR: Cannot enable both NoFreeze and GlobalFreeze';
           resultField.classList.add('error');
           return;
-          }
+     }
 
      try {
           const { environment } = getEnvironment()
@@ -197,7 +197,14 @@ async function updateFlags() {
                     SetFlag: parseInt(flagValue),
                };
                const response = await client.submitAndWait(transaction, { wallet });
-               resultField.value += `\n\nSet Flag ${flagList.find(f => f.value === flagValue).name} Result:\n${JSON.stringify(response.result, null, 2)}`;
+
+               if(response.result.meta.TransactionResult != "tesSUCCESS") {
+                    resultField.value = "ERROR: " + response.result.meta.TransactionResult + '\n' + parseTransactionDetails(response.result);
+                    resultField.classList.add("error");
+               } else {
+                    resultField.value += `\n\nSet Flag ${flagList.find(f => f.value === flagValue).name} Result:\n${parseTransactionDetails(response.result)}`;
+                    resultField.classList.add("success");
+               }
           }
 
           for (const flagValue of clearFlags) {
@@ -208,6 +215,7 @@ async function updateFlags() {
                };
                const response = await client.submitAndWait(transaction, { wallet });
                resultField.value += `\n\nClear Flag ${flagList.find(f => f.value === flagValue).name} Result:\n${JSON.stringify(response.result, null, 2)}`;
+               resultField.classList.add("success");
           }
 
           // Refresh details
@@ -345,7 +353,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           });
 
           console.log('DepositPreauth Transaction:', depositAuthTx);
-          results += `Prepared Transaction:\n${JSON.stringify(depositAuthTx, null, 2)}\n`;
+          // results += `Prepared Transaction:\n${JSON.stringify(depositAuthTx, null, 2)}\n`;
 
           // Submit transaction
           const response = await client.submitAndWait(depositAuthTx, { wallet });
@@ -356,8 +364,9 @@ async function setDepositAuthAccounts(authorizeFlag) {
                resultField.classList.add("error");
                return;
           } else {
-               results += `\nTransaction Result:\n${JSON.stringify(response.result, null, 2)}`;
+               results += `${parseTransactionDetails(response.result)}`;
                resultField.value = results;
+               resultField.classList.add("success");
           }
 
           // Refresh account details
