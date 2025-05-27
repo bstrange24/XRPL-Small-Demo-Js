@@ -133,8 +133,8 @@ table {
 #escrowOwnerField,
 #issuerAddress,
 #issuerField,
-#payIssuerField,
-#getIssuerField {
+#weWantIssuerField,
+#weSpendIssuerField {
   color: #32e685;
 }
 

@@ -70,7 +70,7 @@
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Sequence number of the offer.">
-                                             <lable for="offerSequenceField">Offer Sequence</lable>
+                                             <label for="offerSequenceField">Offer Sequence</label>
                                         </span>
                                    </td>
                                    <td>
@@ -84,86 +84,117 @@
                     <table style="float: left;">
                          <th>
                               <tr style="vertical-align: top;">
-                                   <td style="text-align: ceenter;">
-                                        <h4 style="text-align: center; color: white;"> </h4>
+                                   <td style="text-align: right; padding-bottom: 10px;">
+                                        <span class="tooltip" tooltip-data="Taker Gets.">
+                                        <label for="weWantCurrencyField">Taker Gets</label>
+                                        </span>
+                                        <!-- <h4 style="text-align: center; color: white;">Taker Gets</h4> -->
                                    </td>
-                                   <td style="text-align: right;">
-                                        <h4 style="text-align: center;color: white;">Taker Gets</h4>
+                                   <td style="text-align: left;">
+                                         <span class="tooltip" tooltip-data="Taker Gets.">
+                                        <label for="weWantCurrencyField">We Want This</label>
+                                        </span>
+                                        <!-- <h4 style="text-align: center;color: white;">(We Want This)</h4> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
-                                        <lable for="payCurrencyField">Currency Code</lable>
+                                        <label for="weWantCurrencyField">Currency Code</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="payCurrencyField" size="40"></input>
+                                        <input type="text" id="weWantCurrencyField" size="40"></input>
                                    </td>
                               </tr> 
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
-                                        <lable for="payIssuerField">Issuer</lable>
+                                        <label for="weWantIssuerField">Issuer</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="payIssuerField" size="40"></input>&nbsp;&nbsp;
+                                        <input type="text" id="weWantIssuerField" size="40"></input>&nbsp;&nbsp;
                                    </td>  
                               </tr>    
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Amounts of offered currencies.">
-                                        <lable for="amountField">Amount</lable>
+                                        <label for="amountField">Amount</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="payAmountField" size="40"></input>
+                                        <input type="text" id="weWantAmountField" size="40"></input>
                                    </td> 
                               </tr>
-                               
+                              <tr style="vertical-align: top;">
+                                   <td style="text-align: right;">
+                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold">
+                                        <label for="weWantTokenBalance">Currency Balance</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="weWantTokenBalanceField" size="40"></input>
+                                   </td> 
+                              </tr>
                          </th>
                     </table>
                     
                     <table style="float: left;">
                          <th>
                               <tr style="vertical-align: top;">
-                                   <td style="text-align: ceenter;">
-                                        <h4 style="text-align: center; color: white;"></h4>
+                                   <td style="text-align: right; padding-bottom: 10px;">
+                                        <span class="tooltip" tooltip-data="Taker Pays.">
+                                             <label for="weWantCurrencyField">Taker Pays</label>
+                                        </span>
+                                        <!-- <h4 style="text-align: center; color: white;"></h4> -->
                                    </td>
-                                   <td style="text-align: right;">
-                                        <h4 style="text-align: center;color: white;">Taker Pays</h4>
+                                   <td style="text-align: left; padding-bottom: 10px;">
+                                        <span class="tooltip" tooltip-data="We Spend This.">
+                                             <label for="weWantCurrencyField">We Spend This</label>
+                                        </span>
+                                        <!-- <h4 style="text-align: center;color: white;">Taker Pays (We Spend This)</h4> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
-                                             <lable for="payCurrencyField">Currency Code</lable>
+                                             <label for="weWantCurrencyField">Currency Code</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="getCurrencyField" size="40"></input>
+                                        <input type="text" id="weSpendCurrencyField" size="40"></input>
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
-                                             <lable for="payIssuerField">Issuer</lable>
+                                             <label for="weWantIssuerField">Issuer</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="getIssuerField" size="40"></input>&nbsp;&nbsp;
+                                        <input type="text" id="weSpendIssuerField" size="40"></input>&nbsp;&nbsp;
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
                                    <td style="text-align: right;">
                                         <span class="tooltip" tooltip-data="Amounts of offered currencies.">
-                                             <lable for="amountField">Amount</lable>
+                                             <label for="amountField">Amount</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="getAmountField" size="40"></input>
+                                        <input type="text" id="weSpendAmountField" size="40"></input>
                                    </td>
+                              </tr>
+                              <tr style="vertical-align: top;">
+                                   <td style="text-align: right;">
+                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold.">
+                                        <label for="weSpendTokenBalance">Currency Balance</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="weSpendTokenBalanceField" size="40"></input>
+                                   </td> 
                               </tr>
                          </th>
                     </table>
@@ -176,6 +207,7 @@
                                         <button type="button" onClick="getOffers()">Get Offers</button>
                                         <button type="button" onClick="cancelOffer()">Cancel Offer</button>
                                         <button type="button" onClick="getOrderBook()">Get Order Book</button>
+                                        <button type="button" onClick="invertOrder()">Invert Order</button>
                                         <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
                                         <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
                                         <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
@@ -196,6 +228,33 @@
      </body>
 
      <script>
+          function invertOrder() {
+               const weWantCurrencyField = document.getElementById('weWantCurrencyField').value;
+               const weWantIssuerField = document.getElementById('weWantIssuerField').value;
+               const weWantAmountField = document.getElementById('weWantAmountField').value;
+               const weWantTokenBalanceField = document.getElementById('weWantTokenBalanceField').value;
+
+               const weWantCurrencyFieldTemp = weWantCurrencyField;
+               const weWantIssuerFieldTemp = weWantIssuerField;
+               const weWantAmountFieldTemp = weWantAmountField;
+               const weWantTokenBalanceTemp = weWantTokenBalanceField;
+               
+               const weSpendCurrencyField = document.getElementById('weSpendCurrencyField').value;
+               const weSpendIssuerField = document.getElementById('weSpendIssuerField').value;
+               const weSpendAmountField = document.getElementById('weSpendAmountField').value;
+               const weSpendTokenBalanceField = document.getElementById('weSpendTokenBalanceField').value;
+
+               document.getElementById('weWantCurrencyField').value = weSpendCurrencyField;
+               document.getElementById('weWantIssuerField').value = weSpendIssuerField;
+               document.getElementById('weWantAmountField').value = weSpendAmountField;
+               document.getElementById('weWantTokenBalanceField').value = weSpendTokenBalanceField;
+
+               document.getElementById('weSpendCurrencyField').value = weWantCurrencyFieldTemp;
+               document.getElementById('weSpendIssuerField').value = weWantIssuerFieldTemp;
+               document.getElementById('weSpendAmountField').value = weWantAmountFieldTemp;
+               document.getElementById('weSpendTokenBalanceField').value = weWantTokenBalanceTemp;
+          }
+
           const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
           accountRadioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
@@ -319,6 +378,51 @@
                })
                .catch(error => {
                     console.error('Error loading wallet-issuer-input.html:', error);
+               });
+
+               // Update event listener for async
+               document.getElementById('weWantCurrencyField').addEventListener('blur', async function() {
+                    const currencyCode = this.value.trim();
+                    const balanceField = document.getElementById('weWantTokenBalanceField');
+                    
+                    if (currencyCode) {
+                         let balance = '';
+                         if(currencyCode === 'XRP') {
+                              balance = await getXrpBalance();
+                         } else {
+                              balance = await getCurrencyBalance(currencyCode);
+                         }
+                         
+                         if (balance !== null) {
+                              balanceField.value = balance;
+                         } else {
+                              balanceField.value = '0'; // Or "Currency not found"
+                         }
+                    } else {
+                         balanceField.value = '';
+                    }
+               });
+
+               document.getElementById('weSpendCurrencyField').addEventListener('blur', async function() {
+                    const currencyCode = this.value.trim();
+                    const balanceField = document.getElementById('weSpendTokenBalanceField');
+                    
+                    if (currencyCode) {
+                         let balance = '';
+                         if(currencyCode === 'XRP') {
+                              balance = await getXrpBalance();
+                         } else {
+                              balance = await getCurrencyBalance(currencyCode);
+                         }
+                         
+                         if (balance !== null) {
+                              balanceField.value = balance;
+                         } else {
+                              balanceField.value = '0'; // Or "Currency not found"
+                         }
+                    } else {
+                         balanceField.value = '';
+                    }
                });
      </script>
 </html>

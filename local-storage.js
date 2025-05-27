@@ -23,6 +23,33 @@ const inputIds = [
     "destinationField"
 ];
 
+// DEV
+// Account 1
+// raM6NPysMDpAtBSFqzsgJUKZxZ3ynBy9Wo
+// sstnqf6bKj7N37qWdKnf4HsuN2Dp9
+// Account 2
+// rN26jYCV79y4Vwsaf8GCPYkQaZgBfyuM3w
+// spFU2UgxoqjvAY3X74qLE56C9Nzsj
+// Issuer
+// r3qCc5QHX9fvvkT1Z4wxABD63nEdJFBTz8
+// ssGBWT9sisW41K7gBvHN5cjYt3urr
+
+// TEST
+// Account 1
+// rGhnaXFN5iTKgMVGwaUFBk4CjH3LEmRe88
+// shNeUgLmAMsHvZteMCxF681TZSf2m
+// Account 2
+// rDwRBJFk9HfV8g2JxiA3mVgrm4Yc5tCtpk
+// sn5JmY3ANxJrtvxiERRMTS4S6HbMC
+// Issuer
+// r34GycySncA3jT7dfagMgschmGFFZNGS7m
+// shaNztVzSEX7UUhbdpxx3dVQ4hHEN
+
+// https://testnet.xrpl.org/accounts/rGhnaXFN5iTKgMVGwaUFBk4CjH3LEmRe88
+// https://testnet.xrpl.org/accounts/rDwRBJFk9HfV8g2JxiA3mVgrm4Yc5tCtpk
+// https://testnet.xrpl.org/accounts/r34GycySncA3jT7dfagMgschmGFFZNGS7m
+// https://testnet.xrpl.org/accounts/rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd
+
 // Array of radio button IDs
 const serverRadioIds = ["dn", "tn", "mn"];
 const accountRadioIds = ["account1", "account2", "accountIssuer"];
@@ -32,12 +59,12 @@ function loadInputValues() {
     console.log("Running loadInputValues");
     inputIds.forEach(id => {
         const value = localStorage.getItem(id);
-        // console.log(`Checking ${id}: localStorage value = "${value}"`);
+        console.log(`Checking ${id}: localStorage value = "${value}"`);
         if (value !== null) {
             const element = document.getElementById(id);
             if (element !== null) {
                 element.value = value;
-                // console.log(`Set ${id} value to "${value}"`);
+                console.log(`Set ${id} value to "${value}"`);
             } else {
                 console.warn(`Element with ID ${id} not found when loading value`);
             }
@@ -160,36 +187,36 @@ function updateNavbarColor(radioId) {
 export function saveInputValues() {
     const account1name = document.getElementById("account1name").value;
     const account2name = document.getElementById("account2name").value;
-    let issuerName = document.getElementById("issuerName").value;;
-    if(document.getElementById("issuerName")) {
-        issuerName = document.getElementById("issuerName").value;
+    let issuerName = '';
+    if(document.getElementById("issuerName") != null) {
+        issuerName = document.getElementById("issuerName").value;;
     }
     
     const account1address = document.getElementById("account1address").value;
     const account2address = document.getElementById("account2address").value;
-    let issuerAddress;
-    if(document.getElementById("issuerAddress")) {
+    let issuerAddress = '';
+    if(document.getElementById("issuerAddress") != null) {
         issuerAddress = document.getElementById("issuerAddress").value;
     }
     
     const account1seed = document.getElementById("account1seed").value;
     const account2seed = document.getElementById("account2seed").value;
-    let issuerSeed;
-    if(document.getElementById("issuerSeed")) {
+    let issuerSeed = '';
+    if(document.getElementById("issuerSeed") != null) {
         issuerSeed = document.getElementById("issuerSeed").value;
     }
 
     const account1mnemonic = document.getElementById("account1mnemonic").value;
     const account2mnemonic = document.getElementById("account2mnemonic").value;
-    let issuerMnemonic;
-    if(document.getElementById("issuerMnemonic")) {
+    let issuerMnemonic = '';
+    if(document.getElementById("issuerMnemonic") != null) {
         issuerMnemonic = document.getElementById("issuerMnemonic").value;
     }
 
     const account1secretNumbers = document.getElementById("account1secretNumbers").value;
     const account2secretNumbers = document.getElementById("account2secretNumbers").value;
-    let issuerSecretNumbers;
-    if(document.getElementById("issuerSecretNumbers")) {
+    let issuerSecretNumbers = '';
+    if(document.getElementById("issuerSecretNumbers") != null) {
         issuerSecretNumbers = document.getElementById("issuerSecretNumbers").value;
     }
 
@@ -218,7 +245,7 @@ export function saveInputValues() {
 document.addEventListener("DOMContentLoaded", () => {
     console.log("DOM fully loaded at", new Date().toISOString());
     // initializeWithRetry();
-    loadInputValues();
+    // loadInputValues();
 });
 
 // Reusable function to add event listeners

@@ -87,6 +87,15 @@ export async function disconnectClient() {
      }
 }
 
+// Helper to convert an XRPL amount to a string for display
+export function amt_str(amt) {
+     if (typeof amt == "string") {
+          return `${xrpl.dropsToXrp(amt)} XRP`;
+     } else {
+          return `${amt.value} ${amt.currency}.${amt.issuer}`;
+     }
+}
+
 if (typeof window !== 'undefined') {
      window.addEventListener('beforeunload', async () => {
           await disconnectClient();
@@ -565,12 +574,26 @@ export function parseAccountFlagsDetails(response, accountObjects) {
                     return 'No Account Objects';
                }
                return objects
+                    .map((obj, index) => {
+                         // Format nested objects explicitly
+                         const formatNestedObject = (nestedObj) => {
+                              return `{ currency: ${nestedObj.currency}, issuer: ${nestedObj.issuer}, value: ${nestedObj.value} }`;
+                         };
 
-               .map((obj, index) => {
-                    // Get all fields dynamically
-                    const fields = Object.entries(obj).map(([key, value]) => `          ${key}: ${value}`).join('\n');
-                    return `Object ${index + 1}:\n${fields}`;
-               }).join('\n');
+                         // Get all fields dynamically
+                         const fields = Object.entries(obj).map(([key, value]) => {
+                              if (key === 'Balance' || key === 'HighLimit' || key === 'LowLimit') {
+                                   return `          ${key}: ${formatNestedObject(value)}`;
+                              }
+                              return `          ${key}: ${value}`;
+                         }).join('\n');
+                         return `Object ${index + 1}:\n${fields}`;
+                    }).join('\n');
+               // .map((obj, index) => {
+               //      // Get all fields dynamically
+               //      const fields = Object.entries(obj).map(([key, value]) => `          ${key}: ${value}`).join('\n');
+               //      return `Object ${index + 1}:\n${fields}`;
+               // }).join('\n');
           };
 
           // Extract specific fields from the response

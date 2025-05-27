@@ -54,14 +54,14 @@ async function createTrustLine() {
     }
 }
 
-async function getTokenBalance() {
-     resultField.classList.remove("error");
-     resultField.classList.remove("success");
-
+export async function getTokenBalance() {
      const resultField = document.getElementById("resultField");
      const accountSeedField = document.getElementById("accountSeedField");
      const xrpBalanceField = document.getElementById("xrpBalanceField");
  
+     resultField.classList.remove("error");
+     resultField.classList.remove("success");
+
      // Null checks for DOM elements
      if (resultField === null || accountSeedField === null || xrpBalanceField === null) {
          console.warn("Missing DOM elements: resultField, accountSeedField, or xrpBalanceField");
@@ -112,6 +112,7 @@ async function getTokenBalance() {
  
          results += output;
          resultField.value = results;
+         resultField.classList.add("success");
          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
  
      } catch (error) {
