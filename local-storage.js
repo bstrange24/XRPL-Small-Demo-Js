@@ -54,6 +54,21 @@ const inputIds = [
 // https://gatehub.net/legal/xrpl-addresses
 // https://livenet.xrpl.org/accounts/rhotcWYdfn6qxhVMbPKGDF3XCKqwXar5J4
 
+
+// TEST
+// A1
+// rMu1LtcGhQiU7adNWLmQXkb3HrtPHLZTNo
+// ssXBWVkGXaLCrvFjxJDvYqN6bkCJ6
+// A2
+// rPJDyHkcp3Y8oifkR1KZug9WvM4Vt7THDz
+// ss6YdnwioE7cs4vSRo8kyxn1oRTB3
+// A3
+// rBrXzh8ddQUZbYxwA9wBYF9fyTksmAsvnk
+// sni3iUX4GuCGA2GhdhQszDcBEg1wB
+
+// Hot wallet address: rsePZv7s3FLFXiXQJLFubCGX2QJAZsXwZj
+// Hot wallet seed: sEdTBg4HqAY7D8EXWo5zdUHYDX42xc7
+
 // Array of radio button IDs
 const serverRadioIds = ["dn", "tn", "mn"];
 const accountRadioIds = ["account1", "account2", "accountIssuer"];
