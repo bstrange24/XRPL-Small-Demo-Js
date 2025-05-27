@@ -50,6 +50,10 @@ const inputIds = [
 // https://testnet.xrpl.org/accounts/r34GycySncA3jT7dfagMgschmGFFZNGS7m
 // https://testnet.xrpl.org/accounts/rP9jPyP5kyvFRb6ZiRghAGw5u8SGAmU4bd
 
+// https://unhosted.exchange/
+// https://gatehub.net/legal/xrpl-addresses
+// https://livenet.xrpl.org/accounts/rhotcWYdfn6qxhVMbPKGDF3XCKqwXar5J4
+
 // Array of radio button IDs
 const serverRadioIds = ["dn", "tn", "mn"];
 const accountRadioIds = ["account1", "account2", "accountIssuer"];
