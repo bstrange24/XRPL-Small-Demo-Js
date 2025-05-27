@@ -44,26 +44,34 @@ export async function getAccountInfo() {
      resultField.classList.remove("error");
      resultField.classList.remove("success");
 
-     let accountAddressField;
+     // let accountAddressField;
      let accountSeedField;
      let xrpBalanceField;
 
      const selectedRadio = getSelectedAccount();
      if(selectedRadio != null && selectedRadio == 'account1') {
-          accountAddressField = document.getElementById('accountAddress1Field');
+          // accountAddressField = document.getElementById('accountAddress1Field');
           accountSeedField = document.getElementById('accountSeed1Field');
           xrpBalanceField = document.getElementById('xrpBalance1Field');
      } else {
-          accountAddressField = document.getElementById('accountAddress2Field');
+          // accountAddressField = document.getElementById('accountAddress2Field');
           accountSeedField = document.getElementById('accountSeed2Field');
           xrpBalanceField = document.getElementById('xrpBalance2Field');
      }
 
-     if (!accountAddressField || !accountSeedField || !xrpBalanceField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add("error");
-          return;
+     if(accountSeedField == null) {
+          accountSeedField = document.getElementById('accountSeedField');
      }
+
+     if(xrpBalanceField == null) {
+          xrpBalanceField = document.getElementById('xrpBalanceField');
+     }
+
+     // if (!accountAddressField || !accountSeedField || !xrpBalanceField) {
+          // resultField.value = 'ERROR: DOM elements not found';
+          // resultField.classList.add("error");
+          // return;
+     // }
 
      if (!validatInput(accountSeedField.value)) {
           resultField.value = 'ERROR: Seed can not be empty';

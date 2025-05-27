@@ -303,7 +303,7 @@ async function cancelCheck() {
      } 
 }
 
-function populateFieldSendCurrency1() {
+async function populateFieldSendCurrency1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
      accountSeedField.value = account1seed.value;
@@ -311,9 +311,10 @@ function populateFieldSendCurrency1() {
      issuerField.value = issuerAddress.value;
      currencyField.value = "XRP";
      getXrpBalance();
+     await getAccountInfo();
 }
    
-function populateFieldSendCurrency2() {
+async function populateFieldSendCurrency2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
@@ -321,9 +322,10 @@ function populateFieldSendCurrency2() {
      issuerField.value = issuerAddress.value;
      currencyField.value = "XRP";
      getXrpBalance();
+     await getAccountInfo();
 }
 
-function populateFieldSendCurrency3() {
+async function populateFieldSendCurrency3() {
      accountNameField.value = issuerName.value
      accountAddressField.value = issuerAddress.value
      accountSeedField.value = issuerSeed.value
@@ -331,6 +333,7 @@ function populateFieldSendCurrency3() {
      issuerField.value = "";
      currencyField.value = "";
      getXrpBalance();
+     await getAccountInfo();
 }
 
 window.sendCheck = sendCheck;

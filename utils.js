@@ -121,6 +121,21 @@ export function convertToEstTime(UtcDataTime) {
      return formattedEDT;
 }
 
+export async function getOnlyTokenBalance(client, wallet, currency) {
+     try {
+          const lines = await client.request({
+               command: 'account_lines',
+               account: wallet
+          });
+          const tstLines = lines.result.lines.filter(line => line.currency === currency);
+          const tstBalance = tstLines.reduce((sum, line) => sum + parseFloat(line.balance), 0);
+          return tstBalance;
+     } catch (error) {
+          log.error('Error fetching token balance:', error);
+          return 0;
+     }
+}
+
 export async function getXrpBalance(accountField, balanceField) {
      let accountAddressField = document.getElementById('accountAddressField');
      if((accountAddressField == null)) {
@@ -759,7 +774,7 @@ export async function populateAccount2Only() {
      await getAccountInfo();
 }
 
-export function populate1() {
+export async function populate1() {
      accountNameField.value = account1name.value
      accountAddressField.value = account1address.value
      accountSeedField.value = account1seed.value
@@ -779,10 +794,11 @@ export function populate1() {
           issuerField.value = account2address.value;
           destinationField.value = '';
      }
-     getXrpBalance()
+     getXrpBalance();
+     await getAccountInfo();
 }
    
-export function populate2() {
+export async function populate2() {
      accountNameField.value = account2name.value
      accountAddressField.value = account2address.value
      accountSeedField.value = account2seed.value
@@ -803,10 +819,11 @@ export function populate2() {
           destinationField.value = '';
      }
      
-     getXrpBalance()
+     getXrpBalance();
+     await getAccountInfo();
 }
 
-export function populate3() {
+export async function populate3() {
      accountNameField.value = issuerName.value
      accountAddressField.value = issuerAddress.value
      accountSeedField.value = issuerSeed.value
@@ -827,7 +844,8 @@ export function populate3() {
           destinationField.value = '';
      }
 
-     getXrpBalance()
+     getXrpBalance();
+     await getAccountInfo();
 }
 
 export function validatInput(value) {

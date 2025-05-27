@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str} from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance} from './utils.js';
 import { fetchAccountObjects, fetchXrpBalance } from './account.js';
 import { getTokenBalance } from './main.js';
 import BigNumber from 'bignumber.js';
@@ -91,11 +91,18 @@ import BigNumber from 'bignumber.js';
      const client = await getClient();
 
      try {
-          let results = `Connected to ${environment}.\nCreating Offer.\n\n`;
-          resultField.value = results;
+          let results = `Connected to ${environment} ${net}.\nCreating Offer.\n\n`;
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           results += accountNameField.value + " account address: " + wallet.address + "\n";
           resultField.value = results;
+
+          const xrpBalance = await getXrpBalance();
+          console.log(`XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`);
+          resultField.value += `XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
+
+          const tstBalance = await getOnlyTokenBalance(client, wallet.address, weSpendCurrencyField.value);
+          console.log(`TST Balance: ${tstBalance}`);
+          resultField.value += `\nTST Balance: ${tstBalance}`;
 
           if (weWantCurrencyField.value == 'XRP') {
                takerGetsString = '{"currency": "' + weWantCurrencyField.value +'",\n' + '"value": "' + weWantAmountField.value + '"}';
@@ -110,15 +117,23 @@ import BigNumber from 'bignumber.js';
           if (weSpendCurrencyField.value == 'XRP') {
                takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
                we_spend = JSON.parse(takerPaysString);
+
+               if (xrpBalance < weWantAmountField.value) {
+                    throw new Error("Insufficient XRP to fund the buy offer");
+               }
           } else {
                takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' +
                     '"issuer": "' + weSpendIssuerField.value + '",\n' +
                     '"value": "' + weSpendAmountField.value + '"}';
                we_spend = JSON.parse(takerPaysString);
+     
+               if (xrpl.xrpToDrops(xrpBalance) < weSpendAmountField.value) {
+                    throw new Error("Insufficient TST balance");
+               }
           }
-          console.log('we_want', we_want);
-          console.log('we_spend', we_spend);
-
+          console.log(`we_want ${we_want}`);
+          console.log(`we_spend ${we_spend}`);
+          
           // "Quality" is defined as TakerPays / TakerGets. The lower the "quality"
           // number, the better the proposed exchange rate is for the taker.
           // The quality is rounded to a number of significant digits based on the
@@ -220,45 +235,46 @@ import BigNumber from 'bignumber.js';
                     }
           }
 
-          // let prepared;
-          // if(we_spend.currency === 'XRP') {
-          //      prepared = await client.autofill({
-          //           "TransactionType": "OfferCreate",
-          //           "Account": wallet.address,
-          //           "TakerGets": we_spend.value,
-          //           "TakerPays": we_want
-          //      });
-          // } else {
-          //      prepared = await client.autofill({
-          //           "TransactionType": "OfferCreate",
-          //           "Account": wallet.address,
-          //           "TakerGets": we_spend,
-          //           "TakerPays": we_want.value
-          //      });
-          // }
+          let prepared;
+          if(we_spend.currency === 'XRP') {
+               prepared = await client.autofill({
+                    "TransactionType": "OfferCreate",
+                    "Account": wallet.address,
+                    "TakerGets": we_spend.value,
+                    "TakerPays": we_want
+               });
+          } else {
+               prepared = await client.autofill({
+                    "TransactionType": "OfferCreate",
+                    "Account": wallet.address,
+                    "TakerGets": we_spend,
+                    "TakerPays": we_want.value
+               });
+          }
 
-          const prepared = await client.autofill({
-               "TransactionType": "OfferCreate",
-               "Account": wallet.address,
-               "TakerGets": we_spend.value,
-               "TakerPays": we_want
-          });
+        //   const prepared = await client.autofill({
+        //        "TransactionType": "OfferCreate",
+        //        "Account": wallet.address,
+        //        "TakerGets": we_spend.value,
+        //        "TakerPays": we_want
+        //   });
           console.log('prepared', prepared);
 
           const signed = wallet.sign(prepared);
           results += "\nSubmitting transaction....";
           const tx = await client.submitAndWait(signed.tx_blob);
+          console.log('create offer tx', tx);
 
           if (tx.result.meta.TransactionResult == "tesSUCCESS") {
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}`)
                results += 'Transaction succeeded:\n';
                // results += "\nBalance changes: " + JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2);
                results += results + parseTransactionDetails(tx.result);
-               resultField.value = results;
+               resultField.value += results;
                resultField.classList.add("success");
           } else {
-               results += `Error sending transaction: ${tx.result.meta.TransactionResult}`;
-               resultField.value = results;
+               const errorResults = `Error sending transaction: ${tx.result.meta.TransactionResult}`;
+               resultField.value += errorResults;
                resultField.classList.add("error");
           }
 
@@ -562,54 +578,6 @@ async function getOrderBook() {
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           results += accountNameField.value + " account: " + wallet.address;
      
-          // if (weWantCurrencyField.value == 'XRP') {
-          //      takerGetsString = '{"currency": "' + weWantCurrencyField.value +'",\n' +
-          //      '"value": "' + weWantAmountField.value + '"}';
-          //      we_want = JSON.parse(takerGetsString);
-          // } else {
-          //      takerGetsString = '{"currency": "' + weWantCurrencyField.value +'",\n' +
-          //      '"issuer": "' + weWantIssuerField.value + '",\n' +
-          //      '"value": "' + weWantAmountField.value + '"}';
-          //      we_want = JSON.parse(takerGetsString);
-          // }
-
-          // if (weSpendCurrencyField.value == 'XRP') {
-          //      takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' +
-          //           '"value": "' + weSpendAmountField.value + '"}';
-          //      we_spend = JSON.parse(takerPaysString);
-          // } else {
-          //      takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' +
-          //           '"issuer": "' + weSpendIssuerField.value + '",\n' +
-          //           '"value": "' + weSpendAmountField.value + '"}';
-          //      we_spend = JSON.parse(takerPaysString);
-          // }
-
-          // Set takerGets (We want this)
-          // if (weSpendCurrencyField.value === 'XRP') {
-          //      takerGets = { 
-          //           currency: "XRP" 
-          //      };
-          // } else {
-          //      takerGets = {
-          //           currency: weSpendCurrencyField.value,
-          //           issuer: weSpendIssuerField.value,
-          //           value: weSpendAmountField.value
-          //      };
-          // }
-
-          // // Set takerPays (We spend this)
-          // if (weWantCurrencyField.value === 'XRP') {
-          //      takerPays = { 
-          //           currency: "XRP" 
-          //      };
-          // } else {
-          //      takerPays = {
-          //           currency: weWantCurrencyField.value,
-          //           issuer: weWantIssuerField.value,
-          //           value: weWantAmountField.value
-          //      };
-          // }
-     
           if (weWantCurrencyField.value == 'XRP') {
                takerGetsString = '{"currency": "' + weWantCurrencyField.value +'",\n' + '"value": "' + weWantAmountField.value + '"}';
                we_want = JSON.parse(takerGetsString);
@@ -632,67 +600,75 @@ async function getOrderBook() {
           console.log('we_want', we_want);
           console.log('we_spend', we_spend);
 
-           results += '\n\n*** Order Book (TST/XRP) ***\n';
-        try {
-            const orderBook = await client.request({
-                method: "book_offers",
-                taker: wallet.address,
-                ledger_index: "current",
-                taker_gets: we_spend, // TST
-                taker_pays: we_want   // XRP
-            });
-          //   results += formatOffers(orderBook.result.offers, we_spend.currency, we_want.currency);
-            results += formatOffers1(orderBook.result.offers);
+          results += '\n\n*** Order Book ***\n';
+     
+          try {
+               const orderBook = await client.request({
+                    method: "book_offers",
+                    taker: wallet.address,
+                    ledger_index: "current",
+                    taker_gets: we_spend, // TST
+                    taker_pays: we_want,   // XRP
+                    limit: 10
+               });
+               const sortedOffers = attachRateAndSort(orderBook.result.offers);
+               // const sortedOffers = attachRateAndSort(
+               //      orderBook.result.offers,
+               //      'XRP',      // baseCurrency: XRP is the native currency (in drops or value)
+               //      'TST',      // counterCurrency: TST is the token you're trading against
+               //      50          // maxDeviationPercent (optional)
+               //    );
 
-            // Reverse order book (XRP/TST)
-            results += '\n*** Reverse Order Book (XRP/TST) ***\n';
-            const reverseOrderBook = await client.request({
-                method: "book_offers",
-                taker: wallet.address,
-                ledger_index: "current",
-                taker_gets: we_want,  // XRP
-                taker_pays: we_spend  // TST
-            });
-          //   results += formatOffers(reverseOrderBook.result.offers, we_spend.currency, we_want.currency);
-            results += formatOffers1(reverseOrderBook.result.offers);
-        } catch (err) {
-            throw new Error(err);
-        }
+               const stats = computeAverageExchangeRateBothWays(sortedOffers);
+               results += formatOffers1(sortedOffers);
+               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
+               results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
+               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
+               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} TST/XRP\n`;
+               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} TST/XRP\n`;
 
-          // results += '\n\n*** Order Book ***\n';
-          // console.log('Order Book: base=', we_spend.currency, 'quote=', we_want.currency);
-          // try {
-          //      const orderBook = await client.request({
-          //           method: "book_offers",
-          //           taker: wallet.address,
-          //           ledger_index: "current",
-          //           taker_gets: we_want,
-          //           taker_pays: we_spend
-          //           // taker_gets: takerGets,
-          //           // taker_pays: takerPays
-          //      });
-          //      console.log('Order Book Offers:', orderBook.result.offers);
-          //      results += formatOffers(orderBook.result.offers, we_spend.currency, we_want.currency);
-          // } catch (err) {
-          //      throw new Error(err);
-          // }
+               // Reverse order book
+               results += '\n*** Reverse Order Book ***\n';
+               const reverseOrderBook = await client.request({
+                    method: "book_offers",
+                    taker: wallet.address,
+                    ledger_index: "current",
+                    taker_gets: we_want,  // XRP
+                    taker_pays: we_spend,  // TST
+                    limit: 10
+               });
+               const reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
+               // const reverseSorted = attachRateAndSort(
+               //      reverseOrderBook.result.offers,
+               //      'XRP',      // baseCurrency: XRP is the native currency (in drops or value)
+               //      'TST',      // counterCurrency: TST is the token you're trading against
+               //      50          // maxDeviationPercent (optional)
+               //    );
 
-          // results += '\n\n*** Reverse Order Book ***\n';
-          // console.log('Reverse Order Book: base=', we_spend.currency, 'quote=', we_want.currency);
-          // try {
-          //      const reverseOrderBook = await client.request({
-          //           method: "book_offers",
-          //           taker: wallet.address,
-          //           ledger_index: "current",
-          //           taker_gets: we_spend, // XRP
-          //           taker_pays: we_want   // TST
-          //      });
+               const reverseStats = computeAverageExchangeRateBothWays(sortedOffers);
+               results += formatOffers1(reverseSorted);
+               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
+               results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
+               results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
+               results += `Best Rate: ${reverseStats.inverse.bestRate.toFixed(8)} TST/XRP\n`;
+               results += `Worst Rate: ${reverseStats.inverse.worstRate.toFixed(8)} TST/XRP\n`;
 
-          //      console.log('Reverse Order Book Offers:', reverseOrderBook.result.offers);
-          //      results += formatOffers(reverseOrderBook.result.offers, we_spend.currency, we_want.currency);
-          // } catch (err) {
-          //      throw new Error(err);
-          // }
+               const stats1 = computeFullExchangeRateStats(sortedOffers, reverseSorted, 20);
+               function formatStats(label, data) {
+                    return `${label} (from ${data.count} offers)
+                  VWAP:        ${data.vwap.toFixed(8)}
+                  Average:     ${data.average.toFixed(8)}
+                  Median:      ${data.median.toFixed(8)}
+                  Mode:        ${data.mode.join(', ')}
+                  Best Rate:   ${data.best.toFixed(8)}
+                  Worst Rate:  ${data.worst.toFixed(8)}\n`;
+                }
+                results += '\n--- Combined Exchange Rate Stats ---\n';
+               results += formatStats('TST/XRP', stats1.TST_XRP);
+               results += formatStats('XRP/TST', stats1.XRP_TST);
+          } catch (err) {
+               throw new Error(err);
+          }
 
           resultField.value = results;
           resultField.classList.add("success");
@@ -706,6 +682,237 @@ async function getOrderBook() {
      }
 }
 
+function attachRateAndSort1(offers, baseCurrency, counterCurrency, maxDeviationPercent = 50) {
+     // Attach calculated rate to each offer
+     const offersWithRate = offers.map(offer => {
+       let rate;
+   
+       if (offer.TakerGets.currency === baseCurrency && offer.TakerPays.currency === counterCurrency) {
+         rate = parseFloat(offer.TakerPays.value) / parseFloat(offer.TakerGets.value);
+       } else if (offer.TakerGets.currency === counterCurrency && offer.TakerPays.currency === baseCurrency) {
+         rate = parseFloat(offer.TakerGets.value) / parseFloat(offer.TakerPays.value);
+       } else {
+         return { ...offer, rate: NaN };
+       }
+   
+       return { ...offer, rate };
+     }).filter(offer => !isNaN(offer.rate));
+   
+     // Compute median rate
+     const sortedRates = offersWithRate.map(o => o.rate).sort((a, b) => a - b);
+     const medianRate = sortedRates.length % 2 === 0
+       ? (sortedRates[sortedRates.length / 2 - 1] + sortedRates[sortedRates.length / 2]) / 2
+       : sortedRates[Math.floor(sortedRates.length / 2)];
+   
+     // Filter out outliers based on deviation
+     const filteredOffers = offersWithRate.filter(o => {
+       const deviation = Math.abs((o.rate - medianRate) / medianRate) * 100;
+       return deviation <= maxDeviationPercent;
+     });
+   
+     // Sort by rate ascending
+     return filteredOffers.sort((a, b) => a.rate - b.rate);
+   }
+
+   
+function attachRateAndSort(offers) {
+return offers
+     .map((offer) => {
+          let gets = offer.TakerGets;
+          let pays = offer.TakerPays;
+          let getsValue = 0;
+          let paysValue = 0;
+
+          // Handle drops (XRP)
+          if (typeof gets === "string") {
+               getsValue = parseFloat(gets) / 1_000_000;
+          } else if (typeof gets === "object" && gets !== null) {
+               getsValue = parseFloat(gets.value);   
+          } 
+
+          if (typeof pays === "string") {
+               paysValue = parseFloat(pays) / 1_000_000;
+          } 
+          else if (typeof pays === "object" && pays !== null) {
+               paysValue = parseFloat(pays.value);
+          } 
+
+          // Calculate exchange rate
+          if (getsValue > 0) {
+               offer._exchangeRate = paysValue / getsValue;
+          } else {
+               offer._exchangeRate = 0; // or null/undefined if you prefer
+          }
+
+          return offer;
+     })
+     .sort((a, b) => b._exchangeRate - a._exchangeRate); // descending = best rate first
+}
+
+function computeFullExchangeRateStats(forwardOffers, reverseOffers, maxOffers = null) {
+     const combinedOffers = [...forwardOffers, ...reverseOffers];
+ 
+     let forwardRates = []; // TST/XRP
+     let inverseRates = []; // XRP/TST
+ 
+     // Process all offers
+     combinedOffers.forEach(offer => {
+         let gets = offer.TakerGets;
+         let pays = offer.TakerPays;
+         let getsValue = 0;
+         let paysValue = 0;
+ 
+         if (typeof gets === "string") getsValue = parseFloat(gets) / 1_000_000;
+         else if (typeof gets === "object" && gets !== null) getsValue = parseFloat(gets.value);
+ 
+         if (typeof pays === "string") paysValue = parseFloat(pays) / 1_000_000;
+         else if (typeof pays === "object" && pays !== null) paysValue = parseFloat(pays.value);
+ 
+         if (getsValue > 0 && paysValue > 0) {
+             forwardRates.push(paysValue / getsValue);
+             inverseRates.push(getsValue / paysValue);
+         }
+     });
+ 
+     // Optional: limit depth to top N offers
+     if (maxOffers && maxOffers > 0) {
+         forwardRates = forwardRates.slice(0, maxOffers);
+         inverseRates = inverseRates.slice(0, maxOffers);
+     }
+ 
+     // Helper to calculate stats
+     function computeStats(rates) {
+         const sorted = [...rates].sort((a, b) => a - b);
+         const total = sorted.reduce((a, b) => a + b, 0);
+         const avg = sorted.length > 0 ? total / sorted.length : 0;
+         const vwap = avg;
+ 
+         // Median
+         const mid = Math.floor(sorted.length / 2);
+         const median = sorted.length % 2 === 0
+             ? (sorted[mid - 1] + sorted[mid]) / 2
+             : sorted[mid];
+ 
+         // Mode (rounded to 8 decimals)
+         const freqMap = {};
+         sorted.forEach(rate => {
+             const key = rate.toFixed(8);
+             freqMap[key] = (freqMap[key] || 0) + 1;
+         });
+         const maxFreq = Math.max(...Object.values(freqMap));
+         const modes = Object.entries(freqMap)
+             .filter(([_, freq]) => freq === maxFreq)
+             .map(([rateStr]) => parseFloat(rateStr));
+ 
+         return {
+             vwap,
+             average: avg,
+             median,
+             mode: modes,
+             best: Math.max(...sorted),
+             worst: Math.min(...sorted),
+             count: sorted.length
+         };
+     }
+ 
+     return {
+         TST_XRP: computeStats(forwardRates),
+         XRP_TST: computeStats(inverseRates)
+     };
+ }
+
+ 
+function computeAverageExchangeRateBothWays(offers) {
+     let totalPays = 0;
+     let totalGets = 0;
+     let forwardRates = []; // TST / XRP
+     let inverseRates = []; // XRP / TST
+ 
+     offers.forEach(offer => {
+         let gets = offer.TakerGets;
+         let pays = offer.TakerPays;
+         let getsValue = 0;
+         let paysValue = 0;
+ 
+         if (typeof gets === "string") getsValue = parseFloat(gets) / 1_000_000;
+         else if (typeof gets === "object" && gets !== null) getsValue = parseFloat(gets.value);
+ 
+         if (typeof pays === "string") paysValue = parseFloat(pays) / 1_000_000;
+         else if (typeof pays === "object" && pays !== null) paysValue = parseFloat(pays.value);
+ 
+         if (getsValue > 0 && paysValue > 0) {
+             totalPays += paysValue;
+             totalGets += getsValue;
+             forwardRates.push(paysValue / getsValue);
+             inverseRates.push(getsValue / paysValue);
+         }
+     });
+ 
+     const forwardVWAP = totalGets > 0 ? totalPays / totalGets : 0; // TST/XRP
+     const inverseVWAP = totalPays > 0 ? totalGets / totalPays : 0; // XRP/TST
+ 
+     const forwardSimpleAvg = forwardRates.length > 0
+         ? forwardRates.reduce((a, b) => a + b, 0) / forwardRates.length
+         : 0;
+     const inverseSimpleAvg = inverseRates.length > 0
+         ? inverseRates.reduce((a, b) => a + b, 0) / inverseRates.length
+         : 0;
+ 
+     return {
+         forward: {
+             vwap: forwardVWAP,
+             simpleAvg: forwardSimpleAvg,
+             bestRate: Math.max(...forwardRates),
+             worstRate: Math.min(...forwardRates),
+         },
+         inverse: {
+             vwap: inverseVWAP,
+             simpleAvg: inverseSimpleAvg,
+             bestRate: Math.max(...inverseRates),
+             worstRate: Math.min(...inverseRates),
+         }
+     };
+ }
+
+ 
+// function computeAverageExchangeRate(offers) {
+//      let totalPays = 0;
+//      let totalGets = 0;
+//      let simpleRates = [];
+ 
+//      offers.forEach(offer => {
+//          let gets = offer.TakerGets;
+//          let pays = offer.TakerPays;
+//          let getsValue = 0;
+//          let paysValue = 0;
+ 
+//          if (typeof gets === "string") getsValue = parseFloat(gets) / 1_000_000;
+//          else if (typeof gets === "object" && gets !== null) getsValue = parseFloat(gets.value);
+ 
+//          if (typeof pays === "string") paysValue = parseFloat(pays) / 1_000_000;
+//          else if (typeof pays === "object" && pays !== null) paysValue = parseFloat(pays.value);
+ 
+//          if (getsValue > 0 && paysValue > 0) {
+//              totalPays += paysValue;
+//              totalGets += getsValue;
+//              simpleRates.push(paysValue / getsValue);
+//          }
+//      });
+ 
+//      const vwap = totalGets > 0 ? totalPays / totalGets : 0;
+//      const simpleAvg = simpleRates.length > 0
+//          ? simpleRates.reduce((a, b) => a + b, 0) / simpleRates.length
+//          : 0;
+ 
+//      return {
+//          vwap: vwap,
+//          simpleAvg: simpleAvg,
+//          bestRate: simpleRates.length > 0 ? Math.max(...simpleRates) : 0,
+//          worstRate: simpleRates.length > 0 ? Math.min(...simpleRates) : 0
+//      };
+//  }
+ 
+ 
 function formatOffers(offers, baseCurrency, quoteCurrency) {
     if (!offers || offers.length === 0) {
         return 'No offers found';
@@ -1311,7 +1518,7 @@ function formatOffers2(offers, baseCurrency, quoteCurrency) {
     return formattedOffers + summary;
 }
 
-function formatOffers1(offers) {
+function formatOffersOG(offers) {
      // Conversion factor: 1 XRP = 1,000,000 drops
      const DROPS_PER_XRP = 1000000;
 
@@ -1395,19 +1602,134 @@ function formatOffers1(offers) {
      return offers.map((offer, index) => formatOffer(offer, index)).join('\n');
 }
 
+function formatOffers1(offers) {
+    const DROPS_PER_XRP = 1000000;
+
+    if (!Array.isArray(offers)) {
+        let errorMessage = "Error: Input must be an array of offers";
+        if (typeof offers === "object" && offers !== null && Array.isArray(offers.offers)) {
+            errorMessage += ". Did you mean to pass 'offers.offers'?";
+        } else if (typeof offers === "string") {
+            errorMessage += ". Input is a string; try parsing it with JSON.parse.";
+        }
+        return errorMessage;
+    }
+
+    if (offers.length === 0) {
+        return "No offers to display";
+    }
+
+    function formatNestedObject(obj, indent = '\t') {
+        return `{\n${Object.entries(obj)
+            .map(([key, value]) => `${indent}\t${key}: ${value}`)
+            .join('\n')}\n${indent}}`;
+    }
+
+    function formatOffer(offer, index) {
+        let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
+        let getsXRP = false;
+        let paysXRP = false;
+        let getsValue = 0;
+        let paysValue = 0;
+        let getsCurrency = "XRP";
+        let paysCurrency = "XRP";
+
+        for (const [key, value] of Object.entries(offer)) {
+          if(key === 'Account' || key === 'TakerGets' || key === 'TakerPays') {
+
+          
+            let formattedValue = value;
+
+            if (key === 'TakerGets') {
+                if (typeof value === 'string') {
+                    const drops = parseInt(value);
+                    getsValue = drops / DROPS_PER_XRP;
+                    getsXRP = true;
+                    formattedValue = `${getsValue.toFixed(6)} XRP (${drops} drops)`;
+                } else if (typeof value === 'object' && value !== null) {
+                    getsValue = parseFloat(value.value);
+                    getsCurrency = value.currency;
+                    formattedValue = formatNestedObject(value);
+                } else {
+                    formattedValue = "Invalid TakerGets format";
+                }
+            } else if (key === 'TakerPays') {
+                if (typeof value === 'string') {
+                    const drops = parseInt(value);
+                    paysValue = drops / DROPS_PER_XRP;
+                    paysXRP = true;
+                    formattedValue = `${paysValue.toFixed(6)} XRP (${drops} drops)`;
+                } else if (typeof value === 'object' && value !== null) {
+                    paysValue = parseFloat(value.value);
+                    paysCurrency = value.currency;
+                    formattedValue = formatNestedObject(value);
+                } else {
+                    formattedValue = "Invalid TakerPays format";
+                }
+            } else if (typeof value === 'object' && value !== null) {
+                formattedValue = formatNestedObject(value);
+            } else {
+                formattedValue = String(value);
+            }
+
+            output += `\t${key}: ${formattedValue}\n`;
+          }
+        }
+
+        // Add calculated exchange rates
+        try {
+            if (getsValue > 0 && paysValue > 0) {
+                const forwardRate = paysValue / getsValue;
+                const inverseRate = getsValue / paysValue;
+
+                output += `\tExchange Rate: 1 ${getsCurrency} = ${forwardRate.toFixed(6)} ${paysCurrency}\n`;
+                output += `\tInverse Rate: 1 ${paysCurrency} = ${inverseRate.toFixed(6)} ${getsCurrency}\n`;
+            }
+        } catch (e) {
+            output += `\tExchange Rate: Error calculating exchange rate\n`;
+        }
+
+        return output;
+    }
+
+    return offers.map((offer, index) => formatOffer(offer, index)).join('\n');
+}
+
+
+// async function getCurrencyBalance(currencyCode) {
+//      try {
+//           const accountAddressField = document.getElementById('accountAddressField');
+//           const response = await fetchAccountObjects(accountAddressField);
+//           const accountObjects = response.result.account_objects;
+//           const matchingObject = accountObjects.find(obj => obj.Balance.currency === currencyCode.toUpperCase());
+//           return matchingObject ? matchingObject.Balance.value : null;
+//      } catch (error) {
+//           console.error('Error fetching balance:', error);
+//           return null;
+//      }
+// }
+
 async function getCurrencyBalance(currencyCode) {
      try {
-          const accountAddressField = document.getElementById('accountAddressField');
-          // Example: Fetch account_objects from an API
-          const response = await fetchAccountObjects(accountAddressField); // Your API call
-          const accountObjects = response.result.account_objects;
-          const matchingObject = accountObjects.find(obj => obj.Balance.currency === currencyCode.toUpperCase());
-          return matchingObject ? matchingObject.Balance.value : null;
+         const accountAddressField = document.getElementById('accountAddressField');
+         const response = await fetchAccountObjects(accountAddressField);
+         const accountObjects = response.result.account_objects;
+ 
+         const matchingObjects = accountObjects.filter(
+             obj => obj.Balance && obj.Balance.currency === currencyCode.toUpperCase()
+         );
+ 
+         const total = matchingObjects.reduce((sum, obj) => {
+             return sum + parseFloat(obj.Balance.value);
+         }, 0);
+ 
+         return total;
      } catch (error) {
-          console.error('Error fetching balance:', error);
-          return null;
+         console.error('Error fetching balance:', error);
+         return null;
      }
-}
+ }
+ 
 
 async function getXrpBalance() {
      try {
@@ -1422,7 +1744,8 @@ async function getXrpBalance() {
           // let balanceXRP = xrpl.dropsToXrp(balanceDrops); // Convert drops to XRP
           // balanceXRP += ` Drops(${balanceDrops})`
           // console.log(`XRP Balance for ${accountAddressField.value}: ${balanceXRP} XRP`);
-          return balanceXRP ? balanceXRP : null;
+          // return balanceXRP ? balanceXRP : null;
+          return balanceXRP;
      } catch (error) {
           console.error('Error fetching balance:', error);
           return null;

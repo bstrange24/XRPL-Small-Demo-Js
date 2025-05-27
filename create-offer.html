@@ -92,7 +92,7 @@
                                    </td>
                                    <td style="text-align: left;">
                                          <span class="tooltip" tooltip-data="Taker Gets.">
-                                        <label for="weWantCurrencyField">We Want This</label>
+                                        <label for="weWantCurrencyField">We Want/Buy This</label>
                                         </span>
                                         <!-- <h4 style="text-align: center;color: white;">(We Want This)</h4> -->
                                    </td>
@@ -151,7 +151,7 @@
                                    </td>
                                    <td style="text-align: left; padding-bottom: 10px;">
                                         <span class="tooltip" tooltip-data="We Spend This.">
-                                             <label for="weWantCurrencyField">We Spend This</label>
+                                             <label for="weWantCurrencyField">We Spend/Sell This</label>
                                         </span>
                                         <!-- <h4 style="text-align: center;color: white;">Taker Pays (We Spend This)</h4> -->
                                    </td>
@@ -268,11 +268,11 @@
                });
           });
 
-          fetch('navbar.html')
-               .then(res => res.text())
-               .then(html => {
-                    document.getElementById('navbar-container').innerHTML = html;
-               });
+          // fetch('navbar.html')
+          //      .then(res => res.text())
+          //      .then(html => {
+          //           document.getElementById('navbar-container').innerHTML = html;
+          //      });
 
           fetch('wallet-input.html')
                .then(res => res.text())

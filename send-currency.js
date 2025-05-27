@@ -657,7 +657,7 @@ async function issueCurrency() {
      }
 }
 
-function populateFieldIssueCurrency1() {
+async function populateFieldIssueCurrency1() {
      currencyField.value = "";
      amountField.value = "";
      accountNameField.value = account1name.value
@@ -666,9 +666,10 @@ function populateFieldIssueCurrency1() {
      destinationField.value = account2address.value
      issuerField.value = issuerAddress.value;
      getXrpBalance();
+     await getAccountInfo();
 }
    
-function populateFieldIssueCurrency2() {
+async function populateFieldIssueCurrency2() {
      currencyField.value = "";
      amountField.value = "";
      accountNameField.value = account2name.value
@@ -677,9 +678,10 @@ function populateFieldIssueCurrency2() {
      destinationField.value = account1address.value
      issuerField.value = issuerAddress.value;
      getXrpBalance();
+     await getAccountInfo();
 }
 
-function populateFieldIssueCurrency3() {
+async function populateFieldIssueCurrency3() {
      currencyField.value = "";
      amountField.value = "";
      accountNameField.value = issuerName.value
@@ -688,6 +690,7 @@ function populateFieldIssueCurrency3() {
      destinationField.value = "";
      issuerField.value = "";
      getXrpBalance();
+     await getAccountInfo();
 }
 
 window.createTrustLine = createTrustLine;

@@ -58,17 +58,25 @@ const inputIds = [
 const serverRadioIds = ["dn", "tn", "mn"];
 const accountRadioIds = ["account1", "account2", "accountIssuer"];
 
+fetch('navbar.html')
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('navbar-container').innerHTML = html;
+            loadInputValues();
+        });
+
 // Function to load input values from localStorage
-function loadInputValues() {
+export function loadInputValues() {
     console.log("Running loadInputValues");
+
     inputIds.forEach(id => {
         const value = localStorage.getItem(id);
-        console.log(`Checking ${id}: localStorage value = "${value}"`);
+        console.warn(`Checking ${id}: localStorage value = "${value}"`);
         if (value !== null) {
             const element = document.getElementById(id);
             if (element !== null) {
                 element.value = value;
-                console.log(`Set ${id} value to "${value}"`);
+                console.warn(`Set ${id} value to "${value}"`);
             } else {
                 console.warn(`Element with ID ${id} not found when loading value`);
             }
@@ -80,6 +88,7 @@ function loadInputValues() {
     if (savedServer === null) {
         savedServer = "wss://s.altnet.rippletest.net:51233"; // Default to Testnet
         localStorage.setItem("server", savedServer);
+        alert("Set default server to Testnet");
         console.log("Set default server to Testnet");
     }
     const radio = document.querySelector(`input[name="server"][value="${savedServer}"]`);
@@ -89,6 +98,7 @@ function loadInputValues() {
         console.log(`Set server radio ${radio.id} to checked (server: ${savedServer})`);
     } else {
         console.warn(`Server radio button with value ${savedServer} not found, defaulting to Testnet`);
+        alert(`Server radio button with value ${savedServer} not found, defaulting to Testnet`);
         updateNavbarColor("tn"); // Force Testnet color if radio not found
     }
 }
@@ -167,23 +177,24 @@ function updateNavbarColor(radioId) {
     const navbar = document.getElementById("navbar");
     if (navbar !== null) {
         if (radioId === "dn") {
-            navbar.style.backgroundColor = "#28a745"; // Green for Devnet
+            navbar.style.backgroundColor = "rgb(56 113 69)"; // Green for Devnet
             localStorage.setItem("server", 'wss://s.devnet.rippletest.net:51233');
             console.log("Navbar color changed to green for Devnet");
         } else if (radioId === "tn") {
-            navbar.style.backgroundColor = "#ffc107"; // Yellow for Testnet
+            navbar.style.backgroundColor = "rgb(157 136 72)"; // Yellow for Testnet
             localStorage.setItem("server", 'wss://s.altnet.rippletest.net:51233');
             console.log("Navbar color changed to yellow for Testnet");
         } else if (radioId === "mn") {
-            navbar.style.backgroundColor = "#dc3545"; // Red for Mainnet
+            navbar.style.backgroundColor = "rgb(115 49 55)"; // Red for Mainnet
             localStorage.setItem("server", 'wss://s1.ripple.com_not');
             console.log("Navbar color changed to red for Mainnet");
         } else {
-            navbar.style.backgroundColor = "#343a40"; // Default dark gray
+            navbar.style.backgroundColor = "rgb(145 255 0)"; // Default dark gray
             console.log("Navbar color reset to default");
         }
     } else {
         console.warn("Navbar with ID 'navbar' not found");
+        alert("Navbar with ID 'navbar' not found");
     }
 }
 
@@ -264,14 +275,14 @@ export function addInputListener(elementId, eventType, callback) {
 inputIds.forEach(id => addInputListener(id, "input", saveInputValues));
 
 // Load input values when page loads
-document.addEventListener("DOMContentLoaded", loadInputValues);
+// document.addEventListener("DOMContentLoaded", loadInputValues);
 
 // Optional: Save on form submission
-const theForm = document.getElementById("theForm");
-if (theForm) {
-    theForm.addEventListener("submit", (event) => {
-        event.preventDefault(); // Prevent default form submission
-        saveInputValues();
-        // Add your XRPL transaction logic here (e.g., sendCheck)
-    });
-}
+// const theForm = document.getElementById("theForm");
+// if (theForm) {
+//     theForm.addEventListener("submit", (event) => {
+//         event.preventDefault(); // Prevent default form submission
+//         saveInputValues();
+//         // Add your XRPL transaction logic here (e.g., sendCheck)
+//     });
+// }
