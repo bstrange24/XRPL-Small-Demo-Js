@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseTransactionDetails} from './utils.js';
+import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseTransactionDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -29,7 +29,7 @@ const flagMap = {
      asfGlobalFreeze: 'globalFreeze',
      asfDefaultRipple: 'defaultRipple',
      asfDepositAuth: 'depositAuth',
-      // asfAuthorizedNFTokenMinter: 'authorizedNFTokenMinter',
+     // asfAuthorizedNFTokenMinter: 'authorizedNFTokenMinter',
      asfDisallowIncomingNFTokenOffer: 'disallowIncomingNFTokenOffer',
      asfDisallowIncomingCheck: 'disallowIncomingCheck',
      asfDisallowIncomingPayChan: 'disallowIncomingPayChan',
@@ -40,237 +40,115 @@ const flagMap = {
 export async function getAccountInfo() {
      console.log('Entering getAccountInfo');
 
-     // Clear previous error styling
-     resultField.classList.remove("error");
-     resultField.classList.remove("success");
+     resultField.classList.remove('error', 'success');
 
-     // let accountAddressField;
-     let accountSeedField;
-     let xrpBalanceField;
+     const { seedField, balanceField } = resolveAccountFields();
 
-     const selectedRadio = getSelectedAccount();
-     if(selectedRadio != null && selectedRadio == 'account1') {
-          // accountAddressField = document.getElementById('accountAddress1Field');
-          accountSeedField = document.getElementById('accountSeed1Field');
-          xrpBalanceField = document.getElementById('xrpBalance1Field');
-     } else {
-          // accountAddressField = document.getElementById('accountAddress2Field');
-          accountSeedField = document.getElementById('accountSeed2Field');
-          xrpBalanceField = document.getElementById('xrpBalance2Field');
+     if (!seedField || !balanceField) {
+          return setError('ERROR: DOM elements not found');
      }
 
-     if(accountSeedField == null) {
-          accountSeedField = document.getElementById('accountSeedField');
-     }
-
-     if(xrpBalanceField == null) {
-          xrpBalanceField = document.getElementById('xrpBalanceField');
-     }
-
-     // if (!accountAddressField || !accountSeedField || !xrpBalanceField) {
-          // resultField.value = 'ERROR: DOM elements not found';
-          // resultField.classList.add("error");
-          // return;
-     // }
-
-     if (!validatInput(accountSeedField.value)) {
-          resultField.value = 'ERROR: Seed can not be empty';
-          resultField.classList.add("error");
-          return;
+     if (!validatInput(seedField.value)) {
+          return setError('ERROR: Seed cannot be empty');
      }
 
      try {
-          const { environment } = getEnvironment()
+          const { environment } = getEnvironment();
           const client = await getClient();
+          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
 
           let results = `Connected to ${environment}.\nGetting Account Data.\n\n`;
           resultField.value = results;
-          
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
 
           // Fetch account info
-          const accountInfo = await client.request({
+          const { result: accountInfo } = await client.request({
                method: 'account_info',
                account: wallet.address,
                ledger_index: 'validated',
           });
 
-          console.log('accountInfo',accountInfo.result);
+          console.log('accountInfo', accountInfo);
 
-          flagList.forEach((flag) => {
+          // Set flags from account info
+          flagList.forEach(flag => {
                const input = document.getElementById(flag.name);
-               if (input && flagMap[flag.name]) {
-                    const apiFlag = flagMap[flag.name];
-                    input.checked = !!accountInfo.result.account_flags[apiFlag];
+               const flagKey = flagMap[flag.name];
+               if (input && flagKey) {
+                    input.checked = !!accountInfo.account_flags?.[flagKey];
                }
           });
 
-          const accountObjects = await client.request({
+          // Fetch account objects
+          const { result: accountObjects } = await client.request({
                method: 'account_objects',
                account: wallet.address,
                ledger_index: 'validated',
           });
+
           console.log('accountObjects', accountObjects);
 
-          const accountFlagsDetails = parseAccountFlagsDetails(accountInfo.result.account_flags, accountObjects);
-          results += `Address: ${wallet.address}\nBalance: ${xrpBalanceField.value} XRP\n${accountFlagsDetails}\n`;
-          console.log('account_objects', JSON.stringify(accountObjects.result.account_objects, null, 2));
+          const flagsDetails = parseAccountFlagsDetails(accountInfo.account_flags);
+          results += `Address: ${wallet.address}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
+          results += displayAccountObjects(parseXRPLAccountObjects(accountObjects));
+
           resultField.value = results;
-          resultField.classList.add("success");
+          resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = "ERROR: " + error.message || 'Unknown error';
-          resultField.classList.add("error");
-          await disconnectClient();
+          setError('ERROR: ' + (error.message || 'Unknown error'));
+          await client?.disconnect?.();
      } finally {
           console.log('Leaving getAccountInfo');
-     } 
-}
-
-export async function fetchAccountObjects(walletAddress) {
-     const { environment } = getEnvironment()
-     const client = await getClient();
-     const accountObjects = await client.request({
-          method: 'account_objects',
-          account: walletAddress.value,
-          ledger_index: 'validated',
-     });
-     console.log('accountObjects', accountObjects);
-     return accountObjects;
-}
-
-export async function fetchXrpBalance(walletAddress) {
-     const { environment } = getEnvironment()
-     const client = await getClient();
-     const response = await client.request({
-          method: 'account_info',
-          account: walletAddress.value,
-          ledger_index: 'validated',
-     });
-
-     console.log('response', response);
-     
-     return response;
+     }
 }
 
 async function updateFlags() {
      console.log('Entering updateFlags');
 
-     const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error');
-     resultField.classList.remove("success");
+     resultField.classList.remove('error', 'success');
 
-     let accountSeedField;
-     const selectedRadio = getSelectedAccount();
-     if(selectedRadio != null && selectedRadio == 'account1') {
-          accountSeedField = document.getElementById('accountSeed1Field');
-     } else {
-          accountSeedField = document.getElementById('accountSeed2Field');
-     }
+     const accountSeedField = resolveAccountSeedField();
+     if (!accountSeedField) return setError('ERROR: Account seed field not found');
+     if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty');
 
-     if (!accountSeedField || !resultField) {
-          console.error('DOM elements not found');
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!accountSeedField.value.trim()) {
-          resultField.value = 'ERROR: Account seed cannot be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (document.getElementById('asfNoFreeze').checked && document.getElementById('asfGlobalFreeze').checked) {
-          resultField.value = 'ERROR: Cannot enable both NoFreeze and GlobalFreeze';
-          resultField.classList.add('error');
-          return;
-     }
+     const noFreeze = document.getElementById('asfNoFreeze')?.checked;
+     const globalFreeze = document.getElementById('asfGlobalFreeze')?.checked;
+     if (noFreeze && globalFreeze) return setError('ERROR: Cannot enable both NoFreeze and GlobalFreeze');
 
      try {
-          const { environment } = getEnvironment()
+          const { environment } = getEnvironment();
           const client = await getClient();
-
-          let results = `Connected to ${environment}.\nGetting Account Data.\n\n`;
-          resultField.value = results;
-
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
 
-          const accountInfo = await client.request({
+          resultField.value = `Connected to ${environment}.\nGetting Account Data\n`;
+
+          const { result: accountInfo } = await client.request({
                method: 'account_info',
                account: wallet.address,
                ledger_index: 'validated',
           });
 
-          console.log('accountInfo',accountInfo.result.account_flags);
+          console.log('account_flags', accountInfo.account_flags);
 
-          const setFlags = [];
-          const clearFlags = [];
+          const { setFlags, clearFlags } = getFlagUpdates(accountInfo.account_flags);
 
-          // Compare current flags with desired states from checkboxes
-          flagList.forEach((flag) => {
-               console.log('flag.name', flag.name);
-               const input = document.getElementById(flag.name);
-               
-               if (input) {
-                    const desiredState = input.checked;
-                    console.log('desiredState', desiredState);
-                    const xrplFlagState = accountInfo.result.account_flags[flag.xrplName];
-                    console.log('xrplFlagState', xrplFlagState);
-                    if(desiredState == xrplFlagState) { 
-                         /* empty Continue with next loop iteration */ 
-                    } else if (desiredState && !xrplFlagState) {
-                         setFlags.push(flag.value);
-                    } else if (!desiredState && xrplFlagState) {
-                         clearFlags.push(flag.value);
-                    }
-               }
-          });
-
-          // Submit one transaction per flag change (XRPL limitation)
           for (const flagValue of setFlags) {
-               const transaction = {
-                    TransactionType: 'AccountSet',
-                    Account: wallet.address,
-                    SetFlag: parseInt(flagValue),
-               };
-               const response = await client.submitAndWait(transaction, { wallet });
-
-               if(response.result.meta.TransactionResult != "tesSUCCESS") {
-                    resultField.value = "ERROR: " + response.result.meta.TransactionResult + '\n' + parseTransactionDetails(response.result);
-                    resultField.classList.add("error");
-                    return;
-               } else {
-                    resultField.value += `\n\nSet Flag ${flagList.find(f => f.value === flagValue).name} Result:\n${parseTransactionDetails(response.result)}`;
-                    resultField.classList.add("success");
-               }
+               const response = await submitFlagTransaction(client, wallet, { SetFlag: parseInt(flagValue) });
+               if (!response.success) return setError(response.message);
+               resultField.value += `\n\nSet Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
           for (const flagValue of clearFlags) {
-               const transaction = {
-                    TransactionType: 'AccountSet',
-                    Account: wallet.address,
-                    ClearFlag: parseInt(flagValue),
-               };
-               const response = await client.submitAndWait(transaction, { wallet });
-
-                if(response.result.meta.TransactionResult != "tesSUCCESS") {
-                    resultField.value = "ERROR: " + response.result.meta.TransactionResult + '\n' + parseTransactionDetails(response.result);
-                    resultField.classList.add("error");
-                    return;
-                } else {
-                    resultField.value += `\n\nClear Flag ${flagList.find(f => f.value === flagValue).name} Result:\n${JSON.stringify(response.result, null, 2)}`;
-                    resultField.classList.add("success");
-                }
+               const response = await submitFlagTransaction(client, wallet, { ClearFlag: parseInt(flagValue) });
+               if (!response.success) return setError(response.message);
+               resultField.value += `\n\nClear Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
-          // Refresh details
-          await getAccountInfo();
+          resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = `Error: ${error.message || 'Unknown error'}`;
-          resultField.classList.add('error');
-          await client.disconnect();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           console.log('Leaving updateFlags');
      }
@@ -278,174 +156,202 @@ async function updateFlags() {
 
 async function setDepositAuthAccounts(authorizeFlag) {
      console.log('Entering setDepositAuthAccounts');
-     console.log('Authorize Flag', authorizeFlag);
+     console.log('Authorize Flag:', authorizeFlag);
 
      const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error');
-     resultField.classList.remove("success");
+     resultField?.classList.remove('error', 'success');
 
-     let accountSeedField;
-     let accountAddressField;
-     let authorizedAddressField;
-     
-     const selectedRadio = getSelectedAccount();
-     if (!selectedRadio) {
-          resultField.value = 'ERROR: Please select an account';
-          resultField.classList.add('error');
-          return;
+     const selected = getSelectedAccount();
+     if (!selected) return setError(`Please select an account.`);
+
+     const isAccount1 = selected === 'account1';
+     const accountSeedField = document.getElementById(isAccount1 ? 'accountSeed1Field' : 'accountSeed2Field');
+     const accountAddressField = document.getElementById(isAccount1 ? 'accountAddress1Field' : 'accountAddress2Field');
+     const authorizedAddressField = document.getElementById(isAccount1 ? 'accountAddress2Field' : 'accountAddress1Field');
+
+     if (!accountSeedField || !accountAddressField || !authorizedAddressField || !resultField) {
+          return setError(`ERROR: DOM elements not found.`);
      }
 
-     if(selectedRadio != null && selectedRadio == 'account1') {
-        accountSeedField = document.getElementById('accountSeed1Field');
-        accountAddressField = document.getElementById('accountAddress1Field');
-        authorizedAddressField = document.getElementById('accountAddress2Field');
-     } else {
-        accountSeedField = document.getElementById('accountSeed2Field');
-        accountAddressField = document.getElementById('accountAddress2Field');
-        authorizedAddressField = document.getElementById('accountAddress1Field');
-     }
+     const seed = accountSeedField.value.trim();
+     const authorizedAddress = authorizedAddressField.value.trim();
 
-     if (!accountSeedField || !accountAddressField || !resultField) {
-          console.error('DOM elements not found');
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!accountSeedField.value.trim()) {
-          resultField.value = 'ERROR: Account seed can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!authorizedAddressField.value.trim()) {
-          resultField.value = 'ERROR: Authorized account address can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if(!xrpl.isValidAddress(authorizedAddressField.value)) {
-          resultField.value = 'ERROR: Authorized account address is invalid';
-          resultField.classList.add('error');
-          return;
-     }
+     if (!seed) return setError(`ERROR: Account seed cannot be empty.`);
+     if (!authorizedAddress) return setError(`ERROR: Authorized account address cannot be empty.`);
+     if (!xrpl.isValidAddress(authorizedAddress)) return setError(`ERROR: Authorized account address is invalid.`);
 
      try {
           const { environment } = getEnvironment();
           const client = await getClient();
-     
-          let results = `Connected to ${environment}.\nSetting Deposit Authorization.\n\n`;
-          resultField.value = results;
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          resultField.value = `Connected to ${environment}.\nSetting Deposit Authorization\n\n`;
 
           // Validate authorized account exists
           try {
                await client.request({
-                   method: 'account_info',
-                    account: authorizedAddressField.value,
+                    method: 'account_info',
+                    account: authorizedAddress,
                     ledger_index: 'validated',
                });
           } catch (error) {
-               if (error.data.error === 'actNotFound') {
-                    resultField.value = 'ERROR: Authorized account does not exist (tecNO_TARGET)';
-                    resultField.classList.add('error');
-                    return;
+               if (error.data?.error === 'actNotFound') {
+                    return setError(`ERROR: Authorized account does not exist (tecNO_TARGET).`);
                }
                throw error;
           }
 
-          // Check if asfDepositAuth is enabled
-          const accountInfo = await client.request({
+          // Ensure DepositAuth is enabled
+          const { result: accountInfo } = await client.request({
                method: 'account_info',
                account: wallet.address,
                ledger_index: 'validated',
           });
-          
-          const flags = accountInfo.result.account_flags;
-          if (!flags.depositAuth) {
-               resultField.value = 'ERROR: Account must have asfDepositAuth flag enabled';
-               resultField.classList.add('error');
-               return;
+
+          if (!accountInfo.account_flags.depositAuth) {
+               return setError(`ERROR: Account must have asfDepositAuth flag enabled.`);
           }
 
-           // Check for existing preauthorization
-          const accountObjects = await client.request({
+          // Prevent duplicate preauthorization
+          const { result: accountObjects } = await client.request({
                method: 'account_objects',
                account: wallet.address,
                type: 'deposit_preauth',
                ledger_index: 'validated',
           });
-          const existingPreauth = accountObjects.result.account_objects.find(
-               (obj) => obj.Authorize === authorizedAddressField.value
-          );
 
-          if (existingPreauth && authorizeFlag === 'Y') {
-               resultField.value = 'ERROR: Preauthorization already exists (tecDUPLICATE). Use Unauthorize to remove.';
-               resultField.classList.add('error');
-               return;
+          const alreadyAuthorized = accountObjects.account_objects.some(obj => obj.Authorize === authorizedAddress);
+          if (authorizeFlag === 'Y' && alreadyAuthorized) {
+               return setError(`ERROR: Preauthorization already exists (tecDUPLICATE). Use Unauthorize to remove.`);
           }
-          
-          // Get current fee
-          const feeResponse = await client.request({ command: 'fee' });
-          const fee = feeResponse.result.drops.open_ledger_fee;
 
-          // Prepare DepositPreauth transaction
-          const depositAuthTx = await client.autofill({
+          // Prepare and submit DepositPreauth transaction
+          const { result: feeResponse } = await client.request({ command: 'fee' });
+
+          const tx = await client.autofill({
                TransactionType: 'DepositPreauth',
                Account: wallet.address,
-               [authorizeFlag === 'Y' ? 'Authorize' : 'Unauthorize']: authorizedAddressField.value,
-               Fee: fee,
+               [authorizeFlag === 'Y' ? 'Authorize' : 'Unauthorize']: authorizedAddress,
+               Fee: feeResponse.drops.open_ledger_fee,
           });
 
-          console.log('DepositPreauth Transaction:', depositAuthTx);
-          // results += `Prepared Transaction:\n${JSON.stringify(depositAuthTx, null, 2)}\n`;
+          console.log('DepositPreauth Transaction:', tx);
 
-          // Submit transaction
-          const response = await client.submitAndWait(depositAuthTx, { wallet });
-          console.log('response:', response);
+          const response = await client.submitAndWait(tx, { wallet });
+          const txResult = response.result.meta?.TransactionResult;
 
-          if(response.result.meta.TransactionResult != "tesSUCCESS") {
-               resultField.value = "ERROR: " + response.result.meta.TransactionResult;
-               resultField.classList.add("error");
-               return;
-          } else {
-               results += `${parseTransactionDetails(response.result)}`;
-               resultField.value = results;
-               resultField.classList.add("success");
+          if (txResult !== 'tesSUCCESS') {
+               return setError(`ERROR: Transaction failed: ${txResult}`);
           }
 
-          // Refresh account details
-          // await getAccountInfo();
+          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
+          resultField.value += displayTransaction({ txDetails, accountChanges });
+          resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = "ERROR: " + error.message || 'Unknown error';
-          resultField.classList.add("error");
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           console.log('Leaving setDepositAuthAccounts');
      }
 }
 
-function getSelectedAccount() {
-    const account1 = document.getElementById('account1');
-    const account2 = document.getElementById('account2');
+export async function fetchAccountObjects(walletAddress) {
+     try {
+          const client = await getClient();
+          const accountObjects = await client.request({
+               method: 'account_objects',
+               account: walletAddress.value,
+               ledger_index: 'validated',
+          });
+          console.log('accountObjects', accountObjects);
+          return accountObjects;
+     } catch (error) {
+          console.error('Error fetching account objects:', error);
+          return [];
+     }
+}
 
-    if (account1.checked) {
-        return account1.value; // 'account1'
-    } else if (account2.checked) {
-        return account2.value; // 'account2'
-    }  else {
-        return null; // No radio button checked
-    }
+function getSelectedAccount() {
+     const account1 = document.getElementById('account1');
+     const account2 = document.getElementById('account2');
+
+     if (account1.checked) {
+          return account1.value; // 'account1'
+     } else if (account2.checked) {
+          return account2.value; // 'account2'
+     } else {
+          return null; // No radio button checked
+     }
+}
+
+function getFlagUpdates(currentFlags) {
+     const setFlags = [],
+          clearFlags = [];
+
+     flagList.forEach(flag => {
+          const checkbox = document.getElementById(flag.name);
+          if (!checkbox || !flag.xrplName) return;
+
+          const desired = checkbox.checked;
+          const actual = !!currentFlags[flag.xrplName];
+
+          if (desired && !actual) setFlags.push(flag.value);
+          if (!desired && actual) clearFlags.push(flag.value);
+     });
+
+     return { setFlags, clearFlags };
+}
+
+async function submitFlagTransaction(client, wallet, flagPayload) {
+     const tx = {
+          TransactionType: 'AccountSet',
+          Account: wallet.address,
+          ...flagPayload,
+     };
+
+     try {
+          const response = await client.submitAndWait(tx, { wallet });
+          const txResult = response.result.meta?.TransactionResult;
+          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
+          if (txResult !== 'tesSUCCESS') {
+               return {
+                    success: false,
+                    message: `ERROR: ${txResult}\n${displayTransaction({ txDetails, accountChanges })}`,
+               };
+          }
+          const responseFormat = displayTransaction({ txDetails, accountChanges });
+          return {
+               success: true,
+               message: responseFormat,
+          };
+     } catch (err) {
+          return { success: false, message: `ERROR submitting flag: ${err.message}` };
+     }
+}
+
+function getFlagName(value) {
+     return flagList.find(f => f.value === value)?.name || `Flag ${value}`;
+}
+
+function resolveAccountSeedField() {
+     const selected = getSelectedAccount();
+     return document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
+}
+
+export function resolveAccountFields() {
+     const selected = getSelectedAccount();
+     const seedField = document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
+     const balanceField = document.getElementById(selected === 'account1' ? 'xrpBalance1Field' : 'xrpBalance2Field') || document.getElementById('xrpBalanceField');
+     return { seedField, balanceField };
 }
 
 export async function getTrustLines(account, client) {
      try {
           const response = await client.request({
-          "command": "account_lines",
-          "account": account,
-          "ledger_index": "validated"
+               command: 'account_lines',
+               account: account,
+               ledger_index: 'validated',
           });
           const trustLines = response.result.lines;
 
@@ -461,7 +367,7 @@ export async function getTrustLines(account, client) {
           console.log(`Trust lines for ${account}:`, activeTrustLines);
           return trustLines;
      } catch (error) {
-          console.error("Error fetching trust lines:", error);
+          console.error('Error fetching trust lines:', error);
           return [];
      }
 }

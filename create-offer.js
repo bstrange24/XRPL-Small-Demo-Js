@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger} from './utils.js';
-import { fetchAccountObjects, fetchXrpBalance, getTrustLines } from './account.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger} from './utils.js';
+import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './main.js';
 import BigNumber from 'bignumber.js';
 
@@ -63,18 +63,6 @@ import BigNumber from 'bignumber.js';
           return;
      }
 
-     // if (!validatInput(weWantIssuerField.value)) {
-     //      resultField.value = 'ERROR: Pay issuer can not be empty';
-     //      resultField.classList.add("error");
-     //      return;
-     // }
-
-     // if (!validatInput(weSpendIssuerField.value)) {
-     //      resultField.value = 'ERROR: Get issuer can not be empty';
-     //      resultField.classList.add("error");
-     //      return;
-     // }
-
      if (!validatInput(weWantAmountField.value)) {
           resultField.value = 'ERROR: Pay amount can not be empty';
           resultField.classList.add("error");
@@ -127,15 +115,13 @@ import BigNumber from 'bignumber.js';
                          "LastLedgerSequence": current_ledger + 50 // Add buffer for transaction processing
                     }
                     
-                    // const signed = wallet.sign(trustSetTx);
-                    // const tx = await client.submitAndWait(signed.tx_blob);
-                    console.log(`trustSetTx ${JSON.stringify(trustSetTx, null, 2)}`);
+                    console.debug(`trustSetTx ${trustSetTx}`);
                     const ts_prepared = await client.autofill(trustSetTx);
-                    console.log('ts_prepared', ts_prepared);
+                    console.debug(`ts_prepared ${ts_prepared}`);
                     const ts_signed = wallet.sign(ts_prepared);
-                    console.log('ts_signed', ts_signed);
+                    console.debug(`ts_signed ${ts_signed}`);
                     const tx = await client.submitAndWait(ts_signed.tx_blob);
-                    console.log('tx', tx);
+                    console.debug(`tx ${tx}`);
 
                     if (tx.result.meta.TransactionResult == "tesSUCCESS") {
                          results += 'Trustline established between account ' + wallet.address + ' and issuer ' + issuerAddr + ' for ' + issuerCur + ' with amount ' + amountValue.value;
@@ -152,11 +138,18 @@ import BigNumber from 'bignumber.js';
           
           const xrpBalance = await getXrpBalance();
           console.log(`XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`);
-          resultField.value += `XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
+          resultField.value += `Initial XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
 
-          const tstBalance = await getOnlyTokenBalance(client, wallet.address, weSpendCurrencyField.value);
-          console.log(`TST Balance: ${tstBalance}`);
-          resultField.value += `\nTST Balance: ${tstBalance}`;
+          let tokenBalance;
+          if(weSpendCurrencyField.value === 'XRP' || weSpendCurrencyField.value === '') {
+               tokenBalance = weWantCurrencyField.value;
+          } else {
+               tokenBalance = weSpendCurrencyField.value
+          }
+
+          const tstBalance = await getOnlyTokenBalance(client, wallet.address, tokenBalance);
+          console.log(`${tokenBalance} Balance: ${tstBalance}`);
+          resultField.value += `\nInital ${tokenBalance} Balance: ${tstBalance}\n\n`;
 
           if (weWantCurrencyField.value == 'XRP') {
                takerGetsString = '{"currency": "' + weWantCurrencyField.value +'",\n' + '"value": "' + weWantAmountField.value + '"}';
@@ -182,7 +175,7 @@ import BigNumber from 'bignumber.js';
                we_spend = JSON.parse(takerPaysString);
      
                if (tstBalance < weSpendAmountField.value) {
-                    throw new Error("Insufficient TST balance");
+                    throw new Error(`Insufficient ${weSpendCurrencyField.value } balance`);
                }
           }
           console.log(`we_want ${we_want}`);
@@ -203,7 +196,7 @@ import BigNumber from 'bignumber.js';
                taker_gets: we_want,
                taker_pays: we_spend
           });
-          console.log(JSON.stringify(orderbook_resp.result, null, 2));
+          console.log(`orderbook_resp: ${orderbook_resp.result}`);
 
           // Estimate whether a proposed Offer would execute immediately, and...
           // If so, how much of it? (Partial execution is possible)
@@ -306,25 +299,21 @@ import BigNumber from 'bignumber.js';
                });
           }
 
-        //   const prepared = await client.autofill({
-        //        "TransactionType": "OfferCreate",
-        //        "Account": wallet.address,
-        //        "TakerGets": we_spend.value,
-        //        "TakerPays": we_want
-        //   });
-          console.log('prepared', prepared);
+          console.debug(`prepared ${prepared}`);
 
           const signed = wallet.sign(prepared);
-          results += "\nSubmitting transaction....";
+          results += "\nSubmitting transaction";
           const tx = await client.submitAndWait(signed.tx_blob);
-          console.log('create offer tx', tx);
+          console.debug(`create offer tx ${tx}`);
 
           if (tx.result.meta.TransactionResult == "tesSUCCESS") {
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}`)
-               results += 'Transaction succeeded:\n';
-               // results += "\nBalance changes: " + JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2);
-               results += results + parseTransactionDetails(tx.result);
-               resultField.value += results;
+               resultField.value += `Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}\n`;
+               // console.log("1 " + results);
+               resultField.value += parseTransactionDetails(tx.result);
+               // console.log("2 " + results);
+               // resultField.value += results;
+               // console.log("3 " + resultField.value);
                resultField.classList.add("success");
           } else {
                const errorResults = `Error sending transaction: ${tx.result.meta.TransactionResult}`;
@@ -368,7 +357,7 @@ import BigNumber from 'bignumber.js';
           console.log(`Modified or removed ${offers_affected} matching Offer(s)`)
 
           // Check balances ------------------------------------------------------------
-          console.log("Getting address balances as of validated ledger...")
+          console.log("Getting address balances as of validated ledger")
           const balances = await client.request({
                command: "account_lines",
                account: wallet.address,
@@ -378,14 +367,29 @@ import BigNumber from 'bignumber.js';
           console.log(JSON.stringify(balances.result, null, 2))
 
           // Check Offers --------------------------------------------------------------
-          console.log(`Getting outstanding Offers from ${wallet.address} as of validated ledger...`)
+          console.log(`Getting outstanding Offers from ${wallet.address} as of validated ledger`)
           const acct_offers = await client.request({
                command: "account_offers",
                account: wallet.address,
                ledger_index: "validated"
           })
           console.log(JSON.stringify(acct_offers.result, null, 2))
-          // getOffers();   
+
+          const updatedBalance = await getOnlyTokenBalance(client, wallet.address, tokenBalance);
+          console.log(`\n${tokenBalance} Updated Balance: ${updatedBalance}`);
+          resultField.value += `\n${tokenBalance} Updated Balance: ${updatedBalance}\n`;
+
+          const finalXrpBalance = await client.getXrpBalance(wallet.address)
+          console.log(`Final XRP Balance: ${finalXrpBalance}`);
+          resultField.value += `Final XRP Balance: ${finalXrpBalance}\n`;
+
+          if(weWantCurrencyField.value === 'XRP') {
+               document.getElementById('weWantTokenBalanceField').value = finalXrpBalance;
+               document.getElementById('weSpendTokenBalanceField').value = updatedBalance;
+          } else {
+               document.getElementById('weWantTokenBalanceField').value = updatedBalance;
+               document.getElementById('weSpendTokenBalanceField').value = finalXrpBalance;
+          }
      } catch (error) {
           console.error('Error:', error);
           resultField.value = "ERROR: " + error.message || 'Unknown error';
@@ -517,6 +521,8 @@ async function cancelOffer() {
                results += 'Transaction succeeded:\n';
                // results += "\nBalance changes: " + JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2);
                results += results + parseTransactionDetails(tx.result);
+               console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
+               console.log();
                resultField.value = results;
                resultField.classList.add("success");
           } else {
@@ -1789,17 +1795,7 @@ async function getXrpBalance() {
      try {
           const client = await getClient();
           const accountAddressField = document.getElementById('accountAddressField');
-          let balanceXRP = (await client.getXrpBalance(accountAddressField.value));
-          // const accountAddressField = document.getElementById('accountAddressField');
-          // Example: Fetch account_objects from an API
-          // const response = await fetchXrpBalance(accountAddressField); // Your API call
-          // const accountData = response.result.account_data;
-          // const balanceDrops = response.result.account_data.Balance;
-          // let balanceXRP = xrpl.dropsToXrp(balanceDrops); // Convert drops to XRP
-          // balanceXRP += ` Drops(${balanceDrops})`
-          // console.log(`XRP Balance for ${accountAddressField.value}: ${balanceXRP} XRP`);
-          // return balanceXRP ? balanceXRP : null;
-          return balanceXRP;
+          return (await client.getXrpBalance(accountAddressField.value));
      } catch (error) {
           console.error('Error fetching balance:', error);
           return null;
@@ -1816,3 +1812,4 @@ window.getTokenBalance = getTokenBalance;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
+window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;

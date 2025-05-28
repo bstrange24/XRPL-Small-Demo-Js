@@ -102,8 +102,8 @@ input:read-only {
 }
 
 #resultField {
-  color: black;
-  background-color: white;
+  color: green;
+  background-color: rgb(197, 245, 198);
 }
 
 table {

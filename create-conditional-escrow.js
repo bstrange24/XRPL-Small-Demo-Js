@@ -1,191 +1,177 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseTransactionDetails, parseBalanceChanges, validatInput } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
      console.log('Entering createConditionalEscrow');
 
-     // Clear previous error styling
-     resultField.classList.remove("error");
-     resultField.classList.remove("success");
+     resultField.classList.remove('error', 'success');
 
-     const accountSeed = document.getElementById('accountSeedField');
-     const destinationAddress = document.getElementById('destinationField');
-     const escrowCancelTime = document.getElementById('escrowCancelDateField');
-     const escrowCondition = document.getElementById('escrowConditionField');
-     const xrpBalanceField = document.getElementById('xrpBalanceField');
-     const amountField = document.getElementById('amountField');
+     const fields = {
+          accountSeed: document.getElementById('accountSeedField'),
+          destinationAddress: document.getElementById('destinationField'),
+          escrowCancelTime: document.getElementById('escrowCancelDateField'),
+          escrowCondition: document.getElementById('escrowConditionField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          amountField: document.getElementById('amountField'),
+     };
 
-     if (!accountSeed || !destinationAddress || !escrowCancelTime || !escrowCondition || !xrpBalanceField || !amountField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add("error");
-          return;
+     // Check if any required DOM elements are missing
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`);
+          }
      }
 
-     // Validate inputs
-     if (!validatInput(amountField.value)) {
-          resultField.value = 'ERROR: Amount can not be empty'
-          resultField.classList.add("error");
-          return
-     }
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField } = fields;
 
-     if (isNaN(amountField.value)) {
-          resultField.value = 'ERROR: Amount must be a valid number';
-          resultField.classList.add("error");
-          return;
-     }
+     // Validate input values
+     const validations = [
+          [!validatInput(amountField.value), 'Amount cannot be empty'],
+          [isNaN(amountField.value), 'Amount must be a valid number'],
+          [parseFloat(amountField.value) <= 0, 'Amount must be greater than zero'],
+          [!validatInput(escrowCancelTime.value), 'Escrow Cancel time cannot be empty'],
+          [!validatInput(accountSeed.value), 'Seed cannot be empty'],
+          [!validatInput(destinationAddress.value), 'Destination cannot be empty'],
+          [!validatInput(escrowCondition.value), 'Condition cannot be empty'],
+     ];
 
-     if (parseFloat(amountField.value) <= 0) {
-          resultField.value = 'ERROR: Amount must be greater than zero';
-          resultField.classList.add("error");
-          return;
-     }
-
-     if (!validatInput(escrowCancelTime.value)) {
-          resultField.value = 'ERROR: Escrow Cancel time can not be empty'
-          resultField.classList.add("error");
-          return
-     }
-
-     if (!validatInput(accountSeed.value)) {
-          resultField.value = 'ERROR: Seed can not be empty'
-          resultField.classList.add("error");
-          return
-     }
-
-     if (!validatInput(destinationAddress.value)) {
-          resultField.value = 'ERROR: Destination can not be empty'
-          resultField.classList.add("error");
-          return
-     }
-
-     if (!validatInput(escrowCondition.value)) {
-           resultField.value = 'ERROR: Condition can not be empty'
-           resultField.classList.add("error");
-          return
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`);
      }
 
      try {
-          const { environment } = getEnvironment()
+          const { environment } = getEnvironment();
           const client = await getClient();
-     
+
           let results = `Connected to ${environment}.\nCreating conditional escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
           console.log('Wallet', wallet);
-     
-          const escrow_cancel_date = addSeconds(parseInt(escrowCancelTime.value));
-          
+
+          const escrowCancelDate = addSeconds(parseInt(escrowCancelTime.value));
+
           const escrowTx = await client.autofill({
-               "TransactionType": "EscrowCreate",
-               "Account": wallet.address,
-               "Amount": xrpl.xrpToDrops(amountField.value),
-               "Destination": destinationAddress.value,
-               "CancelAfter": escrow_cancel_date,
-               "Condition": escrowCondition.value
+               TransactionType: 'EscrowCreate',
+               Account: wallet.address,
+               Amount: xrpl.xrpToDrops(amountField.value),
+               Destination: destinationAddress.value,
+               CancelAfter: escrowCancelDate,
+               Condition: escrowCondition.value,
           });
 
           const signed = wallet.sign(escrowTx);
           const tx = await client.submitAndWait(signed.tx_blob);
 
-          console.log("Create Escrow tx", tx);
+          console.log('Create Escrow tx', tx);
 
-          results = results + parseBalanceChanges(xrpl.getBalanceChanges(tx.result.meta));
-          results = results + '\n\n';
-          results = results + parseTransactionDetails(tx.result);
-          xrpBalanceField.value = (await client.getXrpBalance(wallet.address));
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== 'tesSUCCESS') {
+               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+          }
+
+          results += `Escrow created successfully.\n\n`;
+
+          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+          results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
+          resultField.classList.add('success');
+
+          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = error.message || 'Unknown error';
-          resultField.classList.add("error");
+          setError(error.message || 'Unknown error');
           await disconnectClient();
      } finally {
           console.log('Leaving createConditionalEscrow');
-     } 
+     }
 }
 
 async function finishConditionalEscrow() {
      console.log('Entering finishConditionalEscrow');
 
-     // Clear previous error styling
-     resultField.classList.remove("error");
-     resultField.classList.remove("success");
+     resultField.classList.remove('error', 'success');
 
-     const accountAddress = document.getElementById('accountAddressField');
-     const escrowOwner = document.getElementById('escrowOwnerField');
-     const accountSeed = document.getElementById('accountSeedField');
-     const escrowCondition = document.getElementById('escrowConditionField');
-     const escrowFulfillment = document.getElementById('escrowFulfillmentField');
-     const escrowSequenceNumber = document.getElementById('escrowSequenceNumberField');
-     const xrpBalanceField = document.getElementById('xrpBalanceField');
+     const fields = {
+          accountAddress: document.getElementById('accountAddressField'),
+          escrowOwner: document.getElementById('escrowOwnerField'),
+          accountSeed: document.getElementById('accountSeedField'),
+          escrowCondition: document.getElementById('escrowConditionField'),
+          escrowFulfillment: document.getElementById('escrowFulfillmentField'),
+          escrowSequenceNumber: document.getElementById('escrowSequenceNumberField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+     };
 
-     if (!accountSeed || !accountAddress || !escrowOwner || !accountSeed || !escrowFulfillment || !escrowSequenceNumber || !xrpBalanceField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add("error");
-          return;
+     // Check for missing DOM elements
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`);
+          }
      }
 
-     // Validate inputs
-     if (!validatInput(accountAddress.value)) {
-          alert('Address can not be empty');
-          return
-     }
+     const { accountAddress, escrowOwner, accountSeed, escrowCondition, escrowFulfillment, escrowSequenceNumber, xrpBalanceField } = fields;
 
-     if (!validatInput(escrowOwner.value)) {
-          alert('Escrow Owner can not be empty');
-          return
-     }
+     // Input validation
+     const validations = [
+          [!validatInput(accountAddress.value), 'Address cannot be empty'],
+          [!validatInput(escrowOwner.value), 'Escrow Owner cannot be empty'],
+          [!validatInput(escrowSequenceNumber.value), 'Escrow Sequence Number cannot be empty'],
+          [!validatInput(escrowCondition.value), 'Condition cannot be empty'],
+          [!validatInput(escrowFulfillment.value), 'Fulfillment cannot be empty'],
+     ];
 
-     if (!validatInput(escrowSequenceNumber.value)) {
-          alert('Escrow sequence number can not be empty');
-          return
-     }
-
-     if (!validatInput(escrowCondition.value)) {
-          alert('Condition can not be empty');
-          return
-     }
-
-     if (!validatInput(escrowFulfillment.value)) {
-          alert('Fulfillment can not be empty');
-          return
+     for (const [condition, message] of validations) {
+          if (condition) {
+               return setError(`ERROR: ${message}`);
+          }
      }
 
      try {
-          const { environment } = getEnvironment()
+          const { environment } = getEnvironment();
           const client = await getClient();
-          
+
           let results = `Connected to ${environment}.\nFulfilling conditional escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
 
           const prepared = await client.autofill({
-               "TransactionType": "EscrowFinish",
-               "Account": accountAddress.value,
-               "Owner": escrowOwner.value,
-               "OfferSequence": parseInt(escrowSequenceNumber.value),
-               "Condition": escrowCondition.value,
-               "Fulfillment": escrowFulfillment.value
+               TransactionType: 'EscrowFinish',
+               Account: accountAddress.value,
+               Owner: escrowOwner.value,
+               OfferSequence: parseInt(escrowSequenceNumber.value),
+               Condition: escrowCondition.value,
+               Fulfillment: escrowFulfillment.value,
           });
 
           const signed = wallet.sign(prepared);
           const tx = await client.submitAndWait(signed.tx_blob);
-          results = results + parseBalanceChanges(xrpl.getBalanceChanges(tx.result.meta));
-          results = results + '\n\n';
-          results = results + parseTransactionDetails(tx.result);
+
+          console.log('Create Escrow tx', tx);
+
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== 'tesSUCCESS') {
+               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+          }
+
+          results += `Escrow finished successfully.\n\n`;
+
+          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+          results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
-          xrpBalanceField.value = (await client.getXrpBalance(wallet.address));
+          resultField.classList.add('success');
+
+          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = error.message || 'Unknown error';
-          resultField.classList.add("error");
+          setError(error.message || 'Unknown error');
           await disconnectClient();
      } finally {
           console.log('Leaving finishConditionalEscrow');
-     } 
+     }
 }
 
 async function getCondition() {
@@ -197,23 +183,3 @@ async function getCondition() {
 window.createConditionalEscrow = createConditionalEscrow;
 window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
-
-const pageTitles = {
-     "index.html": "Send XRP",
-     "send-checks.html": "Send Checks",
-     "send-currency.html": "Send Currency",
-     "create-time-escrow.html": "Create Time Escrow",
-     "create-conditional-escrow.html": "Create Conditional Escrow",
-     "account.html": "Account Info",
-     "create-offers.html": "Create Offers",
-};
- 
-// Extract filename from URL
-const page = window.location.pathname.split("/").pop();
- 
-// Set navbar title if there's a match
-const titleElement = document.querySelector(".navbar-title");
-
-if (titleElement && pageTitles[page]) {
-     titleElement.textContent = pageTitles[page];
-}

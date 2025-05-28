@@ -1,99 +1,79 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, parseTransactionDetails, parseBalanceChanges, populate1, populate2, populate3} from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
 
 async function sendXRP() {
-    console.log('Entering sendXRP');
+     console.log('Entering sendXRP');
 
-    // Clear previous error styling
-     resultField.classList.remove("error");
-     resultField.classList.remove("success");
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
 
-     const accountAddressField = document.getElementById('accountAddressField');
-     const accountSeedField = document.getElementById('accountSeedField');
-     const xrpBalanceField = document.getElementById('xrpBalanceField');
-     const amountField = document.getElementById('amountField');
-     const destinationField = document.getElementById('destinationField');
+     const fields = {
+          address: document.getElementById('accountAddressField'),
+          seed: document.getElementById('accountSeedField'),
+          balance: document.getElementById('xrpBalanceField'),
+          amount: document.getElementById('amountField'),
+          destination: document.getElementById('destinationField'),
+     };
 
-     if (!accountAddressField || !accountSeedField || !xrpBalanceField || !amountField || !destinationField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add("error");
-          return;
+     // Validate DOM elements
+     if (Object.values(fields).some(el => !el)) {
+          return setError(`ERROR: DOM element not found`);
      }
 
-     if (!validatInput(accountSeedField.value)) {
-          resultField.value = 'ERROR: Seed can not be empty';
-          resultField.classList.add("error");
-          return;
-     }
+     const seed = fields.seed.value.trim();
+     const amount = fields.amount.value.trim();
+     const destination = fields.destination.value.trim();
 
-     if (!validatInput(amountField.value)) {
-          resultField.value = 'ERROR: Amount can not be empty';
-          resultField.classList.add("error");
-          return;
-     }
+     // Validate user inputs
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
+     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
+     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
+     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
+     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty');
 
-     if (isNaN(amountField.value)) {
-          resultField.value = 'ERROR: Amount must be a valid number';
-          resultField.classList.add("error");
-          return;
-     }
-
-     if (parseFloat(amountField.value) <= 0) {
-          resultField.value = 'ERROR: Amount must be greater than zero';
-          resultField.classList.add("error");
-          return;
-     }
-
-     if (!validatInput(destinationField.value)) {
-          resultField.value = 'ERROR: Desitination can not be empty';
-          resultField.classList.add("error");
-          return;
-     }
-
-     const { environment } = getEnvironment()
+     const { environment } = getEnvironment();
      const client = await getClient();
 
      try {
-          let results = `Connected to ${environment}.\nSending XRP.\n\n`;
+          let results = `Connected to ${environment}.\nSending XRP\n\n`;
           resultField.value = results;
-          console.log("Seed: " + accountSeedField.value);
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' })
-          console.log("wallet: " + wallet.classicAddress + " seed: " + wallet.seed);
-          const sendAmount = amountField.value;
 
-          const prepared_tx = await client.autofill({
-               "TransactionType": "Payment",
-               "Account": wallet.address,
-               "Amount": xrpl.xrpToDrops(sendAmount),
-               "Destination": destinationField.value
-          })
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          console.log(`wallet: ${wallet.classicAddress} | seed: ${wallet.seed}`);
 
-          const signed = wallet.sign(prepared_tx);
-          const tx = await client.submitAndWait(signed.tx_blob);
-          console.log("tx", tx);
-          
-          if (tx.result.meta.TransactionResult != "tesSUCCESS") {
-               results += `Error sending xrp: ${tx.result.meta.TransactionResult}`
-               resultField.value = results;
-               resultField.classList.add("error");
-               return;
-          } else {
-               results = results + parseBalanceChanges(xrpl.getBalanceChanges(tx.result.meta));
-               results = results + '\n\n';
-               results = results + parseTransactionDetails(tx.result);
-               resultField.value = results;
-               resultField.classList.add("success");
+          const preparedTx = await client.autofill({
+               TransactionType: 'Payment',
+               Account: wallet.address,
+               Amount: xrpl.xrpToDrops(amount),
+               Destination: destination,
+          });
+
+          const signed = wallet.sign(preparedTx);
+          const response = await client.submitAndWait(signed.tx_blob);
+          console.log('Transaction response:', response);
+
+          const resultCode = response.result.meta.TransactionResult;
+          if (resultCode !== 'tesSUCCESS') {
+               const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
           }
-          
-          xrpBalanceField.value =  (await client.getXrpBalance(wallet.address));
+
+          results += `XRP payment finished successfully.\n\n`;
+          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
+          results += displayTransaction({ txDetails, accountChanges });
+
+          resultField.value = results;
+          resultField.classList.add('success');
+
+          // Update balance
+          fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = "ERROR: " + error.message || 'Unknown error';
-          resultField.classList.add("error");
+          setError(error.message || 'Unknown error');
           await disconnectClient();
      } finally {
           console.log('Leaving sendXRP');
-     } 
+     }
 }
 
 window.sendXRP = sendXRP;

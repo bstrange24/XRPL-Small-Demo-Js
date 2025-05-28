@@ -41,8 +41,8 @@
                                    </td>
                                    <td>
                                         <input type="text" id="accountAddressField" size="40" readonly></input>
-                                        <input type="radio" id="account2" name="accounts" value="account2">
-                                        <label for="account2">Account 2</label>
+                                        <!-- <input type="radio" id="account2" name="accounts" value="account2"> -->
+                                        <!-- <label for="account2">Account 2</label> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
@@ -53,8 +53,8 @@
                                    </td>
                                    <td>
                                         <input type="text" id="accountSeedField" size="40" readonly></input>
-                                        <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer">
-                                        <label for="accountIssuer">Issuer</label>
+                                        <!-- <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer"> -->
+                                        <!-- <label for="accountIssuer">Issuer</label> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top;">
@@ -91,8 +91,8 @@
                                         <!-- <h4 style="text-align: center; color: white;">Taker Gets</h4> -->
                                    </td>
                                    <td style="text-align: left;">
-                                         <span class="tooltip" tooltip-data="Taker Gets.">
-                                        <label for="weWantCurrencyField">We Want/Buy This</label>
+                                         <span class="tooltip" tooltip-data="This is what I want to buy.">
+                                        <label for="weWantCurrencyField">This is what I'm buying</label>
                                         </span>
                                         <!-- <h4 style="text-align: center;color: white;">(We Want This)</h4> -->
                                    </td>
@@ -150,8 +150,8 @@
                                         <!-- <h4 style="text-align: center; color: white;"></h4> -->
                                    </td>
                                    <td style="text-align: left; padding-bottom: 10px;">
-                                        <span class="tooltip" tooltip-data="We Spend This.">
-                                             <label for="weWantCurrencyField">We Spend/Sell This</label>
+                                        <span class="tooltip" tooltip-data="This is what I am selling.">
+                                             <label for="weWantCurrencyField">This is what I'm selling</label>
                                         </span>
                                         <!-- <h4 style="text-align: center;color: white;">Taker Pays (We Spend This)</h4> -->
                                    </td>
@@ -209,7 +209,7 @@
                                         <button type="button" onClick="getOrderBook()">Get Order Book</button>
                                         <button type="button" onClick="invertOrder()">Invert Order</button>
                                         <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
-                                        <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
+                                        <!-- <button type="button" onclick="getXrpBalance()">Get XRP Balance</button> -->
                                         <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
                                         <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
                                    </td>
@@ -259,12 +259,13 @@
           accountRadioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         populate1();
-                    } else if (this.value === 'account2') {
-                         populate2();
-                    } else if (this.value === 'accountIssuer') {
-                         populate3();
+                         populateTakerGetsTakerPayFields();
                     }
+                    //  else if (this.value === 'account2') {
+                         // populate2();
+                    // } else if (this.value === 'accountIssuer') {
+                         // populate3();
+                    // }
                });
           });
 
