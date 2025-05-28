@@ -36,10 +36,10 @@ async function sendCheck() {
           return setError('ERROR: Amount must be a valid number greater than zero');
      }
 
-     const { environment } = getEnvironment();
-     const client = await getClient();
-
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\n`;
           resultField.value = results;
 
@@ -176,10 +176,10 @@ async function cashCheck() {
           return setError('ERROR: Amount must be a valid number greater than zero');
      }
 
-     const { environment } = getEnvironment();
-     const client = await getClient();
-
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\n`;
           resultField.value = results;
 
@@ -256,10 +256,10 @@ async function cancelCheck() {
      if (!validatInput(checkId)) return setError('ERROR: Check ID cannot be empty');
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
 
-     const { environment } = getEnvironment();
-     const client = await getClient();
-
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\nCancelling Check\n\n`;
           resultField.value = results;
 

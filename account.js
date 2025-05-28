@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseTransactionDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
+import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },

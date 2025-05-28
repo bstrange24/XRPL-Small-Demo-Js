@@ -1056,52 +1056,44 @@ export function parseXRPLAccountObjects(response) {
      const ledgerHash = response.ledger_hash || 'N/A';
      const validated = response.validated || false;
 
-     // Extract and format account objects
-     const accountObjects = response.account_objects || [];
-     console.log(`accountObjects ${accountObjects}`);
-     const formattedObjects = accountObjects.map(obj => {
-          const typeConfig = ledgerEntryTypeFields[obj.LedgerEntryType] || {
-               fields: Object.keys(obj).map(key => {
-                    console.log(`Key: ${key}, Value: ${obj[key] || 'N/A'}`);
-                    return {
-                         key,
-                         format: v => v || 'N/A',
-                    };
-               }),
-               label: obj.LedgerEntryType || 'Unknown',
-          };
+     // Identify all array fields in the response (e.g., account_objects, account_offers)
+     const arrayFields = Object.keys(response).filter(key => Array.isArray(response[key]));
+     console.log(`Array Fields Found: ${arrayFields.join(', ')}`);
 
-          const formattedDetails = {};
-          typeConfig.fields.forEach(field => {
-               const value = obj[field.key];
-               console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`); // Log for all types
-               formattedDetails[field.key] = field.format(value);
+     // Process each array field
+     const formattedObjects = {};
+     arrayFields.forEach(field => {
+          const objects = response[field] || [];
+          console.log(`Processing ${field}:`, objects);
+
+          formattedObjects[field] = objects.map(obj => {
+               // Use LedgerEntryType for account_objects, or assume Offer for account_offers
+               const entryType = field === 'account_objects' ? obj.LedgerEntryType : field === 'account_offers' ? 'Offer' : obj.LedgerEntryType || 'Unknown';
+               console.log('entryType' + entryType, ' field' + field);
+               const typeConfig = ledgerEntryTypeFields[entryType] || {
+                    fields: Object.keys(obj).map(key => {
+                         console.log(`Key: ${key}, Value: ${obj[key] || 'N/A'}`);
+                         return {
+                              key,
+                              format: v => (typeof v === 'object' ? JSON.stringify(v) : v || 'N/A'),
+                         };
+                    }),
+                    label: entryType || 'Unknown',
+               };
+
+               const formattedDetails = {};
+               typeConfig.fields.forEach(field => {
+                    const value = obj[field.key];
+                    console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
+                    formattedDetails[field.key] = field.format(value);
+               });
+
+               return {
+                    type: typeConfig.label,
+                    details: formattedDetails,
+               };
           });
-
-          return {
-               type: typeConfig.label,
-               details: formattedDetails,
-          };
      });
-     // const formattedObjects = accountObjects.map(obj => {
-     //      const typeConfig = ledgerEntryTypeFields[obj.LedgerEntryType] || {
-     //           fields: Object.keys(obj).map(key => ({
-     //                key,
-     //                format: v => v || 'N/A',
-     //           })),
-     //           label: obj.LedgerEntryType || 'Unknown',
-     //      };
-
-     //      const formattedDetails = {};
-     //      typeConfig.fields.forEach(field => {
-     //           formattedDetails[field.key] = field.format(obj[field.key]);
-     //      });
-
-     //      return {
-     //           type: typeConfig.label,
-     //           details: formattedDetails,
-     //      };
-     // });
 
      // General details for the response
      const details = {
@@ -1109,20 +1101,85 @@ export function parseXRPLAccountObjects(response) {
           'Ledger Index': ledgerIndex,
           'Ledger Hash': ledgerHash,
           Validated: validated,
-          'Account Objects': formattedObjects.length > 0 ? formattedObjects : 'None',
+          ...Object.fromEntries(arrayFields.map(field => [field, formattedObjects[field].length > 0 ? formattedObjects[field] : 'None'])),
      };
 
      return details;
 }
+// export function parseXRPLAccountObjects(response) {
+//      const account = response.account || 'N/A';
+//      const ledgerIndex = response.ledger_index || 'N/A';
+//      const ledgerHash = response.ledger_hash || 'N/A';
+//      const validated = response.validated || false;
+
+//      // Extract and format account objects
+//      const accountObjects = response.account_objects || [];
+//      console.log(`accountObjects ${accountObjects}`);
+//      const formattedObjects = accountObjects.map(obj => {
+//           const typeConfig = ledgerEntryTypeFields[obj.LedgerEntryType] || {
+//                fields: Object.keys(obj).map(key => {
+//                     console.log(`Key: ${key}, Value: ${obj[key] || 'N/A'}`);
+//                     return {
+//                          key,
+//                          format: v => v || 'N/A',
+//                     };
+//                }),
+//                label: obj.LedgerEntryType || 'Unknown',
+//           };
+
+//           const formattedDetails = {};
+//           typeConfig.fields.forEach(field => {
+//                const value = obj[field.key];
+//                console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`); // Log for all types
+//                formattedDetails[field.key] = field.format(value);
+//           });
+
+//           return {
+//                type: typeConfig.label,
+//                details: formattedDetails,
+//           };
+//      });
+//      // const formattedObjects = accountObjects.map(obj => {
+//      //      const typeConfig = ledgerEntryTypeFields[obj.LedgerEntryType] || {
+//      //           fields: Object.keys(obj).map(key => ({
+//      //                key,
+//      //                format: v => v || 'N/A',
+//      //           })),
+//      //           label: obj.LedgerEntryType || 'Unknown',
+//      //      };
+
+//      //      const formattedDetails = {};
+//      //      typeConfig.fields.forEach(field => {
+//      //           formattedDetails[field.key] = field.format(obj[field.key]);
+//      //      });
+
+//      //      return {
+//      //           type: typeConfig.label,
+//      //           details: formattedDetails,
+//      //      };
+//      // });
+
+//      // General details for the response
+//      const details = {
+//           Account: account,
+//           'Ledger Index': ledgerIndex,
+//           'Ledger Hash': ledgerHash,
+//           Validated: validated,
+//           'Account Objects': formattedObjects.length > 0 ? formattedObjects : 'None',
+//      };
+
+//      return details;
+// }
 
 // Display the parsed details in a formatted string
 export function displayAccountObjects(details) {
-     let output = ['=== XRPL Account Objects Details ==='];
+     let output = ['=== XRPL Account Details ==='];
 
      for (const [key, value] of Object.entries(details)) {
-          if (key === 'Account Objects' && Array.isArray(value)) {
+          if (Array.isArray(value)) {
+               output.push(`\n${key.replace('_', ' ')}:`);
                value.forEach((obj, index) => {
-                    output.push(`\n${obj.type} ${index + 1}:`);
+                    output.push(`  ${obj.type} ${index + 1}:`);
                     for (const [subKey, subValue] of Object.entries(obj.details)) {
                          output.push(`    ${subKey}: ${subValue}`);
                     }
@@ -1134,3 +1191,21 @@ export function displayAccountObjects(details) {
 
      return output.join('\n');
 }
+// export function displayAccountObjects(details) {
+//      let output = ['=== XRPL Account Objects Details ==='];
+
+//      for (const [key, value] of Object.entries(details)) {
+//           if (key === 'Account Objects' && Array.isArray(value)) {
+//                value.forEach((obj, index) => {
+//                     output.push(`\n${obj.type} ${index + 1}:`);
+//                     for (const [subKey, subValue] of Object.entries(obj.details)) {
+//                          output.push(`    ${subKey}: ${subValue}`);
+//                     }
+//                });
+//           } else {
+//                output.push(`${key}: ${value}`);
+//           }
+//      }
+
+//      return output.join('\n');
+// }
