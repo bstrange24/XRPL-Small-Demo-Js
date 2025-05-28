@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger } from './utils.js';
 
 async function createTrustLine() {
      // Clear previous error styling
@@ -65,12 +65,7 @@ async function createTrustLine() {
      try {
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' })
           
-          // Get the current ledger index from the client
-          const ledger_info = await client.request({
-               "command": "ledger",
-               "ledger_index": "current"
-          });
-          const current_ledger = ledger_info.result.ledger_current_index;
+          const current_ledger = getCurrentLedger(client);
           
           const trustSet_tx = {
                "TransactionType": "TrustSet",
@@ -178,13 +173,8 @@ async function removeTrustLine() {
           
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' })
           
-          // Get the current ledger index from the client
-          const ledger_info = await client.request({
-               "command": "ledger",
-               "ledger_index": "current"
-          });
-          const current_ledger = ledger_info.result.ledger_current_index;
-          
+          const current_ledger = getCurrentLedger(client);
+
           const trustSet_tx = {
                "TransactionType": "TrustSet",
                "Account": accountAddress.value,

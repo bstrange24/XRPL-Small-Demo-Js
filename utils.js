@@ -181,6 +181,15 @@ export async function getXrpBalance(accountField, balanceField) {
      }
 }
 
+export async function getCurrentLedger(client) {
+     // Get the current ledger index from the client
+     const ledger_info = await client.request({
+          "command": "ledger",
+          "ledger_index": "current"
+     });
+     return ledger_info.result.ledger_current_index;
+}
+
 export function clearFields() {
      localStorage.removeItem("account1name");
      localStorage.removeItem("account2name");

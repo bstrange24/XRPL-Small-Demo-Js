@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance} from './utils.js';
-import { fetchAccountObjects, fetchXrpBalance } from './account.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger} from './utils.js';
+import { fetchAccountObjects, fetchXrpBalance, getTrustLines } from './account.js';
 import { getTokenBalance } from './main.js';
 import BigNumber from 'bignumber.js';
 
@@ -96,6 +96,60 @@ import BigNumber from 'bignumber.js';
           results += accountNameField.value + " account address: " + wallet.address + "\n";
           resultField.value = results;
 
+          const doesTrustLinesExists = await getTrustLines(wallet.address, client);
+          if(doesTrustLinesExists.length <= 0){
+               // Ensure trustline exists. If not, get trust line from A1 to hotwallet
+               let issuerAddr;
+               let issuerCur;
+               if (weWantIssuerField.value === 'XRP' || weWantIssuerField.value === ''){
+                    issuerAddr = weSpendIssuerField.value;
+               } else {
+                    issuerAddr = weWantIssuerField.value;
+               }
+
+               if(weWantCurrencyField.value === 'XRP') {
+                    issuerCur = weSpendCurrencyField.value;
+               } else {
+                    issuerCur = weWantCurrencyField.value;
+               }
+
+               const current_ledger = await getCurrentLedger(client);
+          
+               try {
+                    const trustSetTx = {
+                              "TransactionType": "TrustSet",
+                              "Account": wallet.address,
+                              "LimitAmount": {
+                              "currency": issuerCur,
+                              "issuer": issuerAddr,
+                              "value": "1000000"
+                         },
+                         "LastLedgerSequence": current_ledger + 50 // Add buffer for transaction processing
+                    }
+                    
+                    // const signed = wallet.sign(trustSetTx);
+                    // const tx = await client.submitAndWait(signed.tx_blob);
+                    console.log(`trustSetTx ${JSON.stringify(trustSetTx, null, 2)}`);
+                    const ts_prepared = await client.autofill(trustSetTx);
+                    console.log('ts_prepared', ts_prepared);
+                    const ts_signed = wallet.sign(ts_prepared);
+                    console.log('ts_signed', ts_signed);
+                    const tx = await client.submitAndWait(ts_signed.tx_blob);
+                    console.log('tx', tx);
+
+                    if (tx.result.meta.TransactionResult == "tesSUCCESS") {
+                         results += 'Trustline established between account ' + wallet.address + ' and issuer ' + issuerAddr + ' for ' + issuerCur + ' with amount ' + amountValue.value;
+                    } else {
+                         throw new Error(`Unable to create trustLine from ${wallet.address} to ${issuerAddr} \nTransaction failed: ${tx.result.meta.TransactionResult}`); 
+                    }
+               } catch (error) {
+                    throw new Error(error);
+               }
+               console.log("Trustline set.")
+          } else {
+               console.log(`Trustines already exist`);
+          }
+          
           const xrpBalance = await getXrpBalance();
           console.log(`XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`);
           resultField.value += `XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
@@ -118,7 +172,7 @@ import BigNumber from 'bignumber.js';
                takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
                we_spend = JSON.parse(takerPaysString);
 
-               if (xrpBalance < weWantAmountField.value) {
+               if (xrpl.xrpToDrops(xrpBalance) < weWantAmountField.value) {
                     throw new Error("Insufficient XRP to fund the buy offer");
                }
           } else {
@@ -127,7 +181,7 @@ import BigNumber from 'bignumber.js';
                     '"value": "' + weSpendAmountField.value + '"}';
                we_spend = JSON.parse(takerPaysString);
      
-               if (xrpl.xrpToDrops(xrpBalance) < weSpendAmountField.value) {
+               if (tstBalance < weSpendAmountField.value) {
                     throw new Error("Insufficient TST balance");
                }
           }
@@ -609,7 +663,7 @@ async function getOrderBook() {
                     ledger_index: "current",
                     taker_gets: we_spend, // TST
                     taker_pays: we_want,   // XRP
-                    limit: 10
+                    // limit: 10
                });
                const sortedOffers = attachRateAndSort(orderBook.result.offers);
                // const sortedOffers = attachRateAndSort(
@@ -635,7 +689,7 @@ async function getOrderBook() {
                     ledger_index: "current",
                     taker_gets: we_want,  // XRP
                     taker_pays: we_spend,  // TST
-                    limit: 10
+                    // limit: 10
                });
                const reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
                // const reverseSorted = attachRateAndSort(

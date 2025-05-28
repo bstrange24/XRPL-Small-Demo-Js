@@ -440,6 +440,32 @@ function getSelectedAccount() {
     }
 }
 
+export async function getTrustLines(account, client) {
+     try {
+          const response = await client.request({
+          "command": "account_lines",
+          "account": account,
+          "ledger_index": "validated"
+          });
+          const trustLines = response.result.lines;
+
+          // Filter out trust lines with Limit: 0
+          const activeTrustLines = trustLines.filter(line => parseFloat(line.limit) > 0);
+          console.log(`Active trust lines for ${account}:`, activeTrustLines);
+
+          if (activeTrustLines.length === 0) {
+               console.log(`No active trust lines found for ${account}`);
+               return [];
+          }
+
+          console.log(`Trust lines for ${account}:`, activeTrustLines);
+          return trustLines;
+     } catch (error) {
+          console.error("Error fetching trust lines:", error);
+          return [];
+     }
+}
+
 window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
