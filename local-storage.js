@@ -69,6 +69,19 @@ const inputIds = [
 // Hot wallet address: rsePZv7s3FLFXiXQJLFubCGX2QJAZsXwZj
 // Hot wallet seed: sEdTBg4HqAY7D8EXWo5zdUHYDX42xc7
 
+account1name:"A1"
+account1address:"rNh6WUEkBPsggrp8cmW3g6A89fs4e65Trq"
+account1seed:"ssLkU9cE14RNjvhfaPTbxCJrbrhTY"
+
+account2name:"Cold"
+account2address:"r3U8WjVLB6jnc9aJdgqWjLkRC5z8qvWCDD"
+account2seed:"ss3WP7x2gMFatdLXsfjvLcukKhgbp"
+
+issuerName:"Hot"
+issuerAddress:"rEb269JzcsMdw1KQPyJ164PVGAkwoZcbpc"
+issuerSeed:"snZHPr5bnZdTFyaMWGXfRk7VDK1cM"
+
+
 // Array of radio button IDs
 const serverRadioIds = ["dn", "tn", "mn"];
 const accountRadioIds = ["account1", "account2", "accountIssuer"];
