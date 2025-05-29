@@ -39,7 +39,6 @@ async function sendXRP() {
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
-          console.log(`wallet: ${wallet.classicAddress} | seed: ${wallet.seed}`);
 
           const preparedTx = await client.autofill({
                TransactionType: 'Payment',

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, getTransaction } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -208,47 +208,47 @@ async function getEscrows() {
      }
 }
 
-async function getTransaction() {
-     resultField.classList.remove('error', 'success');
+// async function getTransaction() {
+//      resultField.classList.remove('error', 'success');
 
-     const transactionHash = document.getElementById('transactionField');
+//      const transactionHash = document.getElementById('transactionField');
 
-     if (!transactionHash) {
-          return setError('ERROR: DOM element "transactionField" not found');
-     }
+//      if (!transactionHash) {
+//           return setError('ERROR: DOM element "transactionField" not found');
+//      }
 
-     if (!validatInput(transactionHash.value)) {
-          return setError('ERROR: Transaction field cannot be empty');
-     }
+//      if (!validatInput(transactionHash.value)) {
+//           return setError('ERROR: Transaction field cannot be empty');
+//      }
 
-     try {
-          const { environment } = getEnvironment();
-          const client = await getClient();
+//      try {
+//           const { environment } = getEnvironment();
+//           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting transaction information.\n\n`;
-          resultField.value = results;
+//           let results = `Connected to ${environment}.\nGetting transaction information.\n\n`;
+//           resultField.value = results;
 
-          const tx = await client.request({
-               id: 1,
-               command: 'tx',
-               transaction: transactionHash.value,
-          });
+//           const tx = await client.request({
+//                id: 1,
+//                command: 'tx',
+//                transaction: transactionHash.value,
+//           });
 
-          console.log('Get transaction tx', tx);
+//           console.log('Get transaction tx', tx);
 
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
-          resultField.value = results;
-          resultField.classList.add('success');
-          autoResize();
-     } catch (error) {
-          console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
-     } finally {
-          console.log('Leaving createTimeBasedEscrow');
-     }
-}
+//           const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+//           results += displayTransaction({ txDetails, accountChanges });
+//           resultField.value = results;
+//           resultField.classList.add('success');
+//           autoResize();
+//      } catch (error) {
+//           console.error('Error:', error);
+//           setError('ERROR: ' + (error.message || 'Unknown error'));
+//           await disconnectClient();
+//      } finally {
+//           console.log('Leaving createTimeBasedEscrow');
+//      }
+// }
 
 async function cancelEscrow() {
      console.log('Entering cancelEscrow');

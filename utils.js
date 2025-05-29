@@ -561,6 +561,48 @@ export function distributeAccountInfo() {
      saveInputValues();
 }
 
+export async function getTransaction() {
+     resultField.classList.remove('error', 'success');
+
+     const transactionHash = document.getElementById('transactionField');
+
+     if (!transactionHash) {
+          return setError('ERROR: DOM element "transactionField" not found');
+     }
+
+     if (!validatInput(transactionHash.value)) {
+          return setError('ERROR: Transaction field cannot be empty');
+     }
+
+     try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
+          let results = `Connected to ${environment}.\nGetting transaction information.\n\n`;
+          resultField.value = results;
+
+          const tx = await client.request({
+               id: 1,
+               command: 'tx',
+               transaction: transactionHash.value,
+          });
+
+          console.log('Get transaction tx', tx);
+
+          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
+          results += displayTransaction({ txDetails, accountChanges });
+          resultField.value = results;
+          resultField.classList.add('success');
+          autoResize();
+     } catch (error) {
+          console.error('Error:', error);
+          setError('ERROR: ' + (error.message || 'Unknown error'));
+          await disconnectClient();
+     } finally {
+          console.log('Leaving createTimeBasedEscrow');
+     }
+}
+
 export function parseOffersTransactionDetails(response) {
      if (response) {
           // Map the response to extract transaction details for each offer

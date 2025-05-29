@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
      <head>
-          <title>Send Checks</title>
+          <title>Manage NFT's</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
-          <script src="https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js"></script>
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <!-- Suppress favicon 404 -->
-          <script type="module" src="./main.js"></script>
-          <script type="module" src="./send-checks.js"></script>
-          <script type="module" src="./local-storage.js"></script>
+          <script type="module" src="main.js"></script>
+          <script type="module" src="create-nft.js"></script>
+          <script type="module" src="local-storage.js"></script>
+          <script type="module" src="utils.js"></script>
      </head>
 
      <body>
@@ -17,7 +18,7 @@
           <form id="theForm">
                <div id="wallet-input-container"></div>
                <p></p>
-               <fieldset>
+               <fieldset style="padding: 20px">
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
                          <th>
@@ -53,8 +54,6 @@
                                    </td>
                                    <td>
                                         <input type="text" id="accountSeedField" size="40" readonly />
-                                        <!-- <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer"> -->
-                                        <!-- <label for="accountIssuer">Issuer</label> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top">
@@ -65,17 +64,6 @@
                                    </td>
                                    <td>
                                         <input type="text" id="xrpBalanceField" size="40" readonly />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Currency code for the check.">
-                                             <lable for="currencyField">Currency Code</lable>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="currencyField" size="40" />
-                                        <br />
                                    </td>
                               </tr>
                          </th>
@@ -96,23 +84,23 @@
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
-                                             <lable for="destinationField">Destination</lable>
+                                        <span class="tooltip" tooltip-data="Nft Id to use for transactions.">
+                                             <label for="nftIdField">Nft Id</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="destinationField" size="40" />
+                                        <input type="text" id="nftIdField" size="85" />
                                         <br />
                                    </td>
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Check ID.">
-                                             <lable for="checkIdField">Check ID / Ledger Index</lable>
+                                        <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                             <label for="transactionField">Transaction</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="checkIdField" size="40" />
+                                        <input type="text" id="transactionField" size="85" />
                                         <br />
                                    </td>
                               </tr>
@@ -120,14 +108,18 @@
                     </table>
 
                     <table style="text-align: left; width: 100%">
+                         <th></th>
                          <tr>
                               <td colspan="2">
-                                   <button type="button" onClick="sendCheck()">Send Check</button>
-                                   <button type="button" onClick="cashCheck()">Cash Check</button>
-                                   <button type="button" onClick="getChecks()">Get Checks</button>
-                                   <button type="button" onClick="cancelCheck()">Cancel Check</button>
-                                   <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
-                                   <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
+                                   <button type="button" onclick="getNFT()">Get NFTs</button>
+                                   <button type="button" onclick="mintNFT()">Mint NFT</button>
+                                   <button type="button" onclick="mintBatchNFT()">Mint Batch NFTs</button>
+                                   <button type="button" onclick="sellNFT()">Sell NFT</button>
+                                   <button type="button" onclick="buyNFT()">Buy NFT</button>
+                                   <button type="button" onclick="burnNFT()">Burn NFTs</button>
+                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
+                                   <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
+                                   <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
                               </td>
                          </tr>
                          <tr>
@@ -141,13 +133,15 @@
      </body>
 
      <script>
-          const radioButtons = document.querySelectorAll('input[type="radio"]');
-          radioButtons.forEach(radio => {
+          const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
+          accountRadioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         populateFieldSendCurrency1();
+                         populate1();
                     } else if (this.value === 'account2') {
-                         populateFieldSendCurrency2();
+                         populate2();
+                    } else if (this.value === 'accountIssuer') {
+                         populate3();
                     }
                });
           });
@@ -223,39 +217,32 @@
                          checkbox.addEventListener('change', function () {
                               pageLoad = 'N';
                               if (this.checked) {
-                                   // Checkbox was checked
                                    if (this.value === 'Y') {
-                                        // Hide derive wallet buttons
                                         hideAllDeriveWalletButtons();
                                         showAllGenerateNewWalletButtons();
                                    } else if (this.value === 'N') {
-                                        // Hide create wallet buttons
                                         hideAllGenerateNewWalletButtons();
                                         showAllDeriveWalletButtons();
                                    }
                               } else {
-                                   // Checkbox was unchecked
                                    console.log(`${this.value} was unchecked`);
                                    hideAllGenerateNewWalletButtons();
                                    showAllDeriveWalletButtons();
-                                   // Optionally handle unchecking
                               }
                          });
                     });
 
                     if (pageLoad === 'Y') {
                          for (const checkbox of checkboxes) {
-                              const isChecked = checkbox.checked; // true if checked, false if not
-                              const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
+                              const isChecked = checkbox.checked;
+                              const checkboxValue = checkbox.value;
                               console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
-
-                              // Optionally, perform actions based on the checked state
                               if (isChecked) {
                                    if (checkboxValue === 'Y') {
                                         hideAllDeriveWalletButtons();
                                    } else if (checkboxValue === 'N') {
-                                        console.log('Account 2 checkbox is checked, calling populate2()');
-                                        populateFieldSendCurrency2();
+                                        console.log('Checkbox N is checked, calling populate2()');
+                                        populate2();
                                    }
                               }
                          }
@@ -264,7 +251,6 @@
                .catch(error => {
                     console.error('Error loading wallet-input.html:', error);
                });
-
           const textarea = document.getElementById('resultField');
 
           function autoResize() {
