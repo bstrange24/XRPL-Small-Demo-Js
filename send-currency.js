@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, autoResize } from './utils.js';
 
 async function createTrustLine() {
      // Clear previous error styling
@@ -93,6 +93,7 @@ async function createTrustLine() {
                results += `\nTransaction failed: ${ts_result.result.meta.TransactionResult}`;
                resultField.value = results;
           }
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           resultField.value = error.message || 'Unknown error';
@@ -197,6 +198,7 @@ async function removeTrustLine() {
                results += `\nTransaction failed: ${ts_result.result.meta.TransactionResult}`;
                resultField.value = results;
           }
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           resultField.value = error.message || 'Unknown error';
@@ -339,6 +341,8 @@ async function sendCurrency() {
                resultField.value = results;
           }
 
+          autoResize();
+
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -416,7 +420,7 @@ async function getTrustLine() {
                output += `Currency: ${line.currency}, \n\tIssuer: ${line.account}, \n\tLimit: ${line.limit}, \n\tBalance: ${line.balance}\n`;
           }
           resultField.value = output;
-
+          autoResize();
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -632,6 +636,7 @@ async function issueCurrency() {
           });
           results += `\nIssuer Obligations:\n${JSON.stringify(gatewayBalances.result.obligations, null, 2)}`;
           resultField.value = results;
+          autoResize();
 
           console.log('pay_result', pay_result);
      } catch (error) {
@@ -688,3 +693,4 @@ window.issueCurrency = issueCurrency;
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
 window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;
+window.autoResize = autoResize;

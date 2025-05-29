@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError, autoResize } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -78,6 +78,7 @@ async function createConditionalEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -163,6 +164,7 @@ async function finishConditionalEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -183,3 +185,4 @@ async function getCondition() {
 window.createConditionalEscrow = createConditionalEscrow;
 window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
+window.autoResize = autoResize;

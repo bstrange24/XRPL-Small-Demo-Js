@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError, autoResize } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './main.js';
 import BigNumber from 'bignumber.js';
@@ -433,6 +433,7 @@ async function getOffers() {
           resultField.classList.add('success');
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -528,6 +529,7 @@ async function cancelOffer() {
           // results  += "\nBalance changes: \n" + JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
           // resultField.value = results
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           resultField.value = 'ERROR: ' + error.message || 'Unknown error';
@@ -662,6 +664,7 @@ async function getOrderBook() {
 
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           resultField.value = 'ERROR: ' + (error.message || 'Unknown error');
@@ -1865,3 +1868,4 @@ window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
 window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;
+window.autoResize = autoResize;

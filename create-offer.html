@@ -198,8 +198,8 @@
                               </tr>
                          </th>
                     </table>
-
-                    <table>
+<!-- 
+                    <table style="text-align: left;">
                          <th>
                               <tr>
                                    <td>
@@ -209,7 +209,7 @@
                                         <button type="button" onClick="getOrderBook()">Get Order Book</button>
                                         <button type="button" onClick="invertOrder()">Invert Order</button>
                                         <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
-                                        <!-- <button type="button" onclick="getXrpBalance()">Get XRP Balance</button> -->
+                                        <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
                                         <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
                                         <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
                                    </td>
@@ -222,6 +222,26 @@
                                    </td>
                               </tr>
                          </th>
+                    </table> -->
+
+                    <table style="text-align: left; width: 100%;">
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onClick="createOffer()">Create Offer</button>
+                                   <button type="button" onClick="getOffers()">Get Offers</button>
+                                   <button type="button" onClick="cancelOffer()">Cancel Offer</button>
+                                   <button type="button" onClick="getOrderBook()">Get Order Book</button>
+                                   <button type="button" onClick="invertOrder()">Invert Order</button>
+                                   <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
+                                   <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
+                                   <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 17px; padding: 10px;"></textarea>
+                              </td>
+                         </tr>
                     </table>
                </fieldset>
           </form>
@@ -425,5 +445,17 @@
                          balanceField.value = '';
                     }
                });
+
+               const textarea = document.getElementById('resultField');
+
+               function autoResize() {
+                    textarea.style.height = 'auto'; // Reset height
+                    textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+               }
+
+               textarea.addEventListener('input', autoResize);
+
+               // Optional: resize on load if there's prefilled content
+               window.addEventListener('load', autoResize);
      </script>
 </html>

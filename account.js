@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
+import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction, autoResize } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -93,6 +93,7 @@ export async function getAccountInfo() {
 
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -145,6 +146,7 @@ async function updateFlags() {
           }
 
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -247,6 +249,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
           resultField.value += displayTransaction({ txDetails, accountChanges });
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -380,3 +383,4 @@ window.populate2 = populate2;
 window.populate3 = populate3;
 window.populateAccount1Only = populateAccount1Only;
 window.populateAccount2Only = populateAccount2Only;
+window.autoResize = autoResize;

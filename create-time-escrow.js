@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -72,6 +72,7 @@ async function createTimeBasedEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -149,6 +150,7 @@ async function finishTimeBasedEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -195,6 +197,7 @@ async function getEscrows() {
           results += displayAccountObjects(details);
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -236,6 +239,7 @@ async function getTransaction() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -307,6 +311,7 @@ async function cancelEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -328,3 +333,4 @@ window.getEscrows = getEscrows;
 window.finishTimeBasedEscrow = finishTimeBasedEscrow;
 window.cancelEscrow = cancelEscrow;
 window.getTransaction = getTransaction;
+window.autoResize = autoResize;

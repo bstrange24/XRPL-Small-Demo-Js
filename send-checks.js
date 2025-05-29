@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, displayAccountObjects, displayTransaction, parseXRPLTransaction } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, displayAccountObjects, displayTransaction, parseXRPLTransaction, autoResize } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -83,6 +83,7 @@ async function sendCheck() {
           results += `Check sent successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -128,6 +129,7 @@ async function getChecks() {
           results += displayAccountObjects(details);
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -220,6 +222,7 @@ async function cashCheck() {
           results += `Check cashed successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           // Update XRP balance
           fields.balance.value = await client.getXrpBalance(wallet.address);
@@ -286,6 +289,7 @@ async function cancelCheck() {
           results += `Check cancelled successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
@@ -337,3 +341,4 @@ window.cancelCheck = cancelCheck;
 window.populateFieldSendCurrency1 = populateFieldSendCurrency1;
 window.populateFieldSendCurrency2 = populateFieldSendCurrency2;
 window.populateFieldSendCurrency3 = populateFieldSendCurrency3;
+window.autoResize = autoResize;

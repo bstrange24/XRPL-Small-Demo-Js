@@ -102,8 +102,11 @@ input:read-only {
 }
 
 #resultField {
-  color: green;
-  background-color: rgb(197, 245, 198);
+  color: #1a1c21;;
+  background-color: #1a1c21;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid white;
 }
 
 table {

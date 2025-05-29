@@ -164,7 +164,7 @@
                     </th>
                 </table>
             
-                <table> 
+                <!-- <table> 
                     <th>
                         <tr>
                             <td>
@@ -186,6 +186,25 @@
                             </td>
                         </tr>
                     </th>
+                </table> -->
+                <table style="text-align: left; width: 100%;">
+                    <tr>
+                        <td colspan="2">
+                            <button type="button" onClick="createConditionalEscrow()">Create Escrow</button>
+                            <button type="button" onClick="getEscrows()">Get Escrows</button>
+                            <button type="button" onClick="finishConditionalEscrow()">Finish Escrow</button>
+                            <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
+                            <button type="button" onClick="getTransaction()">Get Transaction</button>
+                            <button type="button" onClick="getCondition()">Get Condition</button>
+                            <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
+                            <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 17px; padding: 10px;"></textarea>
+                        </td>
+                    </tr>
                 </table>
         </fieldset>
     </form>
@@ -204,12 +223,6 @@
                 }
             });
         });
-
-        // fetch('navbar.html')
-        //     .then(res => res.text())
-        //     .then(html => {
-        //         document.getElementById('navbar-container').innerHTML = html;
-        //     });
 
         fetch('wallet-input.html')
             .then(res => res.text())
@@ -323,5 +336,17 @@
             .catch(error => {
                 console.error('Error loading wallet-issuer-input.html:', error);
             });
+
+            const textarea = document.getElementById('resultField');
+
+            function autoResize() {
+                textarea.style.height = 'auto'; // Reset height
+                textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+            }
+
+            textarea.addEventListener('input', autoResize);
+
+            // Optional: resize on load if there's prefilled content
+            window.addEventListener('load', autoResize);
 </script>
 </html>

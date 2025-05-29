@@ -854,6 +854,7 @@ export function validatInput(value) {
 export function setError(message) {
      resultField.value = message;
      resultField.classList.add('error');
+     autoResize();
 }
 
 export function convertXRPLTime(rippleTime) {
@@ -1106,6 +1107,22 @@ export function parseXRPLAccountObjects(response) {
 
      return details;
 }
+
+const textarea = document.getElementById('resultField');
+
+export function autoResize() {
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = textarea.scrollHeight + 'px';
+    }
+}
+
+  textarea.addEventListener('input', autoResize);
+  window.addEventListener('load', autoResize);
+
+  // Expose globally if needed
+
+
 // export function parseXRPLAccountObjects(response) {
 //      const account = response.account || 'N/A';
 //      const ledgerIndex = response.ledger_index || 'N/A';

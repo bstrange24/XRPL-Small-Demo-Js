@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, displayTransaction } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, displayTransaction, autoResize } from './utils.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -64,6 +64,7 @@ async function sendXRP() {
 
           resultField.value = results;
           resultField.classList.add('success');
+          autoResize();
 
           // Update balance
           fields.balance.value = await client.getXrpBalance(wallet.address);
@@ -80,3 +81,4 @@ window.sendXRP = sendXRP;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
+window.autoResize = autoResize;

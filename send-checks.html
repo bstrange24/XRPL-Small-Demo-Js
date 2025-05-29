@@ -130,7 +130,7 @@
                     </th>
                </table>
 
-               <table>
+               <!-- <table>
                     <th>
                          <tr>
                               <td>
@@ -150,7 +150,24 @@
                               </td>
                          </tr>
                     </th>
-               </table>
+               </table> -->
+               <table style="text-align: left; width: 100%;">
+                    <tr>
+                    <td colspan="2">
+                        <button type="button" onClick="sendCheck()">Send Check</button>
+                         <button type="button" onClick="cashCheck()">Cash Check</button>
+                         <button type="button" onClick="getChecks()">Get Checks</button>
+                         <button type="button" onClick="cancelCheck()">Cancel Check</button>
+                         <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
+                         <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
+                    </td>
+                    </tr>
+                    <tr>
+                         <td colspan="2">
+                         <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 17px; padding: 10px;"></textarea>
+                         </td>
+                    </tr>
+            </table>
           </fieldset>
      </form>
      
@@ -288,5 +305,17 @@
                .catch(error => {
                     console.error('Error loading wallet-issuer-input.html:', error);
                });
+
+               const textarea = document.getElementById('resultField');
+
+               function autoResize() {
+                    textarea.style.height = 'auto'; // Reset height
+                    textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+               }
+
+               textarea.addEventListener('input', autoResize);
+
+               // Optional: resize on load if there's prefilled content
+               window.addEventListener('load', autoResize);
      </script>
 </html>
