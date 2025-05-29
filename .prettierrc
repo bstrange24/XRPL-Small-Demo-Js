@@ -6,5 +6,15 @@
   "tabWidth": 5,
   "useTabs": false,
   "bracketSpacing": true,
-  "arrowParens": "avoid"
+  "arrowParens": "avoid",
+  "htmlWhitespaceSensitivity": "css",
+     "endOfLine": "auto",
+     "overrides": [
+       {
+         "files": "*.html",
+         "options": {
+           "parser": "html"
+         }
+       }
+     ]
 }

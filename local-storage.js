@@ -14,6 +14,7 @@ const pageTitles = {
 const serverConfigs = {
      dn: { url: 'wss://s.devnet.rippletest.net:51233', color: 'rgb(56 113 69)' },
      tn: { url: 'wss://s.altnet.rippletest.net:51233', color: '#4386a9' },
+     // tn: { url: 'wss://s.altnet.rippletest.net:51233', color: '#ff6719' },
      mn: { url: 'wss://s1.ripple.com_not', color: 'rgb(115 49 55)' },
 };
 

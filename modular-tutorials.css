@@ -2,45 +2,45 @@ body,
 input,
 button,
 .navbar {
-  font-family: "currency_symbols", "Work Sans", "system-ui", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+     font-family: "currency_symbols", "Work Sans", "system-ui", "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
 }
 
 body {
-  font-size: 14px;
-  /* line-height: 1.4; */
-  padding: 10px;
-  /* background: #8497a1; */
-  background: #1a1c21;
-  /* max-width: 1000px; */
-  margin: 0 auto;
-  line-height: 21px;
+     font-size: 14px;
+     /* line-height: 1.4; */
+     padding: 10px;
+     /* background: #8497a1; */
+     background: #1a1c21;
+     /* max-width: 1000px; */
+     margin: 0 auto;
+     line-height: 21px;
 }
 
 h1 {
-  font-weight: bold;
+     font-weight: bold;
 }
 
 td {
-  padding-left: 25px;
-  vertical-align: top;
+     padding-left: 25px;
+     vertical-align: top;
 }
 
 tr.buttons td {
-  padding-top: 10px;
+     padding-top: 10px;
 }
 
 .form-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 10px;
+     display: grid;
+     grid-template-columns: auto 1fr;
+     gap: 10px;
 }
 
 input[type="text"] {
-  background-color: #1a1c21;
-  color: #fff;
-  border-radius: 10px;
-  border: 1px solid white;
-  padding: 4px;
+     background-color: #1a1c21;
+     color: #fff;
+     border-radius: 10px;
+     border: 1px solid white;
+     padding: 4px;
 }
 
 /* input[type="checkbox"] .createWallet {
@@ -52,77 +52,85 @@ input[type="text"] {
 } */
 
 fieldset {
-  border-radius: 10px;
-  border: 1px solid #686868;
+     border-radius: 10px;
+     border: 1px solid #686868;
 }
 
 label {
-  color: #fff;
-  background-color: #1a1c21;
-  padding: 4px;
-  /* Optional: for spacing */
-  border-radius: 10px;
-  /* Optional: rounded corners */
+     color: #fff;
+     background-color: #1a1c21;
+     padding: 4px;
+     /* Optional: for spacing */
+     border-radius: 10px;
+     /* Optional: rounded corners */
 }
 
 .input {
-  text-align: left;
+     text-align: left;
 }
 
 input {
-  margin-right: 0;
-  margin-bottom: 10px;
+     margin-right: 0;
+     margin-bottom: 10px;
 }
 
 input,
 button {
-  padding: 6px;
-  border: none;
-  margin-right: 10px;
-  margin-bottom: 10px;
+     padding: 6px;
+     border: none;
+     margin-right: 10px;
+     margin-bottom: 10px;
 }
 
 input:read-only {
-  /* background-color: rgb(145, 145, 145); */
-  background-color: #000000;
-  /* color: black; */
-  color: white;
-  border: 0;
-  border: 1px solid white;
+     /* background-color: rgb(145, 145, 145); */
+     background-color: #000000;
+     /* color: black; */
+     color: white;
+     border: 0;
+     border: 1px solid white;
 }
 
 #resultField.error {
-  color: red;
-  background-color: rgb(236, 160, 160);
+     color: red;
+     /* background-color: rgb(236, 160, 160); */
+     background-color: #1a1c21;
+     /* background-color: black; */
 }
 
 #resultField.success {
-  color: green;
-  background-color: rgb(197, 245, 198);
+     /* color: green; */
+     color: #62bb8b;
+     /* background-color: rgb(197, 245, 198); */
+     background-color: #1a1c21;
+     /* background-color: black; */
 }
 
 #resultField {
-  color: #1a1c21;;
-  background-color: #1a1c21;
-  box-sizing: border-box;
-  border-radius: 10px;
-  border: 1px solid white;
+     /* color: green; */
+     color: #62bb8b;
+     background-color: #1a1c21;
+     box-sizing: border-box;
+     border-radius: 10px;
+     border: 1px solid white;
+     font-family: monospace;
+     white-space: pre;
 }
 
 table {
-  padding-right: 5px;
+     padding-right: 5px;
 }
 
 .table-container {
-  display: flex;
-  justify-content: space-between;
-  padding-right: 400px;
+     display: flex;
+     justify-content: space-between;
+     padding-right: 400px;
 }
 
 .table-container table {
-  display: inline-table;
-  vertical-align: top;
-  margin-right: 5px;
+     display: inline-table;
+     vertical-align: top;
+     margin-right: 5px;
 }
 
 #account1address,
@@ -138,134 +146,134 @@ table {
 #issuerField,
 #weWantIssuerField,
 #weSpendIssuerField {
-  color: #32e685;
+     color: #32e685;
 }
 
 button {
-  padding: 10px 1px;
-  margin: 10px 5px;
-  /* background: #686868; */
-  background: #1a1c21;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
+     padding: 10px 1px;
+     margin: 10px 5px;
+     /* background: #686868; */
+     background: #1a1c21;
+     color: #fff;
+     border: none;
+     border-radius: 10px;
+     cursor: pointer;
 }
 
 button:hover {
-  /* background-color: #8a8a8a; */
-  background: #1a1c21;
-  cursor: pointer;
+     /* background-color: #8a8a8a; */
+     background: #1a1c21;
+     cursor: pointer;
 }
 
 .label_account {
-  display: inline-block;
-  width: 150px;
-  padding-right: 10px;
+     display: inline-block;
+     width: 150px;
+     padding-right: 10px;
 }
 
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 30px;
-  height: 16px;
+     position: relative;
+     display: inline-block;
+     width: 30px;
+     height: 16px;
 }
 
 .switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
+     opacity: 0;
+     width: 0;
+     height: 0;
 }
 
 .slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
+     position: absolute;
+     cursor: pointer;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: #ccc;
+     -webkit-transition: .4s;
+     transition: .4s;
 }
 
 .slider:before {
-  position: absolute;
-  content: "";
-  height: 13px;
-  width: 13px;
-  left: 4px;
-  bottom: 2px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
+     position: absolute;
+     content: "";
+     height: 13px;
+     width: 13px;
+     left: 4px;
+     bottom: 2px;
+     background-color: white;
+     -webkit-transition: .4s;
+     transition: .4s;
 }
 
 input:checked+.slider {
-  background-color: #2196F3;
+     background-color: #2196F3;
 }
 
 input:focus+.slider {
-  box-shadow: 0 0 1px #2196F3;
+     box-shadow: 0 0 1px #2196F3;
 }
 
 input:checked+.slider:before {
-  -webkit-transform: translateX(13px);
-  -ms-transform: translateX(13px);
-  transform: translateX(13px);
+     -webkit-transform: translateX(13px);
+     -ms-transform: translateX(13px);
+     transform: translateX(13px);
 }
 
 .slider.round {
-  border-radius: 10px;
+     border-radius: 10px;
 }
 
 .slider.round:before {
-  border-radius: 50%;
+     border-radius: 50%;
 }
 
 .tooltip {
-  position: relative;
-  color: white;
+     position: relative;
+     color: white;
 }
 
 .tooltip:before {
-  content: attr(tooltip-data);
-  position: absolute;
-  width: 250px;
-  background-color: rgb(145, 145, 145);
-  color: #fff;
-  text-align: center;
-  padding: 15px;
-  line-height: 1.1;
-  border-radius: 10px;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity .5s;
-  bottom: 125%;
-  left: 50%;
-  margin-left: -50px;
-  font-size: 0.9em;
-  visibility: hidden;
+     content: attr(tooltip-data);
+     position: absolute;
+     width: 250px;
+     background-color: rgb(145, 145, 145);
+     color: #fff;
+     text-align: center;
+     padding: 15px;
+     line-height: 1.1;
+     border-radius: 10px;
+     z-index: 1;
+     opacity: 0;
+     transition: opacity .5s;
+     bottom: 125%;
+     left: 50%;
+     margin-left: -50px;
+     font-size: 0.9em;
+     visibility: hidden;
 }
 
 .tooltip:after {
-  content: "";
-  position: absolute;
-  bottom: 75%;
-  left: 50%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  opacity: 0;
-  transition: opacity .5s;
-  border-color: #000 transparent transparent transparent;
-  visibility: hidden;
+     content: "";
+     position: absolute;
+     bottom: 75%;
+     left: 50%;
+     margin-left: -5px;
+     border-width: 5px;
+     border-style: solid;
+     opacity: 0;
+     transition: opacity .5s;
+     border-color: #000 transparent transparent transparent;
+     visibility: hidden;
 }
 
 .tooltip:hover:before,
 .tooltip:hover:after {
-  opacity: 1;
-  visibility: visible;
+     opacity: 1;
+     visibility: visible;
 }
 
 /* .tooltip-container {

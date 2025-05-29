@@ -2,11 +2,11 @@
 <html lang="en">
      <head>
           <title>Offers</title>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <link href='https://fonts.googleapis.com/css?family=Work Sans' rel='stylesheet'>
-          <link href="modular-tutorials.css" rel="stylesheet">
-          <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
+          <link href="modular-tutorials.css" rel="stylesheet" />
+          <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
           <script type="module" src="main.js"></script>
           <script type="module" src="create-offer.js"></script>
           <script type="module" src="local-storage.js"></script>
@@ -17,214 +17,178 @@
           <form id="theForm">
                <div id="wallet-input-container"></div>
                <p></p>
-               <fieldset style="padding: 20px;">
-                    <legend style="color: white;">Transaction Information</legend>
-                    <table style="float: left;">
+               <fieldset style="padding: 20px">
+                    <legend style="color: white">Transaction Information</legend>
+                    <table style="float: left">
                          <th>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Name of the currently selected account.">
-                                        <label for="accountNameField">Name</label>
+                                             <label for="accountNameField">Name</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="accountNameField" size="40" readonly></input>
-                                        <input type="radio" id="account1" name="accounts" value="account1">
+                                        <input type="text" id="accountNameField" size="40" readonly />
+                                        <input type="radio" id="account1" name="accounts" value="account1" />
                                         <label for="account1">Account 1</label>
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Address of the currently selected account.">
-                                        <label for="accountAddressField">Address</label>
+                                             <label for="accountAddressField">Address</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="accountAddressField" size="40" readonly></input>
-                                        <!-- <input type="radio" id="account2" name="accounts" value="account2"> -->
-                                        <!-- <label for="account2">Account 2</label> -->
+                                        <input type="text" id="accountAddressField" size="40" readonly />
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Seed of the currently selected account.">
-                                        <label for="accountSeedField">Seed</label>
+                                             <label for="accountSeedField">Seed</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="accountSeedField" size="40" readonly></input>
-                                        <!-- <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer"> -->
-                                        <!-- <label for="accountIssuer">Issuer</label> -->
+                                        <input type="text" id="accountSeedField" size="40" readonly />
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
-                                        <label for="xrpBalanceField">Balance</label>
+                                             <label for="xrpBalanceField">Balance</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="xrpBalanceField" size="40" readonly></input>
+                                        <input type="text" id="xrpBalanceField" size="40" readonly />
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Sequence number of the offer.">
                                              <label for="offerSequenceField">Offer Sequence</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="offerSequenceField" size="40"></input>
+                                        <input type="text" id="offerSequenceField" size="40" />
                                    </td>
                                    <td></td>
                               </tr>
                          </th>
                     </table>
-                         
-                    <table style="float: left;">
+
+                    <table style="float: left">
                          <th>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right; padding-bottom: 10px;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right; padding-bottom: 10px">
                                         <span class="tooltip" tooltip-data="Taker Gets.">
-                                        <label for="weWantCurrencyField">Taker Gets</label>
+                                             <label for="weWantCurrencyField">Taker Gets</label>
                                         </span>
-                                        <!-- <h4 style="text-align: center; color: white;">Taker Gets</h4> -->
                                    </td>
-                                   <td style="text-align: left;">
-                                         <span class="tooltip" tooltip-data="This is what I want to buy.">
-                                        <label for="weWantCurrencyField">This is what I'm buying</label>
+                                   <td style="text-align: left">
+                                        <span class="tooltip" tooltip-data="This is what I want to buy.">
+                                             <label for="weWantCurrencyField">This is what I'm buying</label>
                                         </span>
-                                        <!-- <h4 style="text-align: center;color: white;">(We Want This)</h4> -->
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
-                                        <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
-                                        <label for="weWantCurrencyField">Currency Code</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="weWantCurrencyField" size="40"></input>
-                                   </td>
-                              </tr> 
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
-                                        <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
-                                        <label for="weWantIssuerField">Issuer</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="weWantIssuerField" size="40"></input>&nbsp;&nbsp;
-                                   </td>  
-                              </tr>    
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
-                                        <span class="tooltip" tooltip-data="Amounts of offered currencies.">
-                                        <label for="amountField">Amount</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="weWantAmountField" size="40"></input>
-                                   </td> 
-                              </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
-                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold">
-                                        <label for="weWantTokenBalance">Currency Balance</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="weWantTokenBalanceField" size="40"></input>
-                                   </td> 
-                              </tr>
-                         </th>
-                    </table>
-                    
-                    <table style="float: left;">
-                         <th>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right; padding-bottom: 10px;">
-                                        <span class="tooltip" tooltip-data="Taker Pays.">
-                                             <label for="weWantCurrencyField">Taker Pays</label>
-                                        </span>
-                                        <!-- <h4 style="text-align: center; color: white;"></h4> -->
-                                   </td>
-                                   <td style="text-align: left; padding-bottom: 10px;">
-                                        <span class="tooltip" tooltip-data="This is what I am selling.">
-                                             <label for="weWantCurrencyField">This is what I'm selling</label>
-                                        </span>
-                                        <!-- <h4 style="text-align: center;color: white;">Taker Pays (We Spend This)</h4> -->
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
                                              <label for="weWantCurrencyField">Currency Code</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="weSpendCurrencyField" size="40"></input>
+                                        <input type="text" id="weWantCurrencyField" size="40" />
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
                                              <label for="weWantIssuerField">Issuer</label>
                                         </span>
                                    </td>
-                                   <td>
-                                        <input type="text" id="weSpendIssuerField" size="40"></input>&nbsp;&nbsp;
-                                   </td>
+                                   <td><input type="text" id="weWantIssuerField" size="40" />&nbsp;&nbsp;</td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Amounts of offered currencies.">
                                              <label for="amountField">Amount</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="weSpendAmountField" size="40"></input>
+                                        <input type="text" id="weWantAmountField" size="40" />
                                    </td>
                               </tr>
-                              <tr style="vertical-align: top;">
-                                   <td style="text-align: right;">
-                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold.">
-                                        <label for="weSpendTokenBalance">Currency Balance</label>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold">
+                                             <label for="weWantTokenBalance">Currency Balance</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="weSpendTokenBalanceField" size="40"></input>
-                                   </td> 
+                                        <input type="text" id="weWantTokenBalanceField" size="40" />
+                                   </td>
                               </tr>
                          </th>
                     </table>
-<!-- 
-                    <table style="text-align: left;">
+
+                    <table style="float: left">
                          <th>
-                              <tr>
-                                   <td>
-                                        <button type="button" onClick="createOffer()">Create Offer</button>
-                                        <button type="button" onClick="getOffers()">Get Offers</button>
-                                        <button type="button" onClick="cancelOffer()">Cancel Offer</button>
-                                        <button type="button" onClick="getOrderBook()">Get Order Book</button>
-                                        <button type="button" onClick="invertOrder()">Invert Order</button>
-                                        <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
-                                        <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
-                                        <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
-                                        <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right; padding-bottom: 10px">
+                                        <span class="tooltip" tooltip-data="Taker Pays.">
+                                             <label for="weWantCurrencyField">Taker Pays</label>
+                                        </span>
+                                   </td>
+                                   <td style="text-align: left; padding-bottom: 10px">
+                                        <span class="tooltip" tooltip-data="This is what I am selling.">
+                                             <label for="weWantCurrencyField">This is what I'm selling</label>
+                                        </span>
                                    </td>
                               </tr>
-                              <tr>
-                                   <td colspan="2">
-                                        <p style="text-align: left;">
-                                             <textarea id="resultField" cols="200" rows="20"></textarea>
-                                        </p>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
+                                             <label for="weWantCurrencyField">Currency Code</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="weSpendCurrencyField" size="40" />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
+                                             <label for="weWantIssuerField">Issuer</label>
+                                        </span>
+                                   </td>
+                                   <td><input type="text" id="weSpendIssuerField" size="40" />&nbsp;&nbsp;</td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Amounts of offered currencies.">
+                                             <label for="amountField">Amount</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="weSpendAmountField" size="40" />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Amounts of currencies I hold.">
+                                             <label for="weSpendTokenBalance">Currency Balance</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="weSpendTokenBalanceField" size="40" />
                                    </td>
                               </tr>
                          </th>
-                    </table> -->
+                    </table>
 
-                    <table style="text-align: left; width: 100%;">
+                    <table style="text-align: left; width: 100%">
+                         <th></th>
                          <tr>
                               <td colspan="2">
                                    <button type="button" onClick="createOffer()">Create Offer</button>
@@ -239,7 +203,7 @@
                          </tr>
                          <tr>
                               <td colspan="2">
-                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 17px; padding: 10px;"></textarea>
+                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px"></textarea>
                               </td>
                          </tr>
                     </table>
@@ -258,7 +222,7 @@
                const weWantIssuerFieldTemp = weWantIssuerField;
                const weWantAmountFieldTemp = weWantAmountField;
                const weWantTokenBalanceTemp = weWantTokenBalanceField;
-               
+
                const weSpendCurrencyField = document.getElementById('weSpendCurrencyField').value;
                const weSpendIssuerField = document.getElementById('weSpendIssuerField').value;
                const weSpendAmountField = document.getElementById('weSpendAmountField').value;
@@ -281,19 +245,8 @@
                     if (this.value === 'account1') {
                          populateTakerGetsTakerPayFields();
                     }
-                    //  else if (this.value === 'account2') {
-                         // populate2();
-                    // } else if (this.value === 'accountIssuer') {
-                         // populate3();
-                    // }
                });
           });
-
-          // fetch('navbar.html')
-          //      .then(res => res.text())
-          //      .then(html => {
-          //           document.getElementById('navbar-container').innerHTML = html;
-          //      });
 
           fetch('wallet-input.html')
                .then(res => res.text())
@@ -361,22 +314,22 @@
                     }
 
                     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-                    let pageLoad = "Y";
+                    let pageLoad = 'Y';
                     checkboxes.forEach(checkbox => {
                          checkbox.addEventListener('change', function () {
-                              pageLoad = "N";
+                              pageLoad = 'N';
                               if (this.checked) {
-                              if (this.value === 'Y') {
-                                   hideAllDeriveWalletButtons();
-                                   showAllGenerateNewWalletButtons();
-                              } else if (this.value === 'N') {
+                                   if (this.value === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                        showAllGenerateNewWalletButtons();
+                                   } else if (this.value === 'N') {
+                                        hideAllGenerateNewWalletButtons();
+                                        showAllDeriveWalletButtons();
+                                   }
+                              } else {
+                                   console.log(`${this.value} was unchecked`);
                                    hideAllGenerateNewWalletButtons();
                                    showAllDeriveWalletButtons();
-                              }
-                              } else {
-                              console.log(`${this.value} was unchecked`);
-                              hideAllGenerateNewWalletButtons();
-                              showAllDeriveWalletButtons();
                               }
                          });
                     });
@@ -401,61 +354,61 @@
                     console.error('Error loading wallet-issuer-input.html:', error);
                });
 
-               // Update event listener for async
-               document.getElementById('weWantCurrencyField').addEventListener('blur', async function() {
-                    const currencyCode = this.value.trim();
-                    const balanceField = document.getElementById('weWantTokenBalanceField');
-                    
-                    if (currencyCode) {
-                         let balance = '';
-                         if(currencyCode === 'XRP') {
-                              balance = await getXrpBalance();
-                         } else {
-                              balance = await getCurrencyBalance(currencyCode);
-                         }
-                         
-                         if (balance !== null) {
-                              balanceField.value = balance;
-                         } else {
-                              balanceField.value = '0'; // Or "Currency not found"
-                         }
+          // Update event listener for async
+          document.getElementById('weWantCurrencyField').addEventListener('blur', async function () {
+               const currencyCode = this.value.trim();
+               const balanceField = document.getElementById('weWantTokenBalanceField');
+
+               if (currencyCode) {
+                    let balance = '';
+                    if (currencyCode === 'XRP') {
+                         balance = await getXrpBalance();
                     } else {
-                         balanceField.value = '';
+                         balance = await getCurrencyBalance(currencyCode);
                     }
-               });
 
-               document.getElementById('weSpendCurrencyField').addEventListener('blur', async function() {
-                    const currencyCode = this.value.trim();
-                    const balanceField = document.getElementById('weSpendTokenBalanceField');
-                    
-                    if (currencyCode) {
-                         let balance = '';
-                         if(currencyCode === 'XRP') {
-                              balance = await getXrpBalance();
-                         } else {
-                              balance = await getCurrencyBalance(currencyCode);
-                         }
-                         
-                         if (balance !== null) {
-                              balanceField.value = balance;
-                         } else {
-                              balanceField.value = '0'; // Or "Currency not found"
-                         }
+                    if (balance !== null) {
+                         balanceField.value = balance;
                     } else {
-                         balanceField.value = '';
+                         balanceField.value = '0'; // Or "Currency not found"
                     }
-               });
-
-               const textarea = document.getElementById('resultField');
-
-               function autoResize() {
-                    textarea.style.height = 'auto'; // Reset height
-                    textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+               } else {
+                    balanceField.value = '';
                }
+          });
 
-               textarea.addEventListener('input', autoResize);
+          document.getElementById('weSpendCurrencyField').addEventListener('blur', async function () {
+               const currencyCode = this.value.trim();
+               const balanceField = document.getElementById('weSpendTokenBalanceField');
 
-               // Optional: resize on load if there's prefilled content
-               window.addEventListener('load', autoResize);
+               if (currencyCode) {
+                    let balance = '';
+                    if (currencyCode === 'XRP') {
+                         balance = await getXrpBalance();
+                    } else {
+                         balance = await getCurrencyBalance(currencyCode);
+                    }
+
+                    if (balance !== null) {
+                         balanceField.value = balance;
+                    } else {
+                         balanceField.value = '0'; // Or "Currency not found"
+                    }
+               } else {
+                    balanceField.value = '';
+               }
+          });
+
+          const textarea = document.getElementById('resultField');
+
+          function autoResize() {
+               textarea.style.height = 'auto'; // Reset height
+               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+          }
+
+          textarea.addEventListener('input', autoResize);
+
+          // Optional: resize on load if there's prefilled content
+          window.addEventListener('load', autoResize);
      </script>
 </html>

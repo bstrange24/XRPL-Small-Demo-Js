@@ -50,12 +50,6 @@ async function createTrustLine() {
           return;
      }
 
-     // if(accountAddress.value == issuerAddress.value) {
-     //      resultField.value = 'ERROR: Account can not be the issuer';
-     //      resultField.classList.add("error");
-     //      return;
-     // }
-
      const { environment } = getEnvironment();
      const client = await getClient();
 
@@ -145,12 +139,6 @@ async function removeTrustLine() {
           resultField.classList.add('error');
           return;
      }
-
-     // if(accountAddress.value == issuerAddress.value) {
-     //      resultField.value = 'ERROR: Account can not be the issuer';
-     //      resultField.classList.add("error");
-     //      return;
-     // }
 
      const { environment } = getEnvironment();
      const client = await getClient();
@@ -687,8 +675,8 @@ async function populateFieldIssueCurrency3() {
 
 window.createTrustLine = createTrustLine;
 window.removeTrustLine = removeTrustLine;
-window.sendCurrency = sendCurrency;
 window.getTrustLine = getTrustLine;
+window.sendCurrency = sendCurrency;
 window.issueCurrency = issueCurrency;
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;

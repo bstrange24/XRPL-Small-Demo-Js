@@ -1,352 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
+     <head>
+          <title>Create a Conditional Escrow</title>
+          <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
+          <link href="modular-tutorials.css" rel="stylesheet" />
+          <script src="https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js"></script>
+          <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+          <script type="module" src="./main.js"></script>
+          <script type="module" src="./create-conditional-escrow.js"></script>
+          <script type="module" src="./create-time-escrow.js"></script>
+          <script type="module" src="./local-storage.js"></script>
+     </head>
 
-<head>
-    <title>Create a Conditional Escrow</title>
-    <link href='https://fonts.googleapis.com/css?family=Work Sans' rel='stylesheet'>
-    <link href="modular-tutorials.css" rel="stylesheet">
-    <script src='https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js'></script>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <script type="module" src="./main.js"></script>
-    <script type="module" src="./create-conditional-escrow.js"></script>
-    <script type="module" src="./create-time-escrow.js"></script>
-    <script type="module" src="./local-storage.js"></script>
-</head>
+     <body>
+          <div id="navbar-container"></div>
+          <form id="theForm">
+               <div id="wallet-input-container"></div>
+               <p></p>
+               <fieldset style="padding: 20px">
+                    <legend style="color: white">Transaction Information</legend>
+                    <table style="float: left">
+                         <th>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                             <label for="accountNameField">Name</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="accountNameField" size="40" readonly />
+                                        <input type="radio" id="account1" name="accounts" value="account1" />
+                                        <label for="account1">Account 1</label>
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                             <label for="accountAddressField">Address</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="accountAddressField" size="40" readonly />
+                                        <input type="radio" id="account2" name="accounts" value="account2" />
+                                        <label for="account2">Account 2</label>
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                             <label for="accountSeedField">Seed</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="accountSeedField" size="40" readonly />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                             <label for="xrpBalanceField">Balance</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="xrpBalanceField" size="40" readonly />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Amount of XRP to send.">
+                                             <label for="amountField">Amount</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="amountField" size="40" />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Destination account address where the escrow is sent.">
+                                             <label for="destinationField">Destination</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="destinationField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                         </th>
+                    </table>
 
-<body>
-    <div id="navbar-container"></div>
-    <form id="theForm">
-        <div id="wallet-input-container"></div>
-        <p></p>
-        <fieldset style="padding: 20px;">
-            <legend style="color: white;">Transaction Information</legend>
-                <table style="float: left;">
-                    <th>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Name of the currently selected account.">
-                                    <label for="accountNameField">Name</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="accountNameField" size="40" readonly></input>
-                                <input type="radio" id="account1" name="accounts" value="account1">
-                                <label for="account1">Account 1</label>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Address of the currently selected account.">
-                                    <label for="accountAddressField">Address</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="accountAddressField" size="40" readonly></input>
-                                <input type="radio" id="account2" name="accounts" value="account2">
-                                <label for="account2">Account 2</label>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Seed of the currently selected account.">
-                                    <label for="accountSeedField">Seed</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="accountSeedField" size="40" readonly></input>
-                                <!-- <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer"> -->
-                                <!-- <label for="accountIssuer">Issuer</label> -->
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
-                                    <label for="xrpBalanceField">Balance</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="xrpBalanceField" size="40" readonly></input>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Amount of XRP to send.">
-                                    <label for="amountField">Amount</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="amountField" size="40"></input>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Destination account address where the escrow is sent.">
-                                    <label for="destinationField">Destination</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="destinationField" size="40"></input>
-                                <br>
-                            </td>
-                        </tr>
-                    </th>
-                </table>
+                    <table style="float: left">
+                         <th>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Condition code used to begin the escrow transaction.">
+                                             <label for="escrowConditionField">Escrow Condition</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="escrowConditionField" size="85" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Fullfillment code to complete the escrow transaction.">
+                                             <label for="escrowFulfillmentField">Escrow Fulfillment</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="escrowFulfillmentField" size="85" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Escrow cancel time, in seconds.">
+                                             <label for="escrowCancelDateField">Escrow Cancel Time</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="escrowCancelDateField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Escrow sequence number, used when finishing the escrow.">
+                                             <label for="escrowSequenceNumberField">Escrow Sequence Number</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="escrowSequenceNumberField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Escrow owner, the account that created the escrow.">
+                                             <label for="escrowOwnerField">Escrow Owner</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="escrowOwnerField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                             <label for="transactionField">Transaction</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="transactionField" size="85" />
+                                        <br />
+                                   </td>
+                              </tr>
+                         </th>
+                    </table>
 
-                <table style="float: left;">
-                    <th>
-                        
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Condition code used to begin the escrow transaction.">
-                                    <label for="escrowConditionField">Escrow Condition</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="escrowConditionField" size="85"></input>
-                                <br>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Fullfillment code to complete the escrow transaction.">
-                                    <label for="escrowFulfillmentField">Escrow Fulfillment</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="escrowFulfillmentField" size="85"></input>
-                                <br>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Escrow cancel time, in seconds.">
-                                    <label for="escrowCancelDateField">Escrow Cancel Time</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="escrowCancelDateField" size="40"></input>
-                                <br>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Escrow sequence number, used when finishing the escrow.">
-                                    <label for="escrowSequenceNumberField">Escrow Sequence Number</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="escrowSequenceNumberField" size="40"></input>
-                                <br>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Escrow owner, the account that created the escrow.">
-                                    <label for="escrowOwnerField">Escrow Owner</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="escrowOwnerField" size="40"></input>
-                                <br>
-                            </td>
-                        </tr>
-                        <tr style="vertical-align: top;">
-                            <td style="text-align: right;">
-                                <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                    <label for="transactionField">Transaction</label>
-                                </span>
-                            </td>
-                            <td>
-                                <input type="text" id="transactionField" size="85"></input>
-                                <br>
-                            </td>
-                        </tr>
-                    </th>
-                </table>
-            
-                <!-- <table> 
-                    <th>
-                        <tr>
-                            <td>
-                                <button type="button" onClick="createConditionalEscrow()">Create Escrow</button>
-                                <button type="button" onClick="getEscrows()">Get Escrows</button>
-                                <button type="button" onClick="finishConditionalEscrow()">Finish Escrow</button>
-                                <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
-                                <button type="button" onClick="getTransaction()">Get Transaction</button>
-                                <button type="button" onClick="getCondition()">Get Condition</button>
-                                <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
-                                <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">
-                                <p style="text-align: left;">
-                                    <textarea id="resultField" cols="200" rows="20"></textarea>
-                                </p>
-                            </td>
-                        </tr>
-                    </th>
-                </table> -->
-                <table style="text-align: left; width: 100%;">
-                    <tr>
-                        <td colspan="2">
-                            <button type="button" onClick="createConditionalEscrow()">Create Escrow</button>
-                            <button type="button" onClick="getEscrows()">Get Escrows</button>
-                            <button type="button" onClick="finishConditionalEscrow()">Finish Escrow</button>
-                            <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
-                            <button type="button" onClick="getTransaction()">Get Transaction</button>
-                            <button type="button" onClick="getCondition()">Get Condition</button>
-                            <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
-                            <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 17px; padding: 10px;"></textarea>
-                        </td>
-                    </tr>
-                </table>
-        </fieldset>
-    </form>
-</body>
+                    <table style="text-align: left; width: 100%">
+                         <th></th>
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onClick="createConditionalEscrow()">Create Escrow</button>
+                                   <button type="button" onClick="getEscrows()">Get Escrows</button>
+                                   <button type="button" onClick="finishConditionalEscrow()">Finish Escrow</button>
+                                   <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
+                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
+                                   <button type="button" onClick="getCondition()">Get Condition</button>
+                                   <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
+                                   <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px"></textarea>
+                              </td>
+                         </tr>
+                    </table>
+               </fieldset>
+          </form>
+     </body>
 
-<script>
-    const radioButtons = document.querySelectorAll('input[type="radio"]');
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', function () {
-                if (this.value === 'account1') {
-                    populate1()
-                } else if (this.value === 'account2') {
-                    populate2()
-                } else if (this.value === 'accountIssuer') {
-                    populate3()
-                }
-            });
-        });
-
-        fetch('wallet-input.html')
-            .then(res => res.text())
-            .then(html => {
-                document.getElementById('wallet-input-container').innerHTML = html;
-
-                function hideAllGenerateNewWalletButtons() {
-                    const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
-                    generateButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                    const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
-                    generateMnemonicButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                    const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
-                    generateNewWalletSecretButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                }
-
-                function showAllGenerateNewWalletButtons() {
-                    const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
-                    generateButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                    const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
-                    generateMnemonicButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                    const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
-                    generateNewWalletSecretButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                }
-
-                function hideAllDeriveWalletButtons() {
-                    const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
-                    derivederiveWalletSeedButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                    const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
-                    deriveWalletMnemonicButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                    const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
-                    deriveWalletSecretButtons.forEach(button => {
-                        button.style.display = 'none';
-                    });
-                }
-
-                function showAllDeriveWalletButtons() {
-                    const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
-                    derivederiveWalletSeedButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                    const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
-                    deriveWalletMnemonicButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                    const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
-                    deriveWalletSecretButtons.forEach(button => {
-                        button.style.display = 'inline-block';
-                    });
-                }
-
-                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-                let pageLoad = "Y";
-                checkboxes.forEach(checkbox => {
-                    checkbox.addEventListener('change', function () {
-                        pageLoad = "N";
-                        if (this.checked) {
-                            // Checkbox was checked
-                            if (this.value === 'Y') {
-                                // Hide derive wallet buttons
-                                hideAllDeriveWalletButtons();
-                                showAllGenerateNewWalletButtons();
-                            } else if (this.value === 'N') {
-                                // Hide create wallet buttons
-                                hideAllGenerateNewWalletButtons();
-                                showAllDeriveWalletButtons();
-                            }
-                        } else {
-                            // Checkbox was unchecked
-                            console.log(`${this.value} was unchecked`);
-                            hideAllGenerateNewWalletButtons();
-                            showAllDeriveWalletButtons();
-                            // Optionally handle unchecking
-                        }
-                    });
-                });
-
-                if (pageLoad === 'Y') {
-                    for (const checkbox of checkboxes) {
-                        const isChecked = checkbox.checked; // true if checked, false if not
-                        const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
-                        console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
-
-                        // Optionally, perform actions based on the checked state
-                        if (isChecked) {
-                            if (checkboxValue === 'Y') {
-                                hideAllDeriveWalletButtons();
-                            } else if (checkboxValue === 'N') {
-                                console.log('Account 2 checkbox is checked, calling populate2()');
-                                populate2();
-                            }
-                        }
+     <script>
+          const radioButtons = document.querySelectorAll('input[type="radio"]');
+          radioButtons.forEach(radio => {
+               radio.addEventListener('change', function () {
+                    if (this.value === 'account1') {
+                         populate1();
+                    } else if (this.value === 'account2') {
+                         populate2();
+                    } else if (this.value === 'accountIssuer') {
+                         populate3();
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Error loading wallet-issuer-input.html:', error);
-            });
+               });
+          });
 
-            const textarea = document.getElementById('resultField');
+          fetch('wallet-input.html')
+               .then(res => res.text())
+               .then(html => {
+                    document.getElementById('wallet-input-container').innerHTML = html;
 
-            function autoResize() {
-                textarea.style.height = 'auto'; // Reset height
-                textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
-            }
+                    function hideAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
 
-            textarea.addEventListener('input', autoResize);
+                    function showAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
 
-            // Optional: resize on load if there's prefilled content
-            window.addEventListener('load', autoResize);
-</script>
+                    function hideAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
+
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    let pageLoad = 'Y';
+                    checkboxes.forEach(checkbox => {
+                         checkbox.addEventListener('change', function () {
+                              pageLoad = 'N';
+                              if (this.checked) {
+                                   // Checkbox was checked
+                                   if (this.value === 'Y') {
+                                        // Hide derive wallet buttons
+                                        hideAllDeriveWalletButtons();
+                                        showAllGenerateNewWalletButtons();
+                                   } else if (this.value === 'N') {
+                                        // Hide create wallet buttons
+                                        hideAllGenerateNewWalletButtons();
+                                        showAllDeriveWalletButtons();
+                                   }
+                              } else {
+                                   // Checkbox was unchecked
+                                   console.log(`${this.value} was unchecked`);
+                                   hideAllGenerateNewWalletButtons();
+                                   showAllDeriveWalletButtons();
+                                   // Optionally handle unchecking
+                              }
+                         });
+                    });
+
+                    if (pageLoad === 'Y') {
+                         for (const checkbox of checkboxes) {
+                              const isChecked = checkbox.checked; // true if checked, false if not
+                              const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
+                              console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+
+                              // Optionally, perform actions based on the checked state
+                              if (isChecked) {
+                                   if (checkboxValue === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                   } else if (checkboxValue === 'N') {
+                                        console.log('Account 2 checkbox is checked, calling populate2()');
+                                        populate2();
+                                   }
+                              }
+                         }
+                    }
+               })
+               .catch(error => {
+                    console.error('Error loading wallet-issuer-input.html:', error);
+               });
+
+          const textarea = document.getElementById('resultField');
+
+          function autoResize() {
+               textarea.style.height = 'auto'; // Reset height
+               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+          }
+
+          textarea.addEventListener('input', autoResize);
+
+          // Optional: resize on load if there's prefilled content
+          window.addEventListener('load', autoResize);
+     </script>
 </html>

@@ -133,6 +133,10 @@ async function updateFlags() {
 
           const { setFlags, clearFlags } = getFlagUpdates(accountInfo.account_flags);
 
+          if (setFlags.length == 0 && clearFlags.length == 0) {
+               resultField.value += '\nSet Flags and Clear Flags length is 0. No flags selected for update';
+          }
+
           for (const flagValue of setFlags) {
                const response = await submitFlagTransaction(client, wallet, { SetFlag: parseInt(flagValue) });
                if (!response.success) return setError(response.message);

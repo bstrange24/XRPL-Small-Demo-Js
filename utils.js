@@ -540,6 +540,7 @@ export function gatherAccountInfo() {
           accountData += issuerName.value + '\n' + issuerAddress.value + '\n' + issuerSeed.value + '\n';
      }
      resultField.value = accountData;
+     autoResize();
 }
 
 export function distributeAccountInfo() {
@@ -1111,17 +1112,16 @@ export function parseXRPLAccountObjects(response) {
 const textarea = document.getElementById('resultField');
 
 export function autoResize() {
-    if (textarea) {
-      textarea.style.height = 'auto';
-      textarea.style.height = textarea.scrollHeight + 'px';
-    }
+     if (textarea) {
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+     }
 }
 
-  textarea.addEventListener('input', autoResize);
-  window.addEventListener('load', autoResize);
+textarea.addEventListener('input', autoResize);
+window.addEventListener('load', autoResize);
 
-  // Expose globally if needed
-
+// Expose globally if needed
 
 // export function parseXRPLAccountObjects(response) {
 //      const account = response.account || 'N/A';
