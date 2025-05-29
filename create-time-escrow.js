@@ -4,6 +4,7 @@ import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
 
+     const resultField = document.getElementById('resultField');
      resultField.classList.remove('error', 'success');
 
      const fields = {

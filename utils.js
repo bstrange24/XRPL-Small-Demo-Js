@@ -534,6 +534,8 @@ export async function getAccountFromSecretNumbers(walletNumber) {
 }
 
 export function gatherAccountInfo() {
+     const resultField = document.getElementById('resultField');
+     resultField.classList.remove('error', 'success');
      let accountData = account1name.value + '\n' + account1address.value + '\n' + account1seed.value + '\n';
      accountData += account2name.value + '\n' + account2address.value + '\n' + account2seed.value + '\n';
      if (document.getElementById('issuerName')) {
@@ -794,6 +796,12 @@ export async function populate1() {
           issuerField.value = account2address.value;
           destinationField.value = '';
      }
+
+     const amountField = document.getElementById('amountField');
+     if (validatInput(amountField)) {
+          amountField.value = '';
+     }
+
      getXrpBalance();
      await getAccountInfo();
 }
@@ -817,6 +825,11 @@ export async function populate2() {
      if (validatInput(issuerField)) {
           issuerField.value = account1address.value;
           destinationField.value = '';
+     }
+
+     const amountField = document.getElementById('amountField');
+     if (validatInput(amountField)) {
+          amountField.value = '';
      }
 
      getXrpBalance();
@@ -844,6 +857,11 @@ export async function populate3() {
           destinationField.value = '';
      }
 
+     const amountField = document.getElementById('amountField');
+     if (validatInput(amountField)) {
+          amountField.value = '';
+     }
+
      getXrpBalance();
      await getAccountInfo();
 }
@@ -855,7 +873,7 @@ export function validatInput(value) {
 export function setError(message) {
      resultField.value = message;
      resultField.classList.add('error');
-     autoResize();
+     // autoResize();
 }
 
 export function convertXRPLTime(rippleTime) {

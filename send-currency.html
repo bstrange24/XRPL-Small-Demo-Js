@@ -17,6 +17,7 @@
           <div id="navbar-container"></div>
           <form id="theForm">
                <div id="wallet-issuer-input-container"></div>
+
                <p></p>
                <fieldset style="padding: 20px">
                     <legend style="color: white">Transaction Information</legend>
@@ -86,17 +87,6 @@
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Issuing account for the currency.">
-                                             <lable for="issuerField">Issuer</lable>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="issuerField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Amount of XRP to send.">
                                              <label for="amountField">Amount</label>
                                         </span>
@@ -120,6 +110,8 @@
                          </th>
                     </table>
 
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
                     <table style="text-align: left; width: 100%">
                          <th></th>
                          <tr>
@@ -140,7 +132,7 @@
                          </tr>
                          <tr>
                               <td colspan="2">
-                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px"></textarea>
+                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false"></textarea>
                               </td>
                          </tr>
                     </table>

@@ -306,7 +306,7 @@ async function populateFieldSendCurrency1() {
      accountAddressField.value = account1address.value;
      accountSeedField.value = account1seed.value;
      destinationField.value = account2address.value;
-     issuerField.value = issuerAddress.value;
+     amountField.value = '';
      currencyField.value = 'XRP';
      await getXrpBalance();
      await getAccountInfo();
@@ -317,7 +317,7 @@ async function populateFieldSendCurrency2() {
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
      destinationField.value = account1address.value;
-     issuerField.value = issuerAddress.value;
+     amountField.value = '';
      currencyField.value = 'XRP';
      await getXrpBalance();
      await getAccountInfo();
@@ -325,8 +325,8 @@ async function populateFieldSendCurrency2() {
 
 async function populateFieldSendCurrency3() {
      accountNameField.value = issuerName.value;
-     accountAddressField.value = issuerAddress.value;
      accountSeedField.value = issuerSeed.value;
+     amountField.value = '';
      destinationField.value = '';
      issuerField.value = '';
      currencyField.value = '';

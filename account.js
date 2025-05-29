@@ -263,6 +263,19 @@ async function setDepositAuthAccounts(authorizeFlag) {
      }
 }
 
+export async function getLedgerAccountInfo(client, accountAddress, validated) {
+     try {
+          const accountInfo = await client.request({
+               command: 'account_info',
+               account: accountAddress,
+               ledger_index: validated,
+          });
+          return accountInfo;
+     } catch (error) {
+          return null;
+     }
+}
+
 export async function fetchAccountObjects(walletAddress) {
      try {
           const client = await getClient();
