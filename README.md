@@ -1,1 +1,15 @@
 # XRPL-Small-Demo-Js
+
+https://app.pinata.cloud/ipfs/files
+
+Offers and NFT
+TESTNET
+Account 1
+rGhnaXFN5iTKgMVGwaUFBk4CjH3LEmRe88
+shNeUgLmAMsHvZteMCxF681TZSf2m
+Account 2
+rDwRBJFk9HfV8g2JxiA3mVgrm4Yc5tCtpk
+sn5JmY3ANxJrtvxiERRMTS4S6HbMC
+Issuer
+r34GycySncA3jT7dfagMgschmGFFZNGS7m
+shaNztVzSEX7UUhbdpxx3dVQ4hHEN

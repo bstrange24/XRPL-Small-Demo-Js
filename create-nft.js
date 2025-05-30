@@ -11,6 +11,7 @@ async function getNFT() {
           accountAddress: document.getElementById('accountAddressField'),
           accountSeed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
+          
      };
 
      // Validate DOM elements
@@ -19,7 +20,7 @@ async function getNFT() {
      }
 
      const seed = fields.accountSeed.value.trim();
-
+     
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
 
@@ -27,18 +28,18 @@ async function getNFT() {
           const { environment } = getEnvironment();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSending XRP\n\n`;
+          let results = `Connected to ${environment}.\Getting NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
 
           // Fetch the NFT ID
-          const nfts = await client.request({
+          const nftInfo = await client.request({
                method: 'account_nfts',
                account: wallet.address,
           });
 
-          const details = parseXRPLAccountObjects(nfts.result);
+          const details = parseXRPLAccountObjects(nftInfo.result);
           results += displayAccountObjects(details);
           resultField.value = results;
           resultField.classList.add('success');
@@ -79,7 +80,7 @@ async function mintNFT() {
           const { environment } = getEnvironment();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nMinting XRP\n\n`;
+          let results = `Connected to ${environment}.\nMinting NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -87,11 +88,11 @@ async function mintNFT() {
           const preparedTx = await client.autofill({
                TransactionType: 'NFTokenMint',
                Account: wallet.address,
-               URI: xrpl.convertStringToHex('https://example.com/nft-metadata.json'),
-               Flags: 1, // 1 = Creator can mint more (royalties), 8 = Transferable
-               NFTokenTaxon: 42, // Unique series ID (for royalties)
-               // Flags: 8,
-               // NFTokenTaxon: 0,
+               URI: xrpl.convertStringToHex("ipfs://bafybeidf5geku675serlvutcibc5n5fjnzqacv43mjfcrh4ur6hcn4xkw4.metadata.json"),
+               // Flags: 1, // 1 = Creator can mint more (royalties), 8 = Transferable
+               // NFTokenTaxon: 42, // Unique series ID (for royalties)
+               Flags: 8,
+               NFTokenTaxon: 0,
           });
 
           const signed = wallet.sign(preparedTx);
@@ -133,7 +134,6 @@ async function mintBatchNFT() {
           seed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
           amount: document.getElementById('amountField'),
-          destination: document.getElementById('destinationField'),
      };
 
      // Validate DOM elements
@@ -143,14 +143,12 @@ async function mintBatchNFT() {
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
-     const destination = fields.destination.value.trim();
 
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
      if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
      if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
      if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty');
 
      const { environment } = getEnvironment();
      const client = await getClient();
@@ -161,32 +159,6 @@ async function mintBatchNFT() {
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
 
-          // const preparedTx = await client.autofill({
-          //      TransactionType: 'Payment',
-          //      Account: wallet.address,
-          //      Amount: xrpl.xrpToDrops(amount),
-          //      Destination: destination,
-          // });
-
-          // const signed = wallet.sign(preparedTx);
-          // const response = await client.submitAndWait(signed.tx_blob);
-          // console.log('Transaction response:', response);
-
-          // const resultCode = response.result.meta.TransactionResult;
-          // if (resultCode !== 'tesSUCCESS') {
-          //      const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          //      return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
-          // }
-
-          // results += `XRP payment finished successfully.\n\n`;
-          // const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          // results += displayTransaction({ txDetails, accountChanges });
-
-          // resultField.value = results;
-          // resultField.classList.add('success');
-          // autoResize();
-
-          // Update balance
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -208,7 +180,7 @@ async function sellNFT() {
           seed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
           amount: document.getElementById('amountField'),
-          destination: document.getElementById('destinationField'),
+          nftIdField: document.getElementById('nftIdField'),
      };
 
      // Validate DOM elements
@@ -218,20 +190,20 @@ async function sellNFT() {
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
-     const destination = fields.destination.value.trim();
+     const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
      if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
      if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
      if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty');
-
-     const { environment } = getEnvironment();
-     const client = await getClient();
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
 
      try {
-          let results = `Connected to ${environment}.\nSending XRP\n\n`;
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
+          let results = `Connected to ${environment}.\nSelling NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -240,7 +212,7 @@ async function sellNFT() {
                TransactionType: 'NFTokenCreateOffer',
                Account: wallet.address,
                NFTokenID: nftId,
-               Amount: xrpl.xrpToDrops(sellPrice), // Price in XRP (converted to drops)
+               Amount: xrpl.xrpToDrops(amount), // Price in XRP (converted to drops)
                Flags: 1, // 1 = Sell offer (owner is seller)
           };
 
@@ -250,10 +222,10 @@ async function sellNFT() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Minting NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Selling NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
           }
 
-          results += `NFT mint finished successfully.\n\n`;
+          results += `NFT sell finished successfully.\n\n`;
           const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
           results += displayTransaction({ txDetails, accountChanges });
 
@@ -282,7 +254,7 @@ async function buyNFT() {
           seed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
           amount: document.getElementById('amountField'),
-          destination: document.getElementById('destinationField'),
+          nftIdField: document.getElementById('nftIdField'),
      };
 
      // Validate DOM elements
@@ -292,19 +264,19 @@ async function buyNFT() {
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
-     const destination = fields.destination.value.trim();
+     const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
      if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
      if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
      if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty');
-
-     const { environment } = getEnvironment();
-     const client = await getClient();
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
 
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\nSending XRP\n\n`;
           resultField.value = results;
 
@@ -363,8 +335,7 @@ async function burnNFT() {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
-          amount: document.getElementById('amountField'),
-          destination: document.getElementById('destinationField'),
+          nftIdField: document.getElementById('nftIdField'),
      };
 
      // Validate DOM elements
@@ -373,15 +344,11 @@ async function burnNFT() {
      }
 
      const seed = fields.seed.value.trim();
-     const amount = fields.amount.value.trim();
-     const destination = fields.destination.value.trim();
+     const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
-     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
-     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
-     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty');
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
 
      try {
           const { environment } = getEnvironment();
@@ -430,7 +397,6 @@ window.sellNFT = sellNFT;
 window.buyNFT = buyNFT;
 window.getNFT = getNFT;
 window.burnNFT = burnNFT;
-
 window.getTransaction = getTransaction;
 
 window.populate1 = populate1;
