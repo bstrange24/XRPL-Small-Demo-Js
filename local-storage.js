@@ -219,6 +219,7 @@ export function loadInputValues() {
 export function saveInputValues() {
      inputIds.forEach(id => {
           const el = document.getElementById(id);
+          console.log('id:' + id + ' el.value: ' + el.value);
           if (el) localStorage.setItem(id, el.value || '');
      });
 }

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, displayAccountObjects, displayTransaction, parseXRPLTransaction, autoResize } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, displayAccountObjects, displayTransaction, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -358,3 +358,6 @@ window.populateFieldSendCurrency2 = populateFieldSendCurrency2;
 window.populateFieldSendCurrency3 = populateFieldSendCurrency3;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
+window.gatherAccountInfo = gatherAccountInfo;
+window.clearFields = clearFields;
+window.distributeAccountInfo = distributeAccountInfo;

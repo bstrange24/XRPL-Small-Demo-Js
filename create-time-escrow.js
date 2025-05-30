@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, getTransaction } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -299,3 +299,6 @@ window.cancelEscrow = cancelEscrow;
 window.getTransaction = getTransaction;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
+window.gatherAccountInfo = gatherAccountInfo;
+window.clearFields = clearFields;
+window.distributeAccountInfo = distributeAccountInfo;

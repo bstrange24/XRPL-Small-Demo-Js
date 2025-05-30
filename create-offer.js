@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError, autoResize } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import BigNumber from 'bignumber.js';
 
@@ -934,3 +934,6 @@ window.populate3 = populate3;
 window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
+window.gatherAccountInfo = gatherAccountInfo;
+window.clearFields = clearFields;
+window.distributeAccountInfo = distributeAccountInfo;

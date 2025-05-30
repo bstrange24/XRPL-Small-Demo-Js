@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, setError } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -738,3 +738,6 @@ window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
 window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
+window.gatherAccountInfo = gatherAccountInfo;
+window.clearFields = clearFields;
+window.distributeAccountInfo = distributeAccountInfo;

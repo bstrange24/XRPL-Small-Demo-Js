@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError, autoResize } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -191,3 +191,6 @@ window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
+window.gatherAccountInfo = gatherAccountInfo;
+window.clearFields = clearFields;
+window.distributeAccountInfo = distributeAccountInfo;
