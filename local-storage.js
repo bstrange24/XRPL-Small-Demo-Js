@@ -217,22 +217,24 @@ export function loadInputValues() {
 }
 
 export function saveInputValues() {
+     console.log('Entering saveInputValues');
      inputIds.forEach(id => {
           const el = document.getElementById(id);
           console.log('id:' + id + ' el.value: ' + el.value);
           if (el) localStorage.setItem(id, el.value || '');
      });
+     console.log('Leaving saveInputValues');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
      console.log('DOM fully loaded at', new Date().toISOString());
 });
 
-export function addInputListener(elementId, eventType, callback) {
-     const element = document.getElementById(elementId);
-     if (element) {
-          element.addEventListener(eventType, callback);
-     }
-}
+// export function addInputListener(elementId, eventType, callback) {
+//      const element = document.getElementById(elementId);
+//      if (element) {
+//           element.addEventListener(eventType, callback);
+//      }
+// }
 
-inputIds.forEach(id => addInputListener(id, 'input', saveInputValues));
+// inputIds.forEach(id => addInputListener(id, 'input', saveInputValues));
