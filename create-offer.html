@@ -7,7 +7,6 @@
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="main.js"></script>
           <script type="module" src="create-offer.js"></script>
           <script type="module" src="local-storage.js"></script>
      </head>
@@ -87,7 +86,7 @@
                                    </td>
                                    <td style="text-align: left">
                                         <span class="tooltip" tooltip-data="This is what I want to buy.">
-                                             <label for="weWantCurrencyField">This is what I'm buying</label>
+                                             <label for="weWantCurrencyField">This is what I'm buying (weWant)</label>
                                         </span>
                                    </td>
                               </tr>
@@ -142,7 +141,7 @@
                                    </td>
                                    <td style="text-align: left; padding-bottom: 10px">
                                         <span class="tooltip" tooltip-data="This is what I am selling.">
-                                             <label for="weWantCurrencyField">This is what I'm selling</label>
+                                             <label for="weWantCurrencyField">This is what I'm selling (weSpend)</label>
                                         </span>
                                    </td>
                               </tr>
@@ -187,6 +186,8 @@
                          </th>
                     </table>
 
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
                     <table style="text-align: left; width: 100%">
                          <th></th>
                          <tr>
@@ -197,8 +198,6 @@
                                    <button type="button" onClick="getOrderBook()">Get Order Book</button>
                                    <button type="button" onClick="invertOrder()">Invert Order</button>
                                    <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
-                                   <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
-                                   <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
                               </td>
                          </tr>
                          <tr>

@@ -1,33 +1,16 @@
 <head>
-     <title>Send MPT</title>
      <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
      <link href="modular-tutorials.css" rel="stylesheet" />
 </head>
-
-<fieldset>
-     <legend style="color: white">Server Info</legend>
-     <span class="tooltip" tooltip-data="Choose the XRPL host server for your account.">Choose your ledger instance:</span>
-     <input type="radio" id="dn" name="server" value="wss://s.devnet.rippletest.net:51233" checked />
-     <label for="dn">Devnet</label>
-     <input type="radio" id="tn" name="server" value="wss://s.altnet.rippletest.net:51233" />
-     <label for="tn">Testnet</label>
-     <input type="radio" id="mn" name="server" value="wss://s1.ripple.com_not" />
-     <label for="mn">Mainnet</label>
-     <button type="button" onclick="clearFields()" style="margin-left: 20px">Clear Fields</button>
-     <button type="button" onclick="closeConnection()" style="margin-left: 20px">Close Connection</button>
-     <br /><br />
-     <span class="tooltip" tooltip-data="Choose the XRPL host server for your account;">Create New Wallet:</span>
-     <label for="createWallet">Yes:</label>
-     <input type="checkbox" id="createWallet" name="server" value="Y" checked />
-</fieldset>
-
-<p></p>
 
 <fieldset>
      <legend style="color: white">Wallet Information</legend>
      <table>
           <th></th>
           <tr>
+               <label class="tooltip" style="padding-left: 35px" tooltip-data="Uncheck this to retrieve a wallet based on secret;">Create New Wallet:</label>
+               <label for="createWallet">Yes:</label>
+               <input type="checkbox" id="createWallet" name="server" value="Y" checked />
                <td>
                     <button type="button" id="generateNewWallet_1" onclick="generateNewWallet('1')">Gen New A1 From Seed</button>
                     <button type="button" id="generateNewWalletMnemonic_1" onclick="generateNewWalletFromMnemonic('1')">Gen New A1 From Mnemonic</button>

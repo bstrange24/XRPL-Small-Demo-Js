@@ -22,8 +22,7 @@ async function createTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          autoResize();
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { address, seed, destinationAddress, currency, amount, xrpBalanceField } = fields;
@@ -40,11 +39,7 @@ async function createTrustLine() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               if (spinner) spinner.style.display = 'none';
-               autoResize();
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -81,7 +76,7 @@ async function createTrustLine() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Trustline created successfully.\n\n`;
@@ -94,8 +89,8 @@ async function createTrustLine() {
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -122,8 +117,7 @@ async function removeTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          autoResize();
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { address, seed, destinationAddress, currency, xrpBalanceField } = fields;
@@ -137,11 +131,7 @@ async function removeTrustLine() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               if (spinner) spinner.style.display = 'none';
-               autoResize();
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -164,11 +154,11 @@ async function removeTrustLine() {
           const targetLine = trustLines.find(line => line.account === destinationAddress.value && line.currency === currency.value);
 
           if (!targetLine) {
-               return setError(`ERROR: No trust line found for ${currency.value} from ${destinationAddress.value}.`);
+               return setError(`ERROR: No trust line found for ${currency.value} from ${destinationAddress.value}.`, spinner);
           }
 
           if (parseFloat(targetLine.balance) !== 0) {
-               return setError(`ERROR: Cannot remove trust line: Balance is ${targetLine.balance}. Balance must be 0.`);
+               return setError(`ERROR: Cannot remove trust line: Balance is ${targetLine.balance}. Balance must be 0.`, spinner);
           }
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
@@ -198,7 +188,7 @@ async function removeTrustLine() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Trustline removed successfully.\n\n`;
@@ -211,8 +201,8 @@ async function removeTrustLine() {
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -236,8 +226,7 @@ async function getTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          autoResize();
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { seed, xrpBalanceField } = fields;
@@ -246,11 +235,7 @@ async function getTrustLine() {
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               if (spinner) spinner.style.display = 'none';
-               autoResize();
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -294,8 +279,8 @@ async function getTrustLine() {
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -323,8 +308,7 @@ async function sendCurrency() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          autoResize();
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { accountAddress, seed, currency, destinationAddress, amountField, xrpBalanceField } = fields;
@@ -341,11 +325,7 @@ async function sendCurrency() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               if (spinner) spinner.style.display = 'none';
-               autoResize();
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -371,10 +351,10 @@ async function sendCurrency() {
           const senderTrustLine = senderTrustLines.find(line => line.account === destinationAddress.value && line.currency === currency.value);
 
           if (!senderTrustLine || parseFloat(senderTrustLine.limit) === 0) {
-               return setError(`ERROR: No active trust line for ${currency.value} from ${destinationAddress.value}`);
+               return setError(`ERROR: No active trust line for ${currency.value} from ${destinationAddress.value}`, spinner);
           }
           if (parseFloat(senderTrustLine.balance) < amountField.value) {
-               return setError(`ERROR: Insufficient balance: ${senderTrustLine.balance} ${currency.value}, need ${amountField.value}`);
+               return setError(`ERROR: Insufficient balance: ${senderTrustLine.balance} ${currency.value}, need ${amountField.value}`, spinner);
           }
 
           // Step 2: Check destination's trust line
@@ -391,11 +371,11 @@ async function sendCurrency() {
           const destTrustLine = destTrustLines.find(line => line.account === accountAddress.value && line.currency === currency.value);
 
           if (!destTrustLine || parseFloat(destTrustLine.limit) === 0) {
-               return setError(`ERROR: Destination ${destinationAddress.value} has no active trust line for ${currency.value} from ${accountAddress.value}`);
+               return setError(`ERROR: Destination ${destinationAddress.value} has no active trust line for ${currency.value} from ${accountAddress.value}`, spinner);
           }
 
           if (parseFloat(destTrustLine.limit) < amountField.value) {
-               return setError(`ERROR: Destination trust line limit (${destTrustLine.limit}) is less than amount (${amountField.value})`);
+               return setError(`ERROR: Destination trust line limit (${destTrustLine.limit}) is less than amount (${amountField.value})`, spinner);
           }
 
           // Step 3: Get current ledger index
@@ -427,7 +407,7 @@ async function sendCurrency() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Currency ${currency.value} successfully sent.\n\n`;
@@ -440,8 +420,8 @@ async function sendCurrency() {
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -469,8 +449,7 @@ async function issueCurrency() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          autoResize();
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { accountAddressField, accountSeed, currency, destinationAddress, amountField, xrpBalanceField } = fields;
@@ -487,11 +466,7 @@ async function issueCurrency() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               if (spinner) spinner.style.display = 'none';
-               autoResize();
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -506,8 +481,7 @@ async function issueCurrency() {
           // Step 1: Verify issuer account
           const accountInfo = await getLedgerAccountInfo(client, accountAddressField.value, 'validated');
           if (accountInfo == null) {
-               autoResize();
-               return setError(`ERROR: Issuer account ${accountAddressField.value} is not funded.\n`);
+               return setError(`ERROR: Issuer account ${accountAddressField.value} is not funded.\n`, spinner);
           }
 
           console.log('accountInfo', accountInfo);
@@ -523,20 +497,17 @@ async function issueCurrency() {
                if (spinner) spinner.style.display = 'none';
                resultField.value += `No trust lines found for ${wallet.address}`;
                resultField.classList.add('success');
-               autoResize();
                return;
           }
 
           const destTrustLine = destTrustLines.find(line => line.account === accountAddressField.value && line.currency === currency.value);
 
           if (!destTrustLine || parseFloat(destTrustLine.limit) === 0) {
-               autoResize();
-               return setError(`ERROR: Destination needs a trust line for ${currency.value} from ${accountAddressField.value}`);
+               return setError(`ERROR: Destination needs a trust line for ${currency.value} from ${accountAddressField.value}`, spinner);
           }
 
           if (parseFloat(destTrustLine.limit) < amountField.value) {
-               autoResize();
-               return setError(`ERROR: Destination trust line limit (${destTrustLine.limit}) is less than amount (${amountField.value})`);
+               return setError(`ERROR: Destination trust line limit (${destTrustLine.limit}) is less than amount (${amountField.value})`, spinner);
           }
 
           // Step 3: Set DefaultRipple flag
@@ -565,7 +536,7 @@ async function issueCurrency() {
                if (resultCode !== 'tesSUCCESS') {
                     const { txDetails, accountChanges } = parseXRPLTransaction(accountSetResult.result);
                     const transactionResults = displayTransaction({ txDetails, accountChanges });
-                    return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+                    return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
                }
 
                const { txDetails, accountChanges } = parseXRPLTransaction(accountSetResult.result);
@@ -603,7 +574,7 @@ async function issueCurrency() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Currency ${currency.value} successfully issued.\n\n`;
@@ -629,12 +600,92 @@ async function issueCurrency() {
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error setting up issuer or issuing TST:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
           console.log('Leaving setupAndIssueTST');
+     }
+}
+
+export async function getTokenBalance() {
+     console.log('Entering getTokenBalance');
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          seed: document.getElementById('accountSeedField'),
+          balance: document.getElementById('xrpBalanceField'),
+     };
+
+     // Validate DOM elements
+     if (!fields.seed || !fields.balance) {
+          return setError('ERROR: DOM elements not found', spinner);
+     }
+
+     const seed = fields.seed.value.trim();
+
+     // Validate inputs
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+
+     try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
+          let results = `Connected to ${environment}.\nGetting Token Balance\n\n`;
+          resultField.value = results;
+
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          results += 'Getting account balance\n';
+          resultField.value = results;
+
+          const balance = await client.request({
+               command: 'gateway_balances',
+               account: wallet.address,
+               ledger_index: 'validated',
+          });
+
+          console.log('balance', balance);
+
+          // Format obligations
+          let output = 'Obligations (Issued by You):\n';
+          if (balance.result.obligations && Object.keys(balance.result.obligations).length > 0) {
+               for (const [currency, amount] of Object.entries(balance.result.obligations)) {
+                    output += `- ${currency}: ${amount}\n`;
+               }
+          } else {
+               output += 'None\n';
+          }
+
+          // Format assets (held balances)
+          output += '\nBalances (Held by You):\n';
+          if (balance.result.assets && Object.keys(balance.result.assets).length > 0) {
+               for (const [issuer, currencies] of Object.entries(balance.result.assets)) {
+                    for (const { currency, value } of currencies) {
+                         output += `- ${currency} from ${issuer}: ${value}\n`;
+                    }
+               }
+          } else {
+               output += 'None\n';
+          }
+
+          results += output;
+          resultField.value = results;
+          resultField.classList.add('success');
+          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+     } catch (error) {
+          console.error('Error:', error);
+          setError('ERROR: ' + (error.message || 'Unknown error'));
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          console.log('Leaving getTokenBalance');
      }
 }
 
@@ -681,7 +732,9 @@ window.removeTrustLine = removeTrustLine;
 window.getTrustLine = getTrustLine;
 window.sendCurrency = sendCurrency;
 window.issueCurrency = issueCurrency;
+window.getTokenBalance = getTokenBalance;
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
 window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

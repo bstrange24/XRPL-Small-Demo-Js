@@ -5,7 +5,10 @@ async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
 
      const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error', 'success');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -18,7 +21,7 @@ async function createTimeBasedEscrow() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`);
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField } = fields;
@@ -35,7 +38,7 @@ async function createTimeBasedEscrow() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`);
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -64,7 +67,7 @@ async function createTimeBasedEscrow() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Escrow created successfully.\n\n`;
@@ -73,14 +76,15 @@ async function createTimeBasedEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving createTimeBasedEscrow');
      }
 }
@@ -88,7 +92,11 @@ async function createTimeBasedEscrow() {
 async function finishTimeBasedEscrow() {
      console.log('Entering finishTimeBasedEscrow');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -100,7 +108,7 @@ async function finishTimeBasedEscrow() {
 
      // DOM element check
      for (const [key, el] of Object.entries(fields)) {
-          if (!el) return setError(`ERROR: DOM element "${key}" not found`);
+          if (!el) return setError(`ERROR: DOM element "${key}" not found`, spinner);
      }
 
      const { accountSeed, accountAddress, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField } = fields;
@@ -114,7 +122,7 @@ async function finishTimeBasedEscrow() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`);
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -142,7 +150,7 @@ async function finishTimeBasedEscrow() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Escrow finsihed successfully.\n\n`;
@@ -151,14 +159,15 @@ async function finishTimeBasedEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving finishTimeBasedEscrow');
      }
 }
@@ -166,16 +175,16 @@ async function finishTimeBasedEscrow() {
 async function getEscrows() {
      console.log('Entering getEscrows');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const accountAddress = document.getElementById('accountAddressField');
-     if (!accountAddress) {
-          return setError('ERROR: DOM element "accountAddressField" not found');
-     }
+     if (!accountAddress) return setError('ERROR: DOM element "accountAddressField" not found', spinner);
 
-     if (!validatInput(accountAddress.value)) {
-          return setError('ERROR: Address field cannot be empty');
-     }
+     if (!validatInput(accountAddress.value)) return setError('ERROR: Address field cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -198,57 +207,16 @@ async function getEscrows() {
           results += displayAccountObjects(details);
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getEscrows');
      }
 }
-
-// async function getTransaction() {
-//      resultField.classList.remove('error', 'success');
-
-//      const transactionHash = document.getElementById('transactionField');
-
-//      if (!transactionHash) {
-//           return setError('ERROR: DOM element "transactionField" not found');
-//      }
-
-//      if (!validatInput(transactionHash.value)) {
-//           return setError('ERROR: Transaction field cannot be empty');
-//      }
-
-//      try {
-//           const { environment } = getEnvironment();
-//           const client = await getClient();
-
-//           let results = `Connected to ${environment}.\nGetting transaction information.\n\n`;
-//           resultField.value = results;
-
-//           const tx = await client.request({
-//                id: 1,
-//                command: 'tx',
-//                transaction: transactionHash.value,
-//           });
-
-//           console.log('Get transaction tx', tx);
-
-//           const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-//           results += displayTransaction({ txDetails, accountChanges });
-//           resultField.value = results;
-//           resultField.classList.add('success');
-//           autoResize();
-//      } catch (error) {
-//           console.error('Error:', error);
-//           setError('ERROR: ' + (error.message || 'Unknown error'));
-//           await disconnectClient();
-//      } finally {
-//           console.log('Leaving createTimeBasedEscrow');
-//      }
-// }
 
 async function cancelEscrow() {
      console.log('Entering cancelEscrow');
@@ -256,14 +224,15 @@ async function cancelEscrow() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const accountSeed = document.getElementById('accountSeedField');
      const escrowOwnerAddress = document.getElementById('escrowOwnerField');
      const escrowSequenceNumber = document.getElementById('escrowSequenceNumberField');
      const xrpBalanceField = document.getElementById('xrpBalanceField');
 
-     if (!accountSeed || !escrowOwnerAddress || !escrowSequenceNumber || !xrpBalanceField) {
-          return setError('ERROR: Required DOM elements not found');
-     }
+     if (!accountSeed || !escrowOwnerAddress || !escrowSequenceNumber || !xrpBalanceField) return setError('ERROR: Required DOM elements not found', spinner);
 
      const fields = [
           { value: accountSeed.value, label: 'Seed' },
@@ -273,9 +242,7 @@ async function cancelEscrow() {
      ];
 
      for (const field of fields) {
-          if (!validatInput(field.value)) {
-               return setError(`ERROR: ${field.label} cannot be empty`);
-          }
+          if (!validatInput(field.value)) return setError(`ERROR: ${field.label} cannot be empty`, spinner);
      }
 
      try {
@@ -303,7 +270,7 @@ async function cancelEscrow() {
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
                const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Escrow cancelled successfully.\n\n`;
@@ -312,20 +279,16 @@ async function cancelEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving cancelEscrow');
-     }
-
-     function setError(message) {
-          resultField.value = message;
-          resultField.classList.add('error');
      }
 }
 
@@ -335,3 +298,4 @@ window.finishTimeBasedEscrow = finishTimeBasedEscrow;
 window.cancelEscrow = cancelEscrow;
 window.getTransaction = getTransaction;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

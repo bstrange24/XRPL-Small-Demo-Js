@@ -1,84 +1,66 @@
 import * as xrpl from 'xrpl';
 import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError, autoResize } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
-import { getTokenBalance } from './main.js';
 import BigNumber from 'bignumber.js';
 
 async function createOffer() {
      console.log('Entering createOffer');
 
-     // Clear previous error styling
-     resultField.classList.remove('error');
-     resultField.classList.remove('success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      let we_want;
      let takerGetsString;
      let we_spend;
      let takerPaysString;
 
-     const accountNameField = document.getElementById('accountNameField');
-     const accountAddressField = document.getElementById('accountAddressField');
-     const accountSeedField = document.getElementById('accountSeedField');
-     const xrpBalanceField = document.getElementById('xrpBalanceField');
-     const weWantCurrencyField = document.getElementById('weWantCurrencyField');
-     const weSpendCurrencyField = document.getElementById('weSpendCurrencyField');
-     const weWantIssuerField = document.getElementById('weWantIssuerField');
-     const weSpendIssuerField = document.getElementById('weSpendIssuerField');
-     const weWantAmountField = document.getElementById('weWantAmountField');
-     const weSpendAmountField = document.getElementById('weSpendAmountField');
+     const fields = {
+          accountName: document.getElementById('accountNameField'),
+          accountAddress: document.getElementById('accountAddressField'),
+          accountSeed: document.getElementById('accountSeedField'),
+          xrpBalance: document.getElementById('xrpBalanceField'),
+          weWantCurrency: document.getElementById('weWantCurrencyField'),
+          weSpendCurrency: document.getElementById('weSpendCurrencyField'),
+          weWantIssuer: document.getElementById('weWantIssuerField'),
+          weSpendIssuer: document.getElementById('weSpendIssuerField'),
+          weWantAmount: document.getElementById('weWantAmountField'),
+          weSpendAmount: document.getElementById('weSpendAmountField'),
+     };
 
-     if (!accountNameField || !accountAddressField || !accountSeedField || !xrpBalanceField || !weWantCurrencyField || !weSpendCurrencyField || !weWantIssuerField || !weSpendIssuerField || !weWantAmountField || !weSpendAmountField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add('error');
-          return;
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     if (!validatInput(accountAddressField.value)) {
-          resultField.value = 'ERROR: Account Address can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
+     // Destructure fields
+     const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
 
-     if (!validatInput(accountSeedField.value)) {
-          resultField.value = 'ERROR: Account seed amount can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
+     // Validation checks
+     const validations = [
+          [!validatInput(accountAddressField.value), 'ERROR: Account Address can not be empty'],
+          [!validatInput(accountSeedField.value), 'ERROR: Account seed amount can not be empty'],
+          [!validatInput(xrpBalanceField.value), 'ERROR: XRP balance can not be empty'],
+          [!validatInput(weWantCurrencyField.value), 'ERROR: Taker Gets currency can not be empty'],
+          [!validatInput(weSpendCurrencyField.value), 'ERROR: Taker Pays currency can not be empty'],
+          [!validatInput(weWantAmountField.value), 'ERROR: Taker Gets amount cannot be empty'],
+          [isNaN(weWantAmountField.value), 'ERROR: Taker Gets amount must be a valid number'],
+          [parseFloat(weWantAmountField.value) <= 0, 'ERROR: Taker Gets amount must be greater than zero'],
+          [!validatInput(weSpendAmountField.value), 'ERROR: Taker Pays amount cannot be empty'],
+          [isNaN(weSpendAmountField.value), 'ERROR: Taker Pays amount must be a valid number'],
+          [parseFloat(weSpendAmountField.value) <= 0, 'ERROR: Taker Pays amount must be greater than zero'],
+     ];
 
-     if (!validatInput(xrpBalanceField.value)) {
-          resultField.value = 'ERROR: XRP amount can not be empty';
-          resultField.classList.add('error');
-          return;
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
-
-     if (!validatInput(weWantCurrencyField.value)) {
-          resultField.value = 'ERROR: Taker Pays currency can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!validatInput(weSpendCurrencyField.value)) {
-          resultField.value = 'ERROR: Taker Gets currency can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!validatInput(weWantAmountField.value)) {
-          resultField.value = 'ERROR: Pay amount can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (!validatInput(weSpendAmountField.value)) {
-          resultField.value = 'ERROR: Get amount can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
-
-     const { net, environment } = getNet();
-     const client = await getClient();
 
      try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
           let results = `Connected to ${environment} ${net}.\nCreating Offer.\n\n`;
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           results += accountNameField.value + ' account address: ' + wallet.address + '\n';
@@ -386,10 +368,11 @@ async function createOffer() {
           }
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = 'ERROR: ' + error.message || 'Unknown error';
-          resultField.classList.add('error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving createOffer');
      }
 }
@@ -400,15 +383,16 @@ async function getOffers() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const accountSeedField = document.getElementById('accountSeedField');
      const xrpBalanceField = document.getElementById('xrpBalanceField');
 
-     if (!accountSeedField || !xrpBalanceField) {
-          return setError('ERROR: DOM elements not found');
-     }
+     if (!accountSeedField || !xrpBalanceField) return setError('ERROR: DOM elements not found', spinner);
 
      const seed = accountSeedField.value.trim();
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -433,12 +417,13 @@ async function getOffers() {
           resultField.classList.add('success');
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getOffers');
      }
 }
@@ -446,54 +431,43 @@ async function getOffers() {
 async function cancelOffer() {
      console.log('Entering cancelOffer');
 
-     // Clear previous error styling
-     resultField.classList.remove('error');
-     resultField.classList.remove('success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
 
-     const accountSeedField = document.getElementById('accountSeedField');
-     const xrpBalanceField = document.getElementById('xrpBalanceField');
-     const offerSequenceField = document.getElementById('offerSequenceField');
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
-     if (!accountSeedField || !xrpBalanceField || !offerSequenceField) {
-          resultField.value = 'ERROR: DOM elements not found';
-          resultField.classList.add('error');
-          return;
+     const fields = {
+          accountSeed: document.getElementById('accountSeedField'),
+          xrpBalance: document.getElementById('xrpBalanceField'),
+          offerSequence: document.getElementById('offerSequenceField'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     if (!validatInput(accountSeedField.value)) {
-          resultField.value = 'ERROR: Account seed can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
+     // Destructure fields
+     const { accountSeed: accountSeedField, xrpBalance: xrpBalanceField, offerSequence: offerSequenceField } = fields;
 
-     if (!validatInput(xrpBalanceField.value)) {
-          resultField.value = 'ERROR: Xrp balance amount can not be empty';
-          resultField.classList.add('error');
-          return;
-     }
+     // Validation checks
+     const validations = [
+          [!validatInput(accountSeedField.value), 'ERROR: Account seed amount can not be empty'],
+          [!validatInput(xrpBalanceField.value), 'ERROR: XRP balance can not be empty'],
+          [!validatInput(offerSequenceField.value), 'ERROR: Offer Sequence amount cannot be empty'],
+          [isNaN(offerSequenceField.value), 'ERROR: Offer Sequence must be a valid number'],
+          [parseFloat(offerSequenceField.value) <= 0, 'ERROR: Offer Sequence must be greater than zero'],
+     ];
 
-     if (!validatInput(offerSequenceField.value)) {
-          resultField.value = 'ERROR: Offer sequence can not be empty';
-          resultField.classList.add('error');
-          return;
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
-
-     if (isNaN(offerSequenceField.value)) {
-          resultField.value = 'ERROR: Offer sequence must be a valid number';
-          resultField.classList.add('error');
-          return;
-     }
-
-     if (parseFloat(offerSequenceField.value) <= 0) {
-          resultField.value = 'ERROR: Offer sequence must be greater than zero';
-          resultField.classList.add('error');
-          return;
-     }
-
-     const { environment } = getEnvironment();
-     const client = await getClient();
 
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\nCancel Offers.\n\n`;
           resultField.value = results;
 
@@ -526,16 +500,14 @@ async function cancelOffer() {
                resultField.classList.add('error');
           }
 
-          // results  += "\nBalance changes: \n" + JSON.stringify(xrpl.getBalanceChanges(tx.result.meta), null, 2)
-          // resultField.value = results
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = 'ERROR: ' + error.message || 'Unknown error';
-          resultField.classList.add('error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving cancelOffer');
      }
 }
@@ -546,46 +518,48 @@ async function getOrderBook() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
-     // Retrieve all required DOM elements in one object
-     const dom = {
-          name: document.getElementById('accountNameField'),
-          address: document.getElementById('accountAddressField'),
-          seed: document.getElementById('accountSeedField'),
-          balance: document.getElementById('xrpBalanceField'),
-          wantCurrency: document.getElementById('weWantCurrencyField'),
-          wantIssuer: document.getElementById('weWantIssuerField'),
-          wantAmount: document.getElementById('weWantAmountField'),
-          spendCurrency: document.getElementById('weSpendCurrencyField'),
-          spendIssuer: document.getElementById('weSpendIssuerField'),
-          spendAmount: document.getElementById('weSpendAmountField'),
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          accountName: document.getElementById('accountNameField'),
+          accountAddress: document.getElementById('accountAddressField'),
+          accountSeed: document.getElementById('accountSeedField'),
+          xrpBalance: document.getElementById('xrpBalanceField'),
+          weWantCurrency: document.getElementById('weWantCurrencyField'),
+          weWantIssuer: document.getElementById('weWantIssuerField'),
+          weWantAmount: document.getElementById('weWantAmountField'),
+          weSpendCurrency: document.getElementById('weSpendCurrencyField'),
+          weSpendIssuer: document.getElementById('weSpendIssuerField'),
+          weSpendAmount: document.getElementById('weSpendAmountField'),
      };
 
-     // Validate DOM existence
-     for (const [key, el] of Object.entries(dom)) {
-          if (!el) {
-               resultField.value = `ERROR: DOM element '${key}' not found.`;
-               resultField.classList.add('error');
-               return;
-          }
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     // Validate required input fields
-     const requiredFields = [
-          { el: dom.address, msg: 'Account Address cannot be empty' },
-          { el: dom.seed, msg: 'Account Seed cannot be empty' },
-          { el: dom.balance, msg: 'XRP amount cannot be empty' },
-          { el: dom.wantCurrency, msg: 'Taker Pays currency cannot be empty' },
-          { el: dom.spendCurrency, msg: 'Taker Gets currency cannot be empty' },
-          { el: dom.wantAmount, msg: 'Pay amount cannot be empty' },
-          { el: dom.spendAmount, msg: 'Get amount cannot be empty' },
+     // Destructure fields
+     const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
+
+     // Validation checks
+     const validations = [
+          [!validatInput(accountNameField.value), 'ERROR: Account Name can not be empty'],
+          [!validatInput(accountAddressField.value), 'ERROR: Account Address can not be empty'],
+          [!validatInput(accountSeedField.value), 'ERROR: Account seed amount can not be empty'],
+          [!validatInput(xrpBalanceField.value), 'ERROR: XRP balance can not be empty'],
+          [!validatInput(weWantCurrencyField.value), 'ERROR: Taker Gets currency can not be empty'],
+          [!validatInput(weSpendCurrencyField.value), 'ERROR: Taker Pays currency can not be empty'],
+          [!validatInput(weWantAmountField.value), 'ERROR: Taker Gets amount cannot be empty'],
+          [isNaN(weWantAmountField.value), 'ERROR: Taker Gets amount must be a valid number'],
+          [parseFloat(weWantAmountField.value) <= 0, 'ERROR: Taker Gets amount must be greater than zero'],
+          [!validatInput(weSpendAmountField.value), 'ERROR: Taker Pays amount cannot be empty'],
+          [isNaN(weSpendAmountField.value), 'ERROR: Taker Pays amount must be a valid number'],
+          [parseFloat(weSpendAmountField.value) <= 0, 'ERROR: Taker Pays amount must be greater than zero'],
      ];
 
-     for (const { el, msg } of requiredFields) {
-          if (!validatInput(el.value)) {
-               resultField.value = `ERROR: ${msg}`;
-               resultField.classList.add('error');
-               return;
-          }
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      const buildCurrencyObject = (currency, issuer, value) => (currency === 'XRP' ? { currency, value } : { currency, issuer, value });
@@ -593,13 +567,14 @@ async function getOrderBook() {
      try {
           const { environment } = getEnvironment();
           const client = await getClient();
-          const wallet = xrpl.Wallet.fromSeed(dom.seed.value, { algorithm: 'secp256k1' });
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
 
           let results = `Connected to ${environment}.\nGet Order Book.\n\n`;
-          results += `${dom.name.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
+          results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
 
-          const we_want = buildCurrencyObject(dom.wantCurrency.value, dom.wantIssuer.value, dom.wantAmount.value);
-          const we_spend = buildCurrencyObject(dom.spendCurrency.value, dom.spendIssuer.value, dom.spendAmount.value);
+          const we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
+          const we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
 
           console.log('we_want:', we_want);
           console.log('we_spend:', we_spend);
@@ -614,7 +589,7 @@ async function getOrderBook() {
 
           const sortedOffers = attachRateAndSort(orderBook.result.offers);
           const stats = computeAverageExchangeRateBothWays(sortedOffers);
-          results += formatOffers1(sortedOffers);
+          results += formatOffers(sortedOffers);
           results += `\n--- Aggregate Exchange Rate Stats ---\n`;
           results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
           results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
@@ -633,7 +608,7 @@ async function getOrderBook() {
 
           const reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
           const reverseStats = computeAverageExchangeRateBothWays(reverseSorted);
-          results += formatOffers1(reverseSorted);
+          results += formatOffers(reverseSorted);
           results += `\n--- Aggregate Exchange Rate Stats ---\n`;
           results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
           results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
@@ -664,212 +639,15 @@ async function getOrderBook() {
 
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          resultField.value = 'ERROR: ' + (error.message || 'Unknown error');
-          resultField.classList.add('error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getOrderBook');
      }
-}
-
-// async function getOrderBook() {
-//      console.log('Entering getOrderBook');
-
-//      // Clear previous error styling
-//      resultField.classList.remove('error');
-//      resultField.classList.remove('success');
-
-//      let we_want;
-//      let takerGetsString;
-//      let we_spend;
-//      let takerPaysString;
-
-//      const accountNameField = document.getElementById('accountNameField');
-//      const accountAddressField = document.getElementById('accountAddressField');
-//      const accountSeedField = document.getElementById('accountSeedField');
-//      const xrpBalanceField = document.getElementById('xrpBalanceField');
-//      const weWantCurrencyField = document.getElementById('weWantCurrencyField');
-//      const weSpendCurrencyField = document.getElementById('weSpendCurrencyField');
-//      const weWantIssuerField = document.getElementById('weWantIssuerField');
-//      const weSpendIssuerField = document.getElementById('weSpendIssuerField');
-//      const weWantAmountField = document.getElementById('weWantAmountField');
-//      const weSpendAmountField = document.getElementById('weSpendAmountField');
-
-//      if (!accountNameField || !accountAddressField || !accountSeedField || !xrpBalanceField || !weWantCurrencyField || !weSpendCurrencyField || !weWantIssuerField || !weSpendIssuerField || !weWantAmountField || !weSpendAmountField) {
-//           resultField.value = 'ERROR: DOM elements not found';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(accountAddressField.value)) {
-//           resultField.value = 'ERROR: Account Address can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(accountSeedField.value)) {
-//           resultField.value = 'ERROR: Account seed amount can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(xrpBalanceField.value)) {
-//           resultField.value = 'ERROR: XRP amount can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(weWantCurrencyField.value)) {
-//           resultField.value = 'ERROR: Taker Pays currency can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(weSpendCurrencyField.value)) {
-//           resultField.value = 'ERROR: Taker Gets currency can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(weWantAmountField.value)) {
-//           resultField.value = 'ERROR: Pay amount can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      if (!validatInput(weSpendAmountField.value)) {
-//           resultField.value = 'ERROR: Get amount can not be empty';
-//           resultField.classList.add('error');
-//           return;
-//      }
-
-//      try {
-//           const { environment } = getEnvironment();
-//           const client = await getClient();
-
-//           let results = `Connected to ${environment}.\nGet Order Book.\n\n`;
-//           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-//           results += accountNameField.value + ' account: ' + wallet.address;
-
-//           if (weWantCurrencyField.value == 'XRP') {
-//                takerGetsString = '{"currency": "' + weWantCurrencyField.value + '",\n' + '"value": "' + weWantAmountField.value + '"}';
-//                we_want = JSON.parse(takerGetsString);
-//           } else {
-//                takerGetsString = '{"currency": "' + weWantCurrencyField.value + '",\n' + '"issuer": "' + weWantIssuerField.value + '",\n' + '"value": "' + weWantAmountField.value + '"}';
-//                we_want = JSON.parse(takerGetsString);
-//           }
-
-//           if (weSpendCurrencyField.value == 'XRP') {
-//                takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
-//                we_spend = JSON.parse(takerPaysString);
-//           } else {
-//                takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"issuer": "' + weSpendIssuerField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
-//                we_spend = JSON.parse(takerPaysString);
-//           }
-//           console.log('we_want', we_want);
-//           console.log('we_spend', we_spend);
-
-//           results += '\n\n*** Order Book ***\n';
-
-//           try {
-//                const orderBook = await client.request({
-//                     method: 'book_offers',
-//                     taker: wallet.address,
-//                     ledger_index: 'current',
-//                     taker_gets: we_spend,
-//                     taker_pays: we_want,
-//                });
-
-//                const sortedOffers = attachRateAndSort(orderBook.result.offers);
-//                const stats = computeAverageExchangeRateBothWays(sortedOffers);
-//                results += formatOffers1(sortedOffers);
-//                results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-//                results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
-//                results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
-//                results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} TST/XRP\n`;
-//                results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} TST/XRP\n`;
-
-//                // Reverse order book
-//                results += '\n*** Reverse Order Book ***\n';
-//                const reverseOrderBook = await client.request({
-//                     method: 'book_offers',
-//                     taker: wallet.address,
-//                     ledger_index: 'current',
-//                     taker_gets: we_want,
-//                     taker_pays: we_spend,
-//                });
-
-//                const reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
-//                const reverseStats = computeAverageExchangeRateBothWays(sortedOffers);
-//                results += formatOffers1(reverseSorted);
-//                results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-//                results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
-//                results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
-//                results += `Best Rate: ${reverseStats.inverse.bestRate.toFixed(8)} TST/XRP\n`;
-//                results += `Worst Rate: ${reverseStats.inverse.worstRate.toFixed(8)} TST/XRP\n`;
-
-//                const stats1 = computeFullExchangeRateStats(sortedOffers, reverseSorted, 20);
-//                function formatStats(label, data) {
-//                     return `${label} (from ${data.count} offers)
-//                   VWAP:        ${data.vwap.toFixed(8)}
-//                   Average:     ${data.average.toFixed(8)}
-//                   Median:      ${data.median.toFixed(8)}
-//                   Mode:        ${data.mode.join(', ')}
-//                   Best Rate:   ${data.best.toFixed(8)}
-//                   Worst Rate:  ${data.worst.toFixed(8)}\n`;
-//                }
-//                results += '\n--- Combined Exchange Rate Stats ---\n';
-//                results += formatStats('TST/XRP', stats1.TOKEN_XRP);
-//                results += formatStats('XRP/TST', stats1.XRP_TOKEN);
-//           } catch (err) {
-//                throw new Error(err);
-//           }
-
-//           resultField.value = results;
-//           resultField.classList.add('success');
-//      } catch (error) {
-//           console.error('Error:', error);
-//           resultField.value = 'ERROR: ' + error.message || 'Unknown error';
-//           resultField.classList.add('error');
-//           await disconnectClient();
-//      } finally {
-//           console.log('Leaving getOrderBook');
-//      }
-// }
-
-function attachRateAndSort1(offers, baseCurrency, counterCurrency, maxDeviationPercent = 50) {
-     // Attach calculated rate to each offer
-     const offersWithRate = offers
-          .map(offer => {
-               let rate;
-
-               if (offer.TakerGets.currency === baseCurrency && offer.TakerPays.currency === counterCurrency) {
-                    rate = parseFloat(offer.TakerPays.value) / parseFloat(offer.TakerGets.value);
-               } else if (offer.TakerGets.currency === counterCurrency && offer.TakerPays.currency === baseCurrency) {
-                    rate = parseFloat(offer.TakerGets.value) / parseFloat(offer.TakerPays.value);
-               } else {
-                    return { ...offer, rate: NaN };
-               }
-
-               return { ...offer, rate };
-          })
-          .filter(offer => !isNaN(offer.rate));
-
-     // Compute median rate
-     const sortedRates = offersWithRate.map(o => o.rate).sort((a, b) => a - b);
-     const medianRate = sortedRates.length % 2 === 0 ? (sortedRates[sortedRates.length / 2 - 1] + sortedRates[sortedRates.length / 2]) / 2 : sortedRates[Math.floor(sortedRates.length / 2)];
-
-     // Filter out outliers based on deviation
-     const filteredOffers = offersWithRate.filter(o => {
-          const deviation = Math.abs((o.rate - medianRate) / medianRate) * 100;
-          return deviation <= maxDeviationPercent;
-     });
-
-     // Sort by rate ascending
-     return filteredOffers.sort((a, b) => a.rate - b.rate);
 }
 
 function attachRateAndSort(offers) {
@@ -1023,707 +801,7 @@ function computeAverageExchangeRateBothWays(offers) {
      };
 }
 
-// function computeAverageExchangeRate(offers) {
-//      let totalPays = 0;
-//      let totalGets = 0;
-//      let simpleRates = [];
-
-//      offers.forEach(offer => {
-//          let gets = offer.TakerGets;
-//          let pays = offer.TakerPays;
-//          let getsValue = 0;
-//          let paysValue = 0;
-
-//          if (typeof gets === "string") getsValue = parseFloat(gets) / 1_000_000;
-//          else if (typeof gets === "object" && gets !== null) getsValue = parseFloat(gets.value);
-
-//          if (typeof pays === "string") paysValue = parseFloat(pays) / 1_000_000;
-//          else if (typeof pays === "object" && pays !== null) paysValue = parseFloat(pays.value);
-
-//          if (getsValue > 0 && paysValue > 0) {
-//              totalPays += paysValue;
-//              totalGets += getsValue;
-//              simpleRates.push(paysValue / getsValue);
-//          }
-//      });
-
-//      const vwap = totalGets > 0 ? totalPays / totalGets : 0;
-//      const simpleAvg = simpleRates.length > 0
-//          ? simpleRates.reduce((a, b) => a + b, 0) / simpleRates.length
-//          : 0;
-
-//      return {
-//          vwap: vwap,
-//          simpleAvg: simpleAvg,
-//          bestRate: simpleRates.length > 0 ? Math.max(...simpleRates) : 0,
-//          worstRate: simpleRates.length > 0 ? Math.min(...simpleRates) : 0
-//      };
-//  }
-
-function formatOffers(offers, baseCurrency, quoteCurrency) {
-     if (!offers || offers.length === 0) {
-          return 'No offers found';
-     }
-
-     // Conversion factor: 1 XRP = 1,000,000 drops
-     const DROPS_PER_XRP = 1000000;
-
-     // Debug: Log the input type and value
-     console.log('Input type:', typeof offers, 'Input value:', offers);
-
-     // Check if offers is an array
-     if (!Array.isArray(offers)) {
-          let errorMessage = 'Error: Input must be an array of offers';
-          if (typeof offers === 'object' && offers !== null && Array.isArray(offers.offers)) {
-               errorMessage += ". Did you mean to pass 'offers.offers'?";
-          } else if (typeof offers === 'string') {
-               errorMessage += '. Input is a string; try parsing it with JSON.parse.';
-          }
-          return errorMessage;
-     }
-
-     // Function to format a single offer
-     function formatOffer(offer, index) {
-          let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
-
-          // Helper function to format nested objects (e.g., TakerPays)
-          function formatNestedObject(obj, indent = '\t') {
-               return `{\n${Object.entries(obj)
-                    .map(([key, value]) => `${indent}\t${key}: ${value}`)
-                    .join('\n')}\n${indent}}`;
-          }
-
-          // Validate offer is an object
-          if (typeof offer !== 'object' || offer === null) {
-               return `\toffers (${index + 1}): Invalid offer data\n`;
-          }
-
-          // Calculate price
-          let priceBaseInQuote = null; // e.g., TST in XRP (XRP per TST)
-          let priceQuoteInBase = null; // e.g., XRP in TST (TST per XRP)
-          let takerGetsAmount, takerPaysAmount;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               // XRP in drops
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               // Issued currency
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               // XRP in drops
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               // Issued currency
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // Determine currencies
-          const getsCurrency = typeof offer.TakerGets === 'string' ? 'XRP' : offer.TakerGets.currency;
-          const paysCurrency = typeof offer.TakerPays === 'string' ? 'XRP' : offer.TakerPays.currency;
-
-          // Calculate price based on currency pair
-          if (takerGetsAmount && takerPaysAmount && takerGetsAmount !== 0) {
-               if (getsCurrency === baseCurrency && paysCurrency === quoteCurrency) {
-                    // TakerGets TST, TakerPays XRP: Price of TST in XRP
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount; // XRP per TST
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount; // TST per XRP
-               } else if (getsCurrency === quoteCurrency && paysCurrency === baseCurrency) {
-                    // TakerGets XRP, TakerPays TST: Price of TST in XRP
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount; // XRP per TST
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount; // TST per XRP
-               }
-          }
-
-          // Debug: Log currency and amounts
-          console.log(`Offer ${index + 1}: GetsCurrency=${getsCurrency}, PaysCurrency=${paysCurrency}, GetsAmount=${takerGetsAmount}, PaysAmount=${takerPaysAmount}, PriceBaseInQuote=${priceBaseInQuote}`);
-
-          // Iterate through offer fields
-          for (const [key, value] of Object.entries(offer)) {
-               let formattedValue = value;
-
-               // Handle TakerGets
-               if (key === 'TakerGets') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerGets value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerGets format';
-                    }
-               }
-               // Handle TakerPays
-               else if (key === 'TakerPays') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerPays value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerPays format';
-                    }
-               }
-               // Handle taker_gets_funded and taker_pays_funded
-               else if (key === 'taker_gets_funded' || key === 'taker_pays_funded') {
-                    if (typeof value === 'string') {
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid funded value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = String(value);
-                    }
-               }
-               // Format other nested objects
-               else if (typeof value === 'object' && value !== null) {
-                    formattedValue = formatNestedObject(value);
-               }
-               // Convert other values to strings
-               else {
-                    formattedValue = String(value);
-               }
-
-               output += `\t${key}: ${formattedValue}\n`;
-          }
-
-          // Append price information
-          if (priceBaseInQuote !== null) {
-               output += `\tPrice (TST/XRP): ${priceBaseInQuote.toFixed(6)} XRP per TST\n`;
-               output += `\tPrice (XRP/TST): ${priceQuoteInBase.toFixed(6)} TST per XRP\n`;
-          } else {
-               output += `\tPrice: Unable to calculate\n`;
-          }
-
-          return output;
-     }
-
-     // Calculate best bid and ask prices
-     const pricedOffers = offers.map(offer => {
-          let takerGetsAmount, takerPaysAmount, priceBaseInQuote, priceQuoteInBase;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // Determine currencies
-          const getsCurrency = typeof offer.TakerGets === 'string' ? 'XRP' : offer.TakerGets.currency;
-          const paysCurrency = typeof offer.TakerPays === 'string' ? 'XRP' : offer.TakerPays.currency;
-
-          // Calculate price
-          if (takerGetsAmount && takerPaysAmount && takerGetsAmount !== 0) {
-               if (getsCurrency === baseCurrency && paysCurrency === quoteCurrency) {
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount; // XRP per TST
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount; // TST per XRP
-               } else if (getsCurrency === quoteCurrency && paysCurrency === baseCurrency) {
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount; // XRP per TST
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount; // TST per XRP
-               }
-          }
-
-          return { offer, priceBaseInQuote, priceQuoteInBase, getsCurrency, paysCurrency };
-     });
-
-     // Find best bid and ask
-     // Bids: Buying TST (TakerGets TST, TakerPays XRP)
-     // Asks: Selling TST (TakerGets XRP, TakerPays TST)
-     const bids = pricedOffers.filter(o => o.priceBaseInQuote && o.getsCurrency === baseCurrency && o.paysCurrency === quoteCurrency);
-     const asks = pricedOffers.filter(o => o.priceBaseInQuote && o.getsCurrency === quoteCurrency && o.paysCurrency === baseCurrency);
-     const bestBid = bids.length > 0 ? Math.max(...bids.map(o => o.priceBaseInQuote)) : null;
-     const bestAsk = asks.length > 0 ? Math.min(...asks.map(o => o.priceBaseInQuote)) : null;
-
-     // Format offers
-     const formattedOffers = offers.map((offer, index) => formatOffer(offer, index)).join('\n');
-
-     // Append summary
-     let summary = '\n*** Order Book Summary ***\n';
-     summary += bestBid ? `Best Bid (TST/XRP): ${bestBid.toFixed(6)} XRP per TST\n` : `No bids found for TST/XRP\n`;
-     summary += bestAsk ? `Best Ask (TST/XRP): ${bestAsk.toFixed(6)} XRP per TST\n` : `No asks found for TST/XRP\n`;
-
-     return formattedOffers + summary;
-}
-
-function formatOffers3(offers, baseCurrency, quoteCurrency) {
-     if (!offers || offers.length === 0) {
-          return 'No offers found';
-     }
-
-     // Conversion factor: 1 XRP = 1,000,000 drops
-     const DROPS_PER_XRP = 1000000;
-
-     // Debug: Log the input type and value
-     console.log('Input type:', typeof offers, 'Input value:', offers);
-
-     // Check if offers is an array
-     if (!Array.isArray(offers)) {
-          let errorMessage = 'Error: Input must be an array of offers';
-          if (typeof offers === 'object' && offers !== null && Array.isArray(offers.offers)) {
-               errorMessage += ". Did you mean to pass 'offers.offers'?";
-          } else if (typeof offers === 'string') {
-               errorMessage += '. Input is a string; try parsing it with JSON.parse.';
-          }
-          return errorMessage;
-     }
-
-     // Function to format a single offer
-     function formatOffer(offer, index) {
-          let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
-
-          // Helper function to format nested objects (e.g., TakerPays)
-          function formatNestedObject(obj, indent = '\t') {
-               return `{\n${Object.entries(obj)
-                    .map(([key, value]) => `${indent}\t${key}: ${value}`)
-                    .join('\n')}\n${indent}}`;
-          }
-
-          // Validate offer is an object
-          if (typeof offer !== 'object' || offer === null) {
-               return `\toffers (${index + 1}): Invalid offer data\n`;
-          }
-
-          // Calculate price
-          let priceBaseInQuote = null; // e.g., TST in XRP
-          let priceQuoteInBase = null; // e.g., XRP in TST
-          let takerGetsAmount, takerPaysAmount;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               // XRP in drops
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               // Issued currency
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               // XRP in drops
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               // Issued currency
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // In formatOffer function
-          // Determine currencies
-          const getsCurrency = typeof offer.TakerGets === 'string' ? 'XRP' : offer.TakerGets.currency;
-          const paysCurrency = typeof offer.TakerPays === 'string' ? 'XRP' : offer.TakerPays.currency;
-
-          console.log(`Offer ${index + 1}: GetsCurrency=${getsCurrency}, PaysCurrency=${paysCurrency}, GetsAmount=${takerGetsAmount}, PaysAmount=${takerPaysAmount}, PriceBaseInQuote=${priceBaseInQuote}`);
-
-          // Calculate price based on currency pair
-          if (takerGetsAmount && takerPaysAmount && takerGetsAmount !== 0) {
-               if (getsCurrency === baseCurrency && paysCurrency === quoteCurrency) {
-                    // TakerGets base, TakerPays quote: Price of base in quote
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount;
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount;
-               } else if (getsCurrency === quoteCurrency && paysCurrency === baseCurrency) {
-                    // TakerGets quote, TakerPays base: Price of base in quote
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount;
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount;
-               }
-          }
-
-          // Debug: Log currency and amounts
-          console.log(`Offer ${index + 1}: GetsCurrency=${getsCurrency}, PaysCurrency=${paysCurrency}, GetsAmount=${takerGetsAmount}, PaysAmount=${takerPaysAmount}, PriceBaseInQuote=${priceBaseInQuote}`);
-
-          // Iterate through offer fields
-          for (const [key, value] of Object.entries(offer)) {
-               let formattedValue = value;
-
-               // Handle TakerGets
-               if (key === 'TakerGets') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerGets value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerGets format';
-                    }
-               }
-               // Handle TakerPays
-               else if (key === 'TakerPays') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerPays value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerPays format';
-                    }
-               }
-               // Handle taker_gets_funded and taker_pays_funded
-               else if (key === 'taker_gets_funded' || key === 'taker_pays_funded') {
-                    if (typeof value === 'string') {
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid funded value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = String(value);
-                    }
-               }
-               // Format other nested objects
-               else if (typeof value === 'object' && value !== null) {
-                    formattedValue = formatNestedObject(value);
-               }
-               // Convert other values to strings
-               else {
-                    formattedValue = String(value);
-               }
-
-               output += `\t${key}: ${formattedValue}\n`;
-          }
-
-          // Append price information
-          if (priceBaseInQuote !== null) {
-               output += `\tPrice (${baseCurrency}/${quoteCurrency}): ${priceBaseInQuote.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n`;
-               output += `\tPrice (${quoteCurrency}/${baseCurrency}): ${priceQuoteInBase.toFixed(6)} ${baseCurrency} per ${quoteCurrency}\n`;
-          } else {
-               output += `\tPrice: Unable to calculate\n`;
-          }
-
-          return output;
-     }
-
-     // Calculate best bid and ask prices
-     const pricedOffers = offers.map(offer => {
-          let takerGetsAmount, takerPaysAmount, priceBaseInQuote, priceQuoteInBase;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // Determine currencies
-          const getsCurrency = typeof offer.TakerGets === 'string' ? 'XRP' : offer.TakerGets.currency;
-          const paysCurrency = typeof offer.TakerPays === 'string' ? 'XRP' : offer.TakerPays.currency;
-
-          // Calculate price
-          if (takerGetsAmount && takerPaysAmount && takerGetsAmount !== 0) {
-               if (getsCurrency === baseCurrency && paysCurrency === quoteCurrency) {
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount;
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount;
-               } else if (getsCurrency === quoteCurrency && paysCurrency === baseCurrency) {
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount;
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount;
-               }
-          }
-
-          return { offer, priceBaseInQuote, priceQuoteInBase, getsCurrency, paysCurrency };
-     });
-
-     // Find best bid and ask
-     // Bids: Buying base (TakerGets base, TakerPays quote)
-     // Asks: Selling base (TakerGets quote, TakerPays base)
-     const bids = pricedOffers.filter(o => o.priceBaseInQuote && o.getsCurrency === baseCurrency && o.paysCurrency === quoteCurrency);
-     const asks = pricedOffers.filter(o => o.priceBaseInQuote && o.getsCurrency === quoteCurrency && o.paysCurrency === baseCurrency);
-     const bestBid = bids.length > 0 ? Math.max(...bids.map(o => o.priceBaseInQuote)) : null;
-     const bestAsk = asks.length > 0 ? Math.min(...asks.map(o => o.priceBaseInQuote)) : null;
-
-     // Format offers
-     const formattedOffers = offers.map((offer, index) => formatOffer(offer, index)).join('\n');
-
-     // Append summary
-     let summary = '\n*** Order Book Summary ***\n';
-     summary += bestBid ? `Best Bid (${baseCurrency}/${quoteCurrency}): ${bestBid.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n` : `No bids found for ${baseCurrency}/${quoteCurrency}\n`;
-     summary += bestAsk ? `Best Ask (${baseCurrency}/${quoteCurrency}): ${bestAsk.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n` : `No asks found for ${baseCurrency}/${quoteCurrency}\n`;
-
-     return formattedOffers + summary;
-}
-
-function formatOffers2(offers, baseCurrency, quoteCurrency) {
-     if (!offers || offers.length === 0) {
-          return 'No offers found';
-     }
-
-     // Conversion factor: 1 XRP = 1,000,000 drops
-     const DROPS_PER_XRP = 1000000;
-
-     // Debug: Log the input type and value
-     console.log('Input type:', typeof offers, 'Input value:', offers);
-
-     // Check if offers is an array
-     if (!Array.isArray(offers)) {
-          let errorMessage = 'Error: Input must be an array of offers';
-          if (typeof offers === 'object' && offers !== null && Array.isArray(offers.offers)) {
-               errorMessage += ". Did you mean to pass 'offers.offers'?";
-          } else if (typeof offers === 'string') {
-               errorMessage += '. Input is a string; try parsing it with JSON.parse.';
-          }
-          return errorMessage;
-     }
-
-     // Function to format a single offer
-     function formatOffer(offer, index) {
-          let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
-
-          // Helper function to format nested objects (e.g., TakerPays)
-          function formatNestedObject(obj, indent = '\t') {
-               return `{\n${Object.entries(obj)
-                    .map(([key, value]) => `${indent}\t${key}: ${value}`)
-                    .join('\n')}\n${indent}}`;
-          }
-
-          // Validate offer is an object
-          if (typeof offer !== 'object' || offer === null) {
-               return `\toffers (${index + 1}): Invalid offer data\n`;
-          }
-
-          // Calculate price
-          let priceBaseInQuote = null; // e.g., TST in XRP
-          let priceQuoteInBase = null; // e.g., XRP in TST
-          let takerGetsAmount, takerPaysAmount;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               // XRP in drops
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               // Issued currency
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               // XRP in drops
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               // Issued currency
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // Calculate price based on currency pair (TST/XRP)
-          if (takerGetsAmount && takerPaysAmount) {
-               if ((offer.TakerGets.currency === baseCurrency || offer.TakerGets === baseCurrency) && (offer.TakerPays.currency === quoteCurrency || offer.TakerPays === quoteCurrency)) {
-                    // TakerGets TST, TakerPays XRP: Price of TST in XRP
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount;
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount;
-               } else if ((offer.TakerGets.currency === quoteCurrency || offer.TakerGets === quoteCurrency) && (offer.TakerPays.currency === baseCurrency || offer.TakerPays === baseCurrency)) {
-                    // TakerGets XRP, TakerPays TST: Price of TST in XRP
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount;
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount;
-               }
-          }
-
-          // Iterate through offer fields
-          for (const [key, value] of Object.entries(offer)) {
-               let formattedValue = value;
-
-               // Handle TakerGets
-               if (key === 'TakerGets') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerGets value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerGets format';
-                    }
-               }
-               // Handle TakerPays
-               else if (key === 'TakerPays') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerPays value' : `${(drops / DROPS_PER_XRP).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerPays format';
-                    }
-               }
-               // Format other nested objects
-               else if (typeof value === 'object' && value !== null) {
-                    formattedValue = formatNestedObject(value);
-               }
-               // Convert other values to strings
-               else {
-                    formattedValue = String(value);
-               }
-
-               output += `\t${key}: ${formattedValue}\n`;
-          }
-
-          // Append price information
-          if (priceBaseInQuote !== null) {
-               output += `\tPrice (${baseCurrency}/${quoteCurrency}): ${priceBaseInQuote.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n`;
-               output += `\tPrice (${quoteCurrency}/${baseCurrency}): ${priceQuoteInBase.toFixed(6)} ${baseCurrency} per ${quoteCurrency}\n`;
-          } else {
-               output += `\tPrice: Unable to calculate\n`;
-          }
-
-          return output;
-     }
-
-     // Calculate best bid and ask prices
-     const pricedOffers = offers.map(offer => {
-          let takerGetsAmount, takerPaysAmount, priceBaseInQuote, priceQuoteInBase;
-
-          // Parse TakerGets
-          if (typeof offer.TakerGets === 'string') {
-               takerGetsAmount = parseInt(offer.TakerGets) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerGets === 'object' && offer.TakerGets.value) {
-               takerGetsAmount = parseFloat(offer.TakerGets.value);
-          }
-
-          // Parse TakerPays
-          if (typeof offer.TakerPays === 'string') {
-               takerPaysAmount = parseInt(offer.TakerPays) / DROPS_PER_XRP;
-          } else if (typeof offer.TakerPays === 'object' && offer.TakerPays.value) {
-               takerPaysAmount = parseFloat(offer.TakerPays.value);
-          }
-
-          // Calculate price
-          if (takerGetsAmount && takerPaysAmount) {
-               if ((offer.TakerGets.currency === baseCurrency || offer.TakerGets === baseCurrency) && (offer.TakerPays.currency === quoteCurrency || offer.TakerPays === quoteCurrency)) {
-                    priceBaseInQuote = takerPaysAmount / takerGetsAmount;
-                    priceQuoteInBase = takerGetsAmount / takerPaysAmount;
-               } else if ((offer.TakerGets.currency === quoteCurrency || offer.TakerGets === quoteCurrency) && (offer.TakerPays.currency === baseCurrency || offer.TakerPays === baseCurrency)) {
-                    priceBaseInQuote = takerGetsAmount / takerPaysAmount;
-                    priceQuoteInBase = takerPaysAmount / takerGetsAmount;
-               }
-          }
-
-          return { offer, priceBaseInQuote, priceQuoteInBase };
-     });
-
-     // Find best bid and ask (for TST/XRP)
-     const bids = pricedOffers.filter(o => o.priceBaseInQuote && (o.offer.TakerGets.currency === baseCurrency || o.offer.TakerGets === baseCurrency));
-     const asks = pricedOffers.filter(o => o.priceBaseInQuote && (o.offer.TakerPays.currency === baseCurrency || o.offer.TakerPays === baseCurrency));
-     const bestBid = bids.length > 0 ? Math.max(...bids.map(o => o.priceBaseInQuote)) : null;
-     const bestAsk = asks.length > 0 ? Math.min(...asks.map(o => o.priceBaseInQuote)) : null;
-
-     // Format offers
-     const formattedOffers = offers.map((offer, index) => formatOffer(offer, index)).join('\n');
-
-     // Append summary
-     let summary = '\n*** Order Book Summary ***\n';
-     summary += bestBid ? `Best Bid (${baseCurrency}/${quoteCurrency}): ${bestBid.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n` : `No bids found for ${baseCurrency}/${quoteCurrency}\n`;
-     summary += bestAsk ? `Best Ask (${baseCurrency}/${quoteCurrency}): ${bestAsk.toFixed(6)} ${quoteCurrency} per ${baseCurrency}\n` : `No asks found for ${baseCurrency}/${quoteCurrency}\n`;
-
-     return formattedOffers + summary;
-}
-
-function formatOffersOG(offers) {
-     // Conversion factor: 1 XRP = 1,000,000 drops
-     const DROPS_PER_XRP = 1000000;
-
-     // Debug: Log the input type and value
-     console.log('Input type:', typeof offers, 'Input value:', offers);
-
-     // Check if offers is an array
-     if (!Array.isArray(offers)) {
-          let errorMessage = 'Error: Input must be an array of offers';
-          if (typeof offers === 'object' && offers !== null && Array.isArray(offers.offers)) {
-               errorMessage += ". Did you mean to pass 'offers.offers'?";
-          } else if (typeof offers === 'string') {
-               errorMessage += '. Input is a string; try parsing it with JSON.parse.';
-          }
-          return errorMessage;
-     }
-
-     // Handle empty array
-     if (offers.length === 0) {
-          return 'No offers to display';
-     }
-
-     // Function to format a single offer
-     function formatOffer(offer, index) {
-          let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
-
-          // Helper function to format nested objects (e.g., TakerPays)
-          function formatNestedObject(obj, indent = '\t') {
-               return `{\n${Object.entries(obj)
-                    .map(([key, value]) => `${indent}\t${key}: ${value}`)
-                    .join('\n')}\n${indent}}`;
-          }
-
-          // Validate offer is an object
-          if (typeof offer !== 'object' || offer === null) {
-               return `\toffers (${index + 1}): Invalid offer data\n`;
-          }
-
-          // Iterate through offer fields
-          for (const [key, value] of Object.entries(offer)) {
-               let formattedValue = value;
-
-               // Convert TakerGets from drops to XRP
-               if (key === 'TakerGets') {
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerGets value' : `${(drops / 1_000_000).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerGets format';
-                    }
-               } else if (key === 'TakerPays') {
-                    // Handle TakerPays
-                    if (typeof value === 'string') {
-                         // XRP in drops
-                         const drops = parseInt(value);
-                         formattedValue = isNaN(drops) ? 'Invalid TakerPays value' : `${(drops / 1_000_000).toFixed(6)} XRP (${drops} drops)`;
-                    } else if (typeof value === 'object' && value !== null) {
-                         // Issued currency (object)
-                         formattedValue = formatNestedObject(value);
-                    } else {
-                         formattedValue = 'Invalid TakerPays format';
-                    }
-               } else if (typeof value === 'object' && value !== null) {
-                    // Format nested objects (TakerPays, taker_pays_funded)
-                    formattedValue = formatNestedObject(value);
-               } else {
-                    // Convert numbers and other values to strings
-                    formattedValue = String(value);
-               }
-               output += `\t${key}: ${formattedValue}\n`;
-          }
-
-          return output;
-     }
-
-     // Process all offers and join with newlines
-     return offers.map((offer, index) => formatOffer(offer, index)).join('\n');
-}
-
-function formatOffers1(offers) {
+function formatOffers(offers) {
      const DROPS_PER_XRP = 1000000;
 
      if (!Array.isArray(offers)) {
@@ -1814,19 +892,6 @@ function formatOffers1(offers) {
      return offers.map((offer, index) => formatOffer(offer, index)).join('\n');
 }
 
-// async function getCurrencyBalance(currencyCode) {
-//      try {
-//           const accountAddressField = document.getElementById('accountAddressField');
-//           const response = await fetchAccountObjects(accountAddressField);
-//           const accountObjects = response.result.account_objects;
-//           const matchingObject = accountObjects.find(obj => obj.Balance.currency === currencyCode.toUpperCase());
-//           return matchingObject ? matchingObject.Balance.value : null;
-//      } catch (error) {
-//           console.error('Error fetching balance:', error);
-//           return null;
-//      }
-// }
-
 async function getCurrencyBalance(currencyCode) {
      try {
           const accountAddressField = document.getElementById('accountAddressField');
@@ -1863,9 +928,9 @@ window.cancelOffer = cancelOffer;
 window.getOrderBook = getOrderBook;
 window.getCurrencyBalance = getCurrencyBalance;
 window.getXrpBalance = getXrpBalance;
-window.getTokenBalance = getTokenBalance;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
 window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

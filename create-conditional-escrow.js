@@ -5,7 +5,11 @@ import { generateCondition } from './five-bells.js';
 async function createConditionalEscrow() {
      console.log('Entering createConditionalEscrow');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -18,9 +22,7 @@ async function createConditionalEscrow() {
 
      // Check if any required DOM elements are missing
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`);
-          }
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField } = fields;
@@ -37,7 +39,7 @@ async function createConditionalEscrow() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`);
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -69,7 +71,7 @@ async function createConditionalEscrow() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}, spinner`);
           }
 
           results += `Escrow created successfully.\n\n`;
@@ -78,14 +80,15 @@ async function createConditionalEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving createConditionalEscrow');
      }
 }
@@ -93,7 +96,11 @@ async function createConditionalEscrow() {
 async function finishConditionalEscrow() {
      console.log('Entering finishConditionalEscrow');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
@@ -107,9 +114,7 @@ async function finishConditionalEscrow() {
 
      // Check for missing DOM elements
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`);
-          }
+          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
      const { accountAddress, escrowOwner, accountSeed, escrowCondition, escrowFulfillment, escrowSequenceNumber, xrpBalanceField } = fields;
@@ -124,9 +129,7 @@ async function finishConditionalEscrow() {
      ];
 
      for (const [condition, message] of validations) {
-          if (condition) {
-               return setError(`ERROR: ${message}`);
-          }
+          if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
      try {
@@ -155,7 +158,7 @@ async function finishConditionalEscrow() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
           }
 
           results += `Escrow finished successfully.\n\n`;
@@ -164,14 +167,15 @@ async function finishConditionalEscrow() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving finishConditionalEscrow');
      }
 }
@@ -186,3 +190,4 @@ window.createConditionalEscrow = createConditionalEscrow;
 window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

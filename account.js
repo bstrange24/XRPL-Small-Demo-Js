@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction, autoResize } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction, autoResize } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -40,17 +40,16 @@ const flagMap = {
 export async function getAccountInfo() {
      console.log('Entering getAccountInfo');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const { seedField, balanceField } = resolveAccountFields();
 
-     if (!seedField || !balanceField) {
-          return setError('ERROR: DOM elements not found');
-     }
-
-     if (!validatInput(seedField.value)) {
-          return setError('ERROR: Seed cannot be empty');
-     }
+     if (!seedField || !balanceField) return setError('ERROR: DOM elements not found', spinner);
+     if (!validatInput(seedField.value)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -93,12 +92,13 @@ export async function getAccountInfo() {
 
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
           await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getAccountInfo');
      }
 }
@@ -106,15 +106,19 @@ export async function getAccountInfo() {
 async function updateFlags() {
      console.log('Entering updateFlags');
 
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const accountSeedField = resolveAccountSeedField();
-     if (!accountSeedField) return setError('ERROR: Account seed field not found');
-     if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty');
+     if (!accountSeedField) return setError('ERROR: Account seed field not found', spinner);
+     if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty', spinner);
 
      const noFreeze = document.getElementById('asfNoFreeze')?.checked;
      const globalFreeze = document.getElementById('asfGlobalFreeze')?.checked;
-     if (noFreeze && globalFreeze) return setError('ERROR: Cannot enable both NoFreeze and GlobalFreeze');
+     if (noFreeze && globalFreeze) return setError('ERROR: Cannot enable both NoFreeze and GlobalFreeze', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -139,23 +143,28 @@ async function updateFlags() {
 
           for (const flagValue of setFlags) {
                const response = await submitFlagTransaction(client, wallet, { SetFlag: parseInt(flagValue) });
-               if (!response.success) return setError(response.message);
+               if (!response.success) {
+                    return setError(response.message, spinner);
+               }
                resultField.value += `\n\nSet Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
           for (const flagValue of clearFlags) {
                const response = await submitFlagTransaction(client, wallet, { ClearFlag: parseInt(flagValue) });
-               if (!response.success) return setError(response.message);
+               if (!response.success) {
+                    return setError(response.message, spinner);
+               }
                resultField.value += `\n\nClear Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
           await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving updateFlags');
      }
 }
@@ -167,24 +176,25 @@ async function setDepositAuthAccounts(authorizeFlag) {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const selected = getSelectedAccount();
-     if (!selected) return setError(`Please select an account.`);
+     if (!selected) return setError(`Please select an account.`, spinner);
 
      const isAccount1 = selected === 'account1';
      const accountSeedField = document.getElementById(isAccount1 ? 'accountSeed1Field' : 'accountSeed2Field');
      const accountAddressField = document.getElementById(isAccount1 ? 'accountAddress1Field' : 'accountAddress2Field');
      const authorizedAddressField = document.getElementById(isAccount1 ? 'accountAddress2Field' : 'accountAddress1Field');
 
-     if (!accountSeedField || !accountAddressField || !authorizedAddressField || !resultField) {
-          return setError(`ERROR: DOM elements not found.`);
-     }
+     if (!accountSeedField || !accountAddressField || !authorizedAddressField || !resultField) return setError(`ERROR: DOM elements not found.`, spinner);
 
      const seed = accountSeedField.value.trim();
      const authorizedAddress = authorizedAddressField.value.trim();
 
-     if (!seed) return setError(`ERROR: Account seed cannot be empty.`);
-     if (!authorizedAddress) return setError(`ERROR: Authorized account address cannot be empty.`);
-     if (!xrpl.isValidAddress(authorizedAddress)) return setError(`ERROR: Authorized account address is invalid.`);
+     if (!seed) return setError(`ERROR: Account seed cannot be empty.`, spinner);
+     if (!authorizedAddress) return setError(`ERROR: Authorized account address cannot be empty.`, spinner);
+     if (!xrpl.isValidAddress(authorizedAddress)) return setError(`ERROR: Authorized account address is invalid.`, spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -202,7 +212,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
                });
           } catch (error) {
                if (error.data?.error === 'actNotFound') {
-                    return setError(`ERROR: Authorized account does not exist (tecNO_TARGET).`);
+                    return setError(`ERROR: Authorized account does not exist (tecNO_TARGET).`, spinner);
                }
                throw error;
           }
@@ -215,7 +225,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           });
 
           if (!accountInfo.account_flags.depositAuth) {
-               return setError(`ERROR: Account must have asfDepositAuth flag enabled.`);
+               return setError(`ERROR: Account must have asfDepositAuth flag enabled.`, spinner);
           }
 
           // Prevent duplicate preauthorization
@@ -228,7 +238,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
 
           const alreadyAuthorized = accountObjects.account_objects.some(obj => obj.Authorize === authorizedAddress);
           if (authorizeFlag === 'Y' && alreadyAuthorized) {
-               return setError(`ERROR: Preauthorization already exists (tecDUPLICATE). Use Unauthorize to remove.`);
+               return setError(`ERROR: Preauthorization already exists (tecDUPLICATE). Use Unauthorize to remove.`, spinner);
           }
 
           // Prepare and submit DepositPreauth transaction
@@ -247,18 +257,19 @@ async function setDepositAuthAccounts(authorizeFlag) {
           const txResult = response.result.meta?.TransactionResult;
 
           if (txResult !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${txResult}`);
+               return setError(`ERROR: Transaction failed: ${txResult}`, spinner);
           }
 
           const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
           resultField.value += displayTransaction({ txDetails, accountChanges });
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
           await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving setDepositAuthAccounts');
      }
 }
@@ -401,3 +412,4 @@ window.populate3 = populate3;
 window.populateAccount1Only = populateAccount1Only;
 window.populateAccount2Only = populateAccount2Only;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

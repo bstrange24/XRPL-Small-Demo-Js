@@ -9,15 +9,16 @@ let isConnecting = false;
 
 export function getEnvironment() {
      let environment;
-     if (document.getElementById('tn').checked) {
+     const network = localStorage.getItem('selectedNetwork');
+     if (network === 'testnet') {
           environment = 'Testnet';
      }
 
-     if (document.getElementById('dn').checked) {
+     if (network === 'devnet') {
           environment = 'Devnet';
      }
 
-     if (document.getElementById('mn').checked) {
+     if (network === 'mainet') {
           environment = 'Mainnet';
      }
      return { environment };
@@ -26,17 +27,18 @@ export function getEnvironment() {
 export function getNet() {
      let net;
      let environment;
-     if (document.getElementById('tn').checked) {
+     const network = localStorage.getItem('selectedNetwork');
+     if (network === 'testnet') {
           net = 'wss://s.altnet.rippletest.net:51233/';
           environment = 'Testnet';
      }
 
-     if (document.getElementById('dn').checked) {
+     if (network === 'devnet') {
           net = 'wss://s.devnet.rippletest.net:51233/';
           environment = 'Devnet';
      }
 
-     if (document.getElementById('mn').checked) {
+     if (network === 'mainet') {
           net = 'wss://s1.ripple.com_not';
           environment = 'Mainnet';
      }
@@ -562,17 +564,17 @@ export function distributeAccountInfo() {
 }
 
 export async function getTransaction() {
-     resultField.classList.remove('error', 'success');
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const transactionHash = document.getElementById('transactionField');
 
-     if (!transactionHash) {
-          return setError('ERROR: DOM element "transactionField" not found');
-     }
+     if (!transactionHash) return setError('ERROR: DOM element "transactionField" not found', spinner);
 
-     if (!validatInput(transactionHash.value)) {
-          return setError('ERROR: Transaction field cannot be empty');
-     }
+     if (!validatInput(transactionHash.value)) return setError('ERROR: Transaction field cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -593,12 +595,13 @@ export async function getTransaction() {
           results += displayTransaction({ txDetails, accountChanges });
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
           await disconnectClient();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving createTimeBasedEscrow');
      }
 }
@@ -912,10 +915,11 @@ export function validatInput(value) {
      return !!(value !== null && value !== undefined && value !== '');
 }
 
-export function setError(message) {
+export function setError(message, spinner) {
+     if (spinner) spinner.style.display = 'none';
      resultField.value = message;
      resultField.classList.add('error');
-     // autoResize();
+     autoResize();
 }
 
 export function convertXRPLTime(rippleTime) {

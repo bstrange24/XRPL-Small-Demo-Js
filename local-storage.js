@@ -12,13 +12,6 @@ const pageTitles = {
      'create-nft.html': 'NFTs',
 };
 
-const serverConfigs = {
-     dn: { url: 'wss://s.devnet.rippletest.net:51233', color: 'rgb(56 113 69)' },
-     tn: { url: 'wss://s.altnet.rippletest.net:51233', color: '#4386a9' },
-     // tn: { url: 'wss://s.altnet.rippletest.net:51233', color: '#ff6719' },
-     mn: { url: 'wss://s1.ripple.com_not', color: 'rgb(115 49 55)' },
-};
-
 fetch('navbar.html')
      .then(res => res.text())
      .then(html => {
@@ -27,7 +20,62 @@ fetch('navbar.html')
      });
 
 export function loadInputValues() {
-     console.log('Running loadInputValues');
+     console.log('Entering loadInputValues');
+
+     const networkButton = document.getElementById('networkDropdownButton');
+     const dropdownMenu = document.querySelector('.network .dropdown-menu');
+     const navbar = document.getElementById('navbar');
+
+     // Load saved network (default: 'devnet')
+     const savedNetwork = localStorage.getItem('selectedNetwork') || 'devnet';
+     updateNetwork(savedNetwork);
+
+     // Handle network selection
+     dropdownMenu.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = e.target.closest('.dropdown-item[data-network]');
+          if (!target) return; // Skip if not a network item
+
+          const network = target.getAttribute('data-network');
+          updateNetwork(network);
+          localStorage.setItem('selectedNetwork', network);
+     });
+
+     // Update UI based on selected network
+     function updateNetwork(network) {
+          // Update button text
+          const displayName = network.charAt(0).toUpperCase() + network.slice(1).replace('_', ' ');
+          networkButton.querySelector('.dropdown-toggle-text').textContent = displayName;
+
+          // Highlight active network in dropdown (optional)
+          document.querySelectorAll('.dropdown-item[data-network]').forEach(item => {
+               item.classList.toggle('active', item.getAttribute('data-network') === network);
+          });
+
+          // Example: Change navbar color based on network
+          const colors = {
+               devnet: 'rgb(56 113 69)',
+               testnet: '#ff6719',
+               mainnet: 'rgb(115 49 55)',
+          };
+
+          // navbar.style.backgroundColor = colors[network] || '#1a1c21';
+          navbar.style.backgroundColor = '#1a1c21';
+          networkButton.style.backgroundColor = colors[network] || '#1a1c21';
+
+          // You can add more UI updates here
+          console.log(`Switched to ${network}`);
+          localStorage.setItem('selectedNetwork', network);
+          if (network === 'devnet') {
+               localStorage.setItem('server', 'wss://s.devnet.rippletest.net:51233');
+          } else if (network === 'testnet') {
+               localStorage.setItem('server', 'wss://s.altnet.rippletest.net:51233');
+          } else if (network === 'mainnet') {
+               localStorage.setItem('server', 'wss://s1.ripple.com_not');
+          } else {
+               localStorage.setItem('server', 'wss://s.altnet.rippletest.net:51233');
+          }
+     }
 
      inputIds.forEach(id => {
           const value = localStorage.getItem(id);
@@ -37,23 +85,126 @@ export function loadInputValues() {
           }
      });
 
-     let savedServer = localStorage.getItem('server');
-     if (!savedServer) {
-          savedServer = serverConfigs.tn.url;
-          localStorage.setItem('server', savedServer);
-          alert('Set default server to Testnet');
+     // Get all navbar links (excluding dropdown toggles)
+     const navLinks = document.querySelectorAll('.navbar-links > a:not(.dropdown-toggle)');
+
+     // Function to set and save active navbar link
+     function setActiveLink(link) {
+          // Remove 'active' class from all navbar links
+          navLinks.forEach(item => {
+               item.classList.remove('active');
+          });
+          // Remove 'active' class from Escrows dropdown header and items
+          const escrowsHeader = document.querySelector('.dropdown:nth-of-type(1) .dropdown-toggle');
+          const escrowsDropdownLinks = document.querySelectorAll('.dropdown:nth-of-type(1) .dropdown-menu a');
+          if (escrowsHeader) {
+               escrowsHeader.classList.remove('active');
+          }
+          escrowsDropdownLinks.forEach(item => {
+               item.classList.remove('active');
+          });
+          // Clear activeEscrowLink from localStorage
+          localStorage.removeItem('activeEscrowLink');
+          // Add 'active' class to the clicked link
+          link.classList.add('active');
+          // Save the active link's href to localStorage
+          localStorage.setItem('activeNavLink', link.getAttribute('href'));
      }
 
-     const selectedRadio = Object.entries(serverConfigs).find(([, config]) => config.url === savedServer);
-     const radioId = selectedRadio ? selectedRadio[0] : 'tn';
-     const radio = document.getElementById(radioId);
+     // Function to restore active link from localStorage
+     function restoreActiveLink() {
+          const activeHref = localStorage.getItem('activeNavLink');
+          if (activeHref) {
+               const activeLink = document.querySelector(`.navbar-links > a[href="${activeHref}"]`);
+               if (activeLink) {
+                    setActiveLink(activeLink);
+               }
+          }
+     }
 
-     if (radio) {
-          radio.checked = true;
-          updateNavbarColor(radioId);
-     } else {
-          alert(`Server radio button with value ${savedServer} not found, defaulting to Testnet`);
-          updateNavbarColor('tn');
+     // Add click event to each navbar link
+     navLinks.forEach(link => {
+          link.addEventListener('click', function (e) {
+               e.preventDefault(); // Prevent default link behavior
+               setActiveLink(this);
+               // Navigate to the page after styling
+               setTimeout(() => {
+                    window.location.href = this.href;
+               }, 300);
+          });
+     });
+
+     // Set initial active navbar link based on current page
+     const currentPage = window.location.pathname.split('/').pop();
+     navLinks.forEach(link => {
+          if (link.getAttribute('href') === currentPage) {
+               setActiveLink(link);
+          }
+     });
+
+     // Handle Utils dropdown links
+     const utilsDropdown = document.querySelector('.utils-dropdown .dropdown-menu');
+     // const utilsDropdown = document.querySelector('.dropdown:last-of-type .dropdown-menu'); // Target Utils dropdown
+     const utilsDropdownLinks = utilsDropdown ? utilsDropdown.querySelectorAll('a[onclick]') : [];
+     utilsDropdownLinks.forEach(link => {
+          link.addEventListener('click', function (e) {
+               e.preventDefault();
+               const onclickFunction = link.getAttribute('onclick');
+               if (onclickFunction && window[onclickFunction.replace('()', '')]) {
+                    window[onclickFunction.replace('()', '')]();
+               }
+               restoreActiveLink();
+          });
+     });
+
+     // Handle Escrows dropdown links
+     const escrowsDropdown = document.querySelector('.escrows-dropdown .dropdown-menu');
+     const escrowsDropdownLinks = escrowsDropdown ? escrowsDropdown.querySelectorAll('a') : [];
+     escrowsDropdownLinks.forEach(link => {
+          link.addEventListener('click', function (e) {
+               e.preventDefault();
+               // Remove active class from all navbar links
+               navLinks.forEach(item => {
+                    item.classList.remove('active');
+               });
+               localStorage.removeItem('activeNavLink');
+               // Remove active class from all escrow dropdown items
+               escrowsDropdownLinks.forEach(item => {
+                    item.classList.remove('active');
+               });
+               // Add active class to clicked escrow item
+               this.classList.add('active');
+               // Add active class to Escrows dropdown header
+               const escrowsHeader = document.querySelector('.dropdown:nth-of-type(1) .dropdown-toggle');
+               if (escrowsHeader) {
+                    escrowsHeader.classList.add('active');
+               }
+               // Save active escrow link
+               localStorage.setItem('activeEscrowLink', this.getAttribute('href'));
+               // Navigate to the page
+               setTimeout(() => {
+                    window.location.href = this.href;
+               }, 300);
+          });
+     });
+
+     // Restore active Escrows dropdown state on page load
+     const activeEscrowHref = localStorage.getItem('activeEscrowLink');
+     if (activeEscrowHref) {
+          const activeEscrowLink = escrowsDropdown ? escrowsDropdown.querySelector(`a[href="${activeEscrowHref}"]`) : null;
+          if (activeEscrowLink) {
+               // Clear active navbar links
+               navLinks.forEach(item => {
+                    item.classList.remove('active');
+               });
+               localStorage.removeItem('activeNavLink');
+               // Set active escrow link and header
+               activeEscrowLink.classList.add('active');
+               const escrowsHeader = document.querySelector('.dropdown:nth-of-type(1) .dropdown-toggle');
+               if (escrowsHeader) {
+                    escrowsHeader.classList.add('active');
+               }
+          }
      }
 
      const page = window.location.pathname.split('/').pop();
@@ -61,28 +212,8 @@ export function loadInputValues() {
      if (titleElement && pageTitles[page]) {
           titleElement.textContent = pageTitles[page];
      }
-}
 
-// Handle radio button changes
-Object.keys(serverConfigs).forEach(id => {
-     const radio = document.getElementById(id);
-     if (radio) {
-          radio.addEventListener('change', () => {
-               const config = serverConfigs[radio.id];
-               localStorage.setItem('server', config.url);
-               updateNavbarColor(radio.id);
-          });
-     }
-});
-
-function updateNavbarColor(radioId) {
-     const navbar = document.getElementById('navbar');
-     const config = serverConfigs[radioId];
-     if (navbar && config) {
-          navbar.style.backgroundColor = config.color;
-     } else {
-          console.warn('Navbar not found or invalid radioId');
-     }
+     console.log('Leaving loadInputValues');
 }
 
 export function saveInputValues() {
@@ -104,191 +235,3 @@ export function addInputListener(elementId, eventType, callback) {
 }
 
 inputIds.forEach(id => addInputListener(id, 'input', saveInputValues));
-
-// // Array of input IDs for text fields
-// const inputIds = ['account1name', 'account2name', 'issuerName', 'account1address', 'account2address', 'issuerAddress', 'account1seed', 'account2seed', 'issuerSeed', 'account1mnemonic', 'account2mnemonic', 'issuerMnemonic', 'account1secretNumbers', 'account2secretNumbers', 'issuerSecretNumbers', 'accountNameField', 'accountAddressField', 'accountSeedField', 'xrpBalanceField', 'amountField', 'destinationField'];
-
-// const pageTitles = {
-//      'index.html': 'Send XRP',
-//      'send-checks.html': 'Send Checks',
-//      'send-currency.html': 'Send Currency',
-//      'create-time-escrow.html': 'Create Time Escrow',
-//      'create-conditional-escrow.html': 'Create Conditional Escrow',
-//      'account.html': 'Account Info',
-//      'create-offers.html': 'Create Offers',
-// };
-
-// // Array of radio button IDs
-// const serverRadioIds = ['dn', 'tn', 'mn'];
-// const accountRadioIds = ['account1', 'account2', 'accountIssuer'];
-
-// fetch('navbar.html')
-//      .then(res => res.text())
-//      .then(html => {
-//           document.getElementById('navbar-container').innerHTML = html;
-//           loadInputValues();
-//      });
-
-// // Function to load input values from localStorage
-// export function loadInputValues() {
-//      console.log('Running loadInputValues');
-
-//      inputIds.forEach(id => {
-//           const value = localStorage.getItem(id);
-//           console.warn(`Checking ${id}: localStorage value = "${value}"`);
-//           if (value !== null) {
-//                const element = document.getElementById(id);
-//                if (element !== null) {
-//                     element.value = value;
-//                     console.warn(`Set ${id} value to "${value}"`);
-//                } else {
-//                     console.warn(`Element with ID ${id} not found when loading value`);
-//                }
-//           }
-//      });
-
-//      // Load server radio selection, default to Testnet (tn)
-//      let savedServer = localStorage.getItem('server');
-//      if (savedServer === null) {
-//           savedServer = 'wss://s.altnet.rippletest.net:51233'; // Default to Testnet
-//           localStorage.setItem('server', savedServer);
-//           alert('Set default server to Testnet');
-//           console.log('Set default server to Testnet');
-//      }
-//      const radio = document.querySelector(`input[name="server"][value="${savedServer}"]`);
-//      if (radio !== null) {
-//           radio.checked = true;
-//           updateNavbarColor(radio.id);
-//           console.log(`Set server radio ${radio.id} to checked (server: ${savedServer})`);
-//      } else {
-//           console.warn(`Server radio button with value ${savedServer} not found, defaulting to Testnet`);
-//           alert(`Server radio button with value ${savedServer} not found, defaulting to Testnet`);
-//           updateNavbarColor('tn'); // Force Testnet color if radio not found
-//      }
-
-//      // Extract filename from URL
-//      const page = window.location.pathname.split('/').pop();
-
-//      // Set navbar title if there's a match
-//      const titleElement = document.querySelector('.navbar-title');
-
-//      if (titleElement && pageTitles[page]) {
-//           titleElement.textContent = pageTitles[page];
-//      }
-// }
-
-// const accountRadioButtons1 = document.querySelectorAll('input[name="server"]');
-// accountRadioButtons1.forEach(radio => {
-//      radio.addEventListener('change', function () {
-//           if (this.value === 'wss://s.devnet.rippletest.net:51233') {
-//                localStorage.setItem('server', this.value);
-//                updateNavbarColor(this.id);
-//           } else if (this.value === 'wss://s.altnet.rippletest.net:51233') {
-//                localStorage.setItem('server', this.value);
-//                updateNavbarColor(this.id);
-//           } else if (this.value === 'wss://s1.ripple.com_not') {
-//                localStorage.setItem('server', this.value);
-//                updateNavbarColor(this.id);
-//           }
-//      });
-// });
-
-// // Function to update navbar color based on server radio selection
-// function updateNavbarColor(radioId) {
-//      const navbar = document.getElementById('navbar');
-//      if (navbar !== null) {
-//           if (radioId === 'dn') {
-//                navbar.style.backgroundColor = 'rgb(56 113 69)'; // Green for Devnet
-//                localStorage.setItem('server', 'wss://s.devnet.rippletest.net:51233');
-//                console.log('Navbar color changed to green for Devnet');
-//           } else if (radioId === 'tn') {
-//                navbar.style.backgroundColor = '#4386a9'; // Yellow for Testnet
-//                localStorage.setItem('server', 'wss://s.altnet.rippletest.net:51233');
-//                console.log('Navbar color changed to yellow for Testnet');
-//           } else if (radioId === 'mn') {
-//                navbar.style.backgroundColor = 'rgb(115 49 55)'; // Red for Mainnet
-//                localStorage.setItem('server', 'wss://s1.ripple.com_not');
-//                console.log('Navbar color changed to red for Mainnet');
-//           } else {
-//                navbar.style.backgroundColor = 'rgb(145 255 0)'; // Default dark gray
-//                console.log('Navbar color reset to default');
-//           }
-//      } else {
-//           console.warn("Navbar with ID 'navbar' not found");
-//           alert("Navbar with ID 'navbar' not found");
-//      }
-// }
-
-// // Function to save input values to localStorage
-// export function saveInputValues() {
-//      const account1name = document.getElementById('account1name').value;
-//      const account2name = document.getElementById('account2name').value;
-//      let issuerName = '';
-//      if (document.getElementById('issuerName') != null) {
-//           issuerName = document.getElementById('issuerName').value;
-//      }
-
-//      const account1address = document.getElementById('account1address').value;
-//      const account2address = document.getElementById('account2address').value;
-//      let issuerAddress = '';
-//      if (document.getElementById('issuerAddress') != null) {
-//           issuerAddress = document.getElementById('issuerAddress').value;
-//      }
-
-//      const account1seed = document.getElementById('account1seed').value;
-//      const account2seed = document.getElementById('account2seed').value;
-//      let issuerSeed = '';
-//      if (document.getElementById('issuerSeed') != null) {
-//           issuerSeed = document.getElementById('issuerSeed').value;
-//      }
-
-//      const account1mnemonic = document.getElementById('account1mnemonic').value;
-//      const account2mnemonic = document.getElementById('account2mnemonic').value;
-//      let issuerMnemonic = '';
-//      if (document.getElementById('issuerMnemonic') != null) {
-//           issuerMnemonic = document.getElementById('issuerMnemonic').value;
-//      }
-
-//      const account1secretNumbers = document.getElementById('account1secretNumbers').value;
-//      const account2secretNumbers = document.getElementById('account2secretNumbers').value;
-//      let issuerSecretNumbers = '';
-//      if (document.getElementById('issuerSecretNumbers') != null) {
-//           issuerSecretNumbers = document.getElementById('issuerSecretNumbers').value;
-//      }
-
-//      localStorage.setItem('account1name', account1name);
-//      localStorage.setItem('account2name', account2name);
-//      localStorage.setItem('issuerName', issuerName);
-
-//      localStorage.setItem('account1address', account1address);
-//      localStorage.setItem('account2address', account2address);
-//      localStorage.setItem('issuerAddress', issuerAddress);
-
-//      localStorage.setItem('account1seed', account1seed);
-//      localStorage.setItem('account2seed', account2seed);
-//      localStorage.setItem('issuerSeed', issuerSeed);
-
-//      localStorage.setItem('account1mnemonic', account1mnemonic);
-//      localStorage.setItem('account2mnemonic', account2mnemonic);
-//      localStorage.setItem('issuerMnemonic', issuerMnemonic);
-
-//      localStorage.setItem('account1secretNumbers', account1secretNumbers);
-//      localStorage.setItem('account2secretNumbers', account2secretNumbers);
-//      localStorage.setItem('issuerSecretNumbers', issuerSecretNumbers);
-// }
-
-// // Run initialization after DOM is loaded
-// document.addEventListener('DOMContentLoaded', () => {
-//      console.log('DOM fully loaded at', new Date().toISOString());
-// });
-
-// // Reusable function to add event listeners
-// export function addInputListener(elementId, eventType, callback) {
-//      const element = document.getElementById(elementId);
-//      if (element) {
-//           element.addEventListener(eventType, callback);
-//      }
-// }
-
-// // Add input event listeners to all inputs
-// inputIds.forEach(id => addInputListener(id, 'input', saveInputValues));

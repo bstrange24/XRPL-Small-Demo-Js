@@ -51,6 +51,34 @@ input[type="text"] {
   padding: 4px;
 } */
 
+/* Ensure dropdown-toggle and dropdown-menu links also get green and bold when active */
+.navbar-links .dropdown-toggle.active,
+.navbar-links .dropdown-menu a.active {
+     color: #4CAF50;
+     font-weight: bold;
+}
+
+/* Optional: Ensure dropdown items don’t override background when active */
+.dropdown-menu a.active {
+     background-color: #2a2c31;
+     /* Keep your existing dropdown active background */
+}
+
+/* Add this to your existing CSS */
+.navbar-links a {
+     color: white;
+     /* Default color */
+     transition: color 0.3s ease;
+     /* Smooth color transition */
+}
+
+.navbar-links a.active {
+     color: #4CAF50;
+     /* Your desired active color (green example) */
+     font-weight: bold;
+     /* Optional: make active link bold */
+}
+
 fieldset {
      border-radius: 10px;
      border: 1px solid #686868;

@@ -7,7 +7,6 @@
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="main.js"></script>
           <script type="module" src="account.js"></script>
           <script type="module" src="local-storage.js"></script>
      </head>
@@ -253,6 +252,8 @@
                          </th>
                     </table>
 
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
                     <table style="text-align: left; width: 100%">
                          <th></th>
                          <tr>
@@ -261,8 +262,6 @@
                                    <button type="button" onClick="updateFlags()">Update Flags</button>
                                    <button type="button" onClick="setDepositAuthAccounts('Y')">Set Deposit Auth</button>
                                    <button type="button" onClick="setDepositAuthAccounts('N')">Unauthorize Deposit Auth</button>
-                                   <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
-                                   <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
                               </td>
                          </tr>
                          <tr>

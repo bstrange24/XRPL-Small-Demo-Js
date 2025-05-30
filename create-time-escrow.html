@@ -6,7 +6,6 @@
           <link href="modular-tutorials.css" rel="stylesheet" />
           <script src="https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js"></script>
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="./main.js"></script>
           <script type="module" src="./create-time-escrow.js"></script>
           <script type="module" src="./local-storage.js"></script>
      </head>
@@ -148,6 +147,8 @@
                          </th>
                     </table>
 
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
                     <table style="text-align: left; width: 100%">
                          <th></th>
                          <tr>
@@ -157,8 +158,6 @@
                                    <button type="button" onClick="finishTimeBasedEscrow()">Finish Time-based Escrow</button>
                                    <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
                                    <button type="button" onClick="getTransaction()">Get Transaction</button>
-                                   <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button>
-                                   <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
                               </td>
                          </tr>
                          <tr>

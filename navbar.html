@@ -1,10 +1,109 @@
 <style>
+     /* Main container to center everything */
+     .page-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          width: 100%;
+     }
+
+     /* Container for network dropdown + navbar */
+     .nav-wrapper {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+          width: fit-content; /* Makes the container only as wide as its contents */
+     }
+
+     /* Container for navbar + network dropdown */
+     .nav-container {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 0.5px;
+     }
+
+     /* Network dropdown styles */
+     .network-dropdown {
+          position: relative;
+     }
+
+     .network .btn.open .arrow {
+          transform: rotate(180deg);
+     }
+
+     .network .btn {
+          background: #1a1c21;
+          color: black;
+          border: none;
+          padding: 10px 15px;
+          border-radius: 10px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          font-weight: 700;
+     }
+
+     .network .dropdown-toggle-text {
+          margin-right: 5px;
+     }
+
+     .network .arrow {
+          width: 12px;
+          height: 12px;
+          color: white;
+     }
+
+     .network .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background-color: #1a1c21;
+          border: 1px solid #ccc;
+          min-width: 160px;
+          z-index: 1000;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+          border-radius: 10px;
+          padding: 4px;
+          color: white;
+          display: none;
+     }
+
+     .network .dropdown-menu a {
+          display: block;
+          padding: 8px 12px;
+          text-decoration: none;
+          color: white;
+          white-space: nowrap;
+     }
+
+     .network .dropdown-menu a:hover {
+          text-decoration: none;
+          background-color: #2a2c31;
+     }
+
+     .network:hover .dropdown-menu {
+          display: block;
+     }
+
+     .custom-network-form input {
+          width: 100%;
+          padding: 8px 12px;
+          background: #1a1c21;
+          border: 1px solid #ccc;
+          color: white;
+          border-radius: 4px;
+     }
+
+     /* Navbar styles (unchanged) */
      .navbar {
           background-color: #1a1c21;
           color: black;
           padding: 10px 20px;
           font-family: Arial, sans-serif;
           border-radius: 10px;
+          margin: 0 auto;
      }
 
      .navbar-container {
@@ -16,10 +115,11 @@
      .navbar-title {
           font-size: 1.1rem;
           font-weight: bold;
+          color: white;
      }
 
      .navbar-links a {
-          color: black;
+          color: white;
           text-decoration: none;
           margin-left: 15px;
           font-size: 0.9rem;
@@ -64,34 +164,60 @@
 
      .dropdown-menu a:hover {
           text-decoration: none;
-          background-color: #1a1c21;
+          background-color: #2a2c31;
      }
 
      .dropdown:hover .dropdown-menu {
           display: block;
-          background-color: #1a1c21;
-          border: 1px solid #ccc;
-          color: #ccc;
+     }
+
+     .dropdown-item.active {
+          background-color: #2a2c31;
+          font-weight: bold;
      }
 </style>
 
-<nav id="navbar" class="navbar" style="margin-bottom: 20px">
-     <div class="navbar-container">
-          <span class="navbar-title">XRPL</span>
-          <div class="navbar-links">
-               <a href="account.html">Account Info</a>
-               <a href="index.html">Send XRP</a>
-               <a href="create-nft.html">NFTs</a>
-               <div class="dropdown">
-                    <a href="#" class="dropdown-toggle">Escrows ▾</a>
-                    <div class="dropdown-menu">
-                         <a href="create-time-escrow.html">Create Time Escrow</a>
-                         <a href="create-conditional-escrow.html">Create Conditional Escrow</a>
-                    </div>
-               </div>
-               <a href="send-checks.html">Send Checks</a>
-               <a href="send-currency.html">Send Currency</a>
-               <a href="create-offer.html">Offers</a>
+<div class="nav-container">
+     <div class="network-dropdown network network-devnet">
+          <button class="btn dropdown-toggle" type="button" id="networkDropdownButton">
+               <div class="dropdown-toggle-text">Devnet</div>
+               <svg class="arrow" viewBox="0 0 12 12" width="12" height="12">
+                    <path fill="black" d="M2 4l4 4 4-4H2z" />
+               </svg>
+          </button>
+          <div class="dropdown-menu" aria-labelledby="networkDropdownButton">
+               <a class="dropdown-item devnet" href="#" data-network="devnet">Devnet</a>
+               <a class="dropdown-item testnet" href="#" data-network="testnet">Testnet</a>
+               <a class="dropdown-item mainnet" href="#" data-network="mainnet">Mainnet</a>
           </div>
      </div>
-</nav>
+
+     <nav id="navbar" class="navbar">
+          <div class="navbar-container">
+               <div class="navbar-links">
+                    <a href="account.html">Account Info</a>
+                    <a href="index.html">Send XRP</a>
+                    <a href="create-nft.html">NFTs</a>
+                    <div class="dropdown escrows-dropdown">
+                         <a href="#" class="dropdown-toggle">Escrows ▾</a>
+                         <div class="dropdown-menu">
+                              <a href="create-time-escrow.html">Create Time Escrow</a>
+                              <a href="create-conditional-escrow.html">Create Conditional Escrow</a>
+                         </div>
+                    </div>
+                    <a href="send-checks.html">Send Checks</a>
+                    <a href="send-currency.html">Send Currency</a>
+                    <a href="create-offer.html">Offers</a>
+                    <div class="dropdown">
+                         <a href="#" class="dropdown-toggle">Utils ▾</a>
+                         <div class="dropdown-menu utils-dropdown">
+                              <a href="#" onclick="clearFields()" class="noColor">Clear Input Fields</a>
+                              <a href="#" onclick="disconnectClient()" class="noColor">Close XRPL Connection</a>
+                              <a href="#" onclick="gatherAccountInfo()" class="noColor">Gather Account Info</a>
+                              <a href="#" onclick="distributeAccountInfo()" class="noColor">Distribute Account Info</a>
+                         </div>
+                    </div>
+               </div>
+          </div>
+     </nav>
+</div>

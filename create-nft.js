@@ -7,22 +7,22 @@ async function getNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
           accountSeed: document.getElementById('accountSeedField'),
           balance: document.getElementById('xrpBalanceField'),
-          
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.accountSeed.value.trim();
-     
+
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -47,9 +47,11 @@ async function getNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getNFT');
      }
 }
@@ -60,6 +62,9 @@ async function mintNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
           accountSeed: document.getElementById('accountSeedField'),
@@ -67,14 +72,12 @@ async function mintNFT() {
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.accountSeed.value.trim();
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -88,7 +91,7 @@ async function mintNFT() {
           const preparedTx = await client.autofill({
                TransactionType: 'NFTokenMint',
                Account: wallet.address,
-               URI: xrpl.convertStringToHex("ipfs://bafybeidf5geku675serlvutcibc5n5fjnzqacv43mjfcrh4ur6hcn4xkw4.metadata.json"),
+               URI: xrpl.convertStringToHex('ipfs://bafybeidf5geku675serlvutcibc5n5fjnzqacv43mjfcrh4ur6hcn4xkw4.metadata.json'),
                // Flags: 1, // 1 = Creator can mint more (royalties), 8 = Transferable
                // NFTokenTaxon: 42, // Unique series ID (for royalties)
                Flags: 8,
@@ -102,7 +105,7 @@ async function mintNFT() {
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-               return setError(`ERROR: Minting NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Minting NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
           }
 
           results += `NFT mint finished successfully.\n\n`;
@@ -115,9 +118,10 @@ async function mintNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
           autoResize();
           console.log('Leaving mintNFT');
      }
@@ -129,6 +133,9 @@ async function mintBatchNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
@@ -137,23 +144,21 @@ async function mintBatchNFT() {
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
-     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
-     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
-     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-
-     const { environment } = getEnvironment();
-     const client = await getClient();
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty', spinner);
+     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number', spinner);
+     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero', spinner);
 
      try {
+          const { environment } = getEnvironment();
+          const client = await getClient();
+
           let results = `Connected to ${environment}.\nSending XRP\n\n`;
           resultField.value = results;
 
@@ -162,9 +167,11 @@ async function mintBatchNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving mintNFT');
      }
 }
@@ -175,6 +182,9 @@ async function sellNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
@@ -184,20 +194,18 @@ async function sellNFT() {
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
      const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
-     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
-     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
-     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty', spinner);
+     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number', spinner);
+     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero', spinner);
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -222,7 +230,7 @@ async function sellNFT() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Selling NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Selling NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
           }
 
           results += `NFT sell finished successfully.\n\n`;
@@ -236,9 +244,11 @@ async function sellNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving sellNFT');
      }
 }
@@ -249,6 +259,9 @@ async function buyNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
@@ -258,20 +271,18 @@ async function buyNFT() {
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
      const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
-     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty');
-     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number');
-     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero');
-     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty', spinner);
+     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number', spinner);
+     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero', spinner);
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -305,7 +316,7 @@ async function buyNFT() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Buying NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Buying NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
           }
 
           results += `NFT buy finished successfully.\n\n`;
@@ -318,9 +329,11 @@ async function buyNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving buyNFT');
      }
 }
@@ -331,6 +344,9 @@ async function burnNFT() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
@@ -339,16 +355,14 @@ async function burnNFT() {
      };
 
      // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`);
-     }
+     if (Object.values(fields).some(el => !el)) return setError(`ERROR: DOM element not found`, spinner);
 
      const seed = fields.seed.value.trim();
      const nftId = fields.nftIdField.value.trim();
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
-     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty');
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+     if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -371,7 +385,7 @@ async function burnNFT() {
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
                const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Minting NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`);
+               return setError(`ERROR: Minting NFT failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
           }
 
           results += `NFT mint finished successfully.\n\n`;
@@ -384,9 +398,11 @@ async function burnNFT() {
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
-          setError(error.message || 'Unknown error');
-          await disconnectClient();
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving burnNFT');
      }
 }
@@ -403,3 +419,4 @@ window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;

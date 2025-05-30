@@ -7,7 +7,6 @@
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="main.js"></script>
           <script type="module" src="send-xrp.js"></script>
           <script type="module" src="local-storage.js"></script>
           <script type="module" src="utils.js"></script>
@@ -91,14 +90,14 @@
                          </th>
                     </table>
 
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
                     <table style="text-align: left; width: 100%">
                          <th></th>
                          <tr>
                               <td colspan="2">
                                    <button type="button" onclick="sendXRP()">Send XRP</button>
                                    <button type="button" onclick="getXrpBalance()">Get XRP Balance</button>
-                                   <button type="button" onclick="gatherAccountInfo()">Gather Account Info</button>
-                                   <button type="button" onclick="distributeAccountInfo()">Distribute Account Info</button>
                               </td>
                          </tr>
                          <tr>
@@ -124,13 +123,6 @@
                     }
                });
           });
-
-          //   fetch('navbar.html')
-          //        .then(res => res.text())
-          //        .then(html => {document.getElementById('navbar-container').innerHTML = html;})
-          //        .catch(error => {console.error('Error loading wallet-input.html:', error);
-
-          //        });
 
           fetch('wallet-input.html')
                .then(res => res.text())

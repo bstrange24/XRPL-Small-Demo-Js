@@ -5,7 +5,10 @@ async function sendCheck() {
      console.log('Entering sendCheck');
 
      const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error', 'success');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -27,13 +30,13 @@ async function sendCheck() {
 
      for (const { key, name } of required) {
           if (!fields[key] || !validatInput(fields[key].value)) {
-               return setError(`ERROR: ${name} cannot be empty`);
+               return setError(`ERROR: ${name} cannot be empty`, spinner);
           }
      }
 
      const amount = parseFloat(fields.amount.value);
      if (isNaN(amount) || amount <= 0) {
-          return setError('ERROR: Amount must be a valid number greater than zero');
+          return setError('ERROR: Amount must be a valid number greater than zero', spinner);
      }
 
      try {
@@ -77,20 +80,21 @@ async function sendCheck() {
           const transactionResults = displayTransaction({ txDetails, accountChanges });
 
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Check sent successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving sendCheck');
      }
 }
@@ -99,7 +103,10 @@ async function getChecks() {
      console.log('Entering getChecks');
 
      const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error', 'success');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      const accountAddressField = document.getElementById('accountAddressField');
      if (!validatInput(accountAddressField.value)) {
@@ -129,12 +136,13 @@ async function getChecks() {
           results += displayAccountObjects(details);
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getChecks');
      }
 }
@@ -143,7 +151,10 @@ async function cashCheck() {
      console.log('Entering cashCheck');
 
      const resultField = document.getElementById('resultField');
-     resultField.classList.remove('error', 'success');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
 
      // Field references
      const fields = {
@@ -169,13 +180,13 @@ async function cashCheck() {
 
      for (const { key, name } of requiredFields) {
           if (!fields[key] || !validatInput(fields[key].value)) {
-               return setError(`ERROR: ${name} cannot be empty`);
+               return setError(`ERROR: ${name} cannot be empty`, spinner);
           }
      }
 
      const amount = parseFloat(fields.amount.value);
      if (isNaN(amount) || amount <= 0) {
-          return setError('ERROR: Amount must be a valid number greater than zero');
+          return setError('ERROR: Amount must be a valid number greater than zero', spinner);
      }
 
      try {
@@ -216,21 +227,21 @@ async function cashCheck() {
           const transactionResults = displayTransaction({ txDetails, accountChanges });
 
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Check cashed successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
-          // Update XRP balance
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving cashCheck');
      }
 }
@@ -241,6 +252,9 @@ async function cancelCheck() {
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
      const fields = {
           checkId: document.getElementById('checkIdField'),
           seed: document.getElementById('accountSeedField'),
@@ -249,15 +263,15 @@ async function cancelCheck() {
 
      // Validate DOM elements
      if (!fields.checkId || !fields.seed || !fields.balance) {
-          return setError('ERROR: DOM elements not found');
+          return setError('ERROR: DOM elements not found', spinner);
      }
 
      const checkId = fields.checkId.value.trim();
      const seed = fields.seed.value.trim();
 
      // Validate inputs
-     if (!validatInput(checkId)) return setError('ERROR: Check ID cannot be empty');
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty');
+     if (!validatInput(checkId)) return setError('ERROR: Check ID cannot be empty', spinner);
+     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -283,20 +297,21 @@ async function cancelCheck() {
           const transactionResults = displayTransaction({ txDetails, accountChanges });
 
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
           }
 
           results += `Check cancelled successfully.\n\n${transactionResults}`;
           resultField.value = results;
           resultField.classList.add('success');
-          autoResize();
 
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await disconnectClient();
+          await client?.disconnect?.();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving cancelCheck');
      }
 }
@@ -342,3 +357,4 @@ window.populateFieldSendCurrency1 = populateFieldSendCurrency1;
 window.populateFieldSendCurrency2 = populateFieldSendCurrency2;
 window.populateFieldSendCurrency3 = populateFieldSendCurrency3;
 window.autoResize = autoResize;
+window.disconnectClient = disconnectClient;
