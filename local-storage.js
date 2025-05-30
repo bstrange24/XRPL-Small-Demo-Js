@@ -9,7 +9,7 @@ const pageTitles = {
      'create-conditional-escrow.html': 'Create Conditional Escrow',
      'account.html': 'Account Info',
      'create-offers.html': 'Create Offers',
-     'create-nft.html': 'Manage NFTs',
+     'create-nft.html': 'NFTs',
 };
 
 const serverConfigs = {
