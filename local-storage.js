@@ -230,6 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
      console.log('DOM fully loaded at', new Date().toISOString());
 });
 
+document.getElementById('transactionField')?.addEventListener('keydown', function (event) {
+     if (event.key === 'Enter') {
+          event.preventDefault(); // Optional: prevent form submission or newline
+          getTransaction();
+     }
+});
+
 // export function addInputListener(elementId, eventType, callback) {
 //      const element = document.getElementById(elementId);
 //      if (element) {

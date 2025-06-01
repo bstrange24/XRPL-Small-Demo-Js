@@ -30,6 +30,16 @@ export function convertToEstTime(UtcDataTime) {
      return formatter.format(utcDate);
 }
 
+// Decode hex string to ASCII
+const decodeHex = hex => {
+     try {
+          return Buffer.from(hex, 'hex').toString('ascii');
+     } catch (error) {
+          console.error(`Error decoding hex: ${hex}`, error);
+          return hex; // Return raw hex if decoding fails
+     }
+};
+
 const convertXRPLTime = rippleTime => {
      const rippleEpoch = 946684800; // Jan 1, 2000 in Unix time
      const date = new Date((rippleTime + rippleEpoch) * 1000);
@@ -786,6 +796,18 @@ function parseXRPLTransaction(response) {
                          formattedValue = formatXRPLAmount(value || '0');
                     } else if (key === 'CancelAfter' || key === 'FinishAfter') {
                          formattedValue = value ? convertXRPLTime(value) : null;
+                    } else if (key === 'Memos' && Array.isArray(value)) {
+                         output.push(`    ${key}:`);
+                         value.forEach((memoObj, index) => {
+                              if (memoObj.Memo) {
+                                   const memoType = memoObj.Memo.MemoType ? decodeHex(memoObj.Memo.MemoType) : 'N/A';
+                                   const memoData = memoObj.Memo.MemoData ? decodeHex(memoObj.Memo.MemoData) : 'N/A';
+                                   output.push(`        Memo ${index + 1}:`);
+                                   output.push(`            Type: ${memoType}`);
+                                   output.push(`            Data: ${memoData}`);
+                              }
+                         });
+                         return; // Skip adding formattedValue for Memos
                     } else {
                          formattedValue = value;
                     }

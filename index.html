@@ -20,85 +20,99 @@
                <fieldset style="padding: 20px">
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
-                         <th>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Name of the currently selected account.">
-                                             <label for="accountNameField">Name</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountNameField" size="40" readonly />
-                                        <input type="radio" id="account1" name="accounts" value="account1" />
-                                        <label for="account1">Account 1</label>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Address of the currently selected account.">
-                                             <label for="accountAddressField">Address</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountAddressField" size="40" readonly />
-                                        <input type="radio" id="account2" name="accounts" value="account2" />
-                                        <label for="account2">Account 2</label>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Seed of the currently selected account.">
-                                             <label for="accountSeedField">Seed</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountSeedField" size="40" readonly />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
-                                             <label for="xrpBalanceField">Balance</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="xrpBalanceField" size="40" readonly />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Amount of XRP to send.">
-                                             <label for="amountField">Amount</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="amountField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
-                                             <label for="destinationField">Destination</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="destinationField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                             <label for="transactionField">Transaction</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="transactionField" size="85" />
-                                        <br />
-                                   </td>
-                              </tr>
-                         </th>
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                        <label for="accountNameField">Name</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountNameField" size="40" readonly />
+                                   <input type="radio" id="account1" name="accounts" value="account1" />
+                                   <label for="account1">Account 1</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                        <label for="accountAddressField">Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountAddressField" size="40" readonly />
+                                   <input type="radio" id="account2" name="accounts" value="account2" />
+                                   <label for="account2">Account 2</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                        <label for="accountSeedField">Seed</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountSeedField" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                        <label for="xrpBalanceField">Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="xrpBalanceField" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amount of XRP to send.">
+                                        <label for="amountField">Amount</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="amountField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
+                                        <label for="destinationField">Destination</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="destinationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                    </table>
+
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
+                                        <label for="destinationField">Memo</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                        <label for="transactionField">Transaction</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="transactionField" size="85" />
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>

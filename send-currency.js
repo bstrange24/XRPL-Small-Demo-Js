@@ -234,8 +234,7 @@ async function getTrustLine() {
           const { environment } = getEnvironment();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting Trust Lines.\n\n`;
-          resultField.value = results;
+          let results = (resultField.value = `Connected to ${environment}.\nGetting Trust Lines.\n\n`);
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
           const trustLines = await getTrustLines(wallet.address, client);
@@ -261,9 +260,9 @@ async function getTrustLine() {
 
           console.log(`Trust lines for ${wallet.address}:`, trustLines);
 
-          results = `Active Trust Lines for ${wallet.address}:\n`;
+          results += `Active Trust Lines for ${wallet.address}:\n`;
           for (const line of activeTrustLines) {
-               results += `Currency: ${line.currency}, \n\tIssuer: ${line.account}, \n\tLimit: ${line.limit}, \n\tBalance: ${line.balance}\n`;
+               results += `Currency: ${line.currency}, \n\tIssuer: ${line.account}, \n\tLimit: ${line.limit}, \n\tBalance: ${line.balance}, \n\tLimit Peer: ${line.limit_peer},\n\tNo Ripple: ${line.no_ripple_peer},`;
           }
           resultField.value = results;
           resultField.classList.add('success');

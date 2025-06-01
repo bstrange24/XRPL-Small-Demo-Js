@@ -640,6 +640,16 @@ export function convertXRPLTime(rippleTime) {
      return formatter.format(date);
 }
 
+// Decode hex string to ASCII
+const decodeHex = hex => {
+     try {
+          return Buffer.from(hex, 'hex').toString('ascii');
+     } catch (error) {
+          console.error(`Error decoding hex: ${hex}`, error);
+          return hex; // Return raw hex if decoding fails
+     }
+};
+
 const formatXRPLAmount = value => {
      if (value == null || isNaN(value)) {
           console.warn(`Invalid value: ${value}`);
@@ -723,13 +733,26 @@ export function parseXRPLTransaction(response) {
                     let formattedValue;
                     if (key === 'date') {
                          formattedValue = convertXRPLTime(value);
-                    } else if (key === 'Fee' || key === 'Amount') {
+                    } else if (key === 'Fee' || key === 'Amount' || key === 'DeliverMax' || key === 'SendMax') {
                          formattedValue = formatXRPLAmount(value || '0');
                     } else if (key === 'CancelAfter' || key === 'FinishAfter') {
                          formattedValue = value ? convertXRPLTime(value) : null;
+                    } else if (key === 'Memos' && Array.isArray(value)) {
+                         output.push(`    ${key}:`);
+                         value.forEach((memoObj, index) => {
+                              if (memoObj.Memo) {
+                                   const memoType = memoObj.Memo.MemoType ? decodeHex(memoObj.Memo.MemoType) : 'N/A';
+                                   const memoData = memoObj.Memo.MemoData ? decodeHex(memoObj.Memo.MemoData) : 'N/A';
+                                   output.push(`        Memo ${index + 1}:`);
+                                   output.push(`            Type: ${memoType}`);
+                                   output.push(`            Data: ${memoData}`);
+                              }
+                         });
+                         return; // Skip adding formattedValue for Memos
                     } else {
                          formattedValue = value;
                     }
+
                     if (formattedValue !== null && formattedValue !== undefined) {
                          if (typeof value === 'object' && value !== null) {
                               output.push(`    ${key}:`);
@@ -745,11 +768,18 @@ export function parseXRPLTransaction(response) {
                }
           });
 
+          // output.push('\nGeneral Metadata:');
+          if (closeTimeIso) output.push(`    close_time_iso: ${convertToEstTime(closeTimeIso)}`);
+          if (hash) output.push(`    hash: ${hash}`);
+          if (ledgerHash) output.push(`    ledger_hash: ${ledgerHash}`);
+          if (validated !== null) output.push(`    validated: ${validated}`);
+
           // Extract metadata
           const meta = result.meta || {};
           output.push('\nMetadata:');
           if (meta.TransactionResult) output.push(`    TransactionResult: ${meta.TransactionResult}`);
           if (meta.TransactionIndex !== undefined) output.push(`    TransactionIndex: ${meta.TransactionIndex}`);
+          if (meta.delivered_amount) output.push(`    Delivered Amout: ${formatXRPLAmount(meta.delivered_amount || '0')}`);
           if (meta.nftoken_id) output.push(`    nftoken_id: ${meta.nftoken_id}`);
 
           // Process AffectedNodes
@@ -841,7 +871,11 @@ export function parseXRPLTransaction(response) {
                                                             }
                                                        });
                                                   } else {
-                                                       output.push(`                ${key}: ${value}`);
+                                                       if (key === 'Balance') {
+                                                            output.push(`                ${key}: ${formatXRPLAmount(value || '0')}`);
+                                                       } else {
+                                                            output.push(`                ${key}: ${value}`);
+                                                       }
                                                   }
                                              }
                                         });
@@ -857,13 +891,13 @@ export function parseXRPLTransaction(response) {
           }
 
           // Append general metadata
-          output.push('\nGeneral Metadata:');
-          if (closeTimeIso) output.push(`    close_time_iso: ${convertToEstTime(closeTimeIso)}`);
-          if (ctid) output.push(`    ctid: ${ctid}`);
-          if (hash) output.push(`    hash: ${hash}`);
-          if (ledgerHash) output.push(`    ledger_hash: ${ledgerHash}`);
-          if (ledgerIndex) output.push(`    ledger_index: ${ledgerIndex}`);
-          if (validated !== null) output.push(`    validated: ${validated}`);
+          // output.push('\nGeneral Metadata:');
+          // if (closeTimeIso) output.push(`    close_time_iso: ${convertToEstTime(closeTimeIso)}`);
+          // if (ctid) output.push(`    ctid: ${ctid}`);
+          // if (hash) output.push(`    hash: ${hash}`);
+          // if (ledgerHash) output.push(`    ledger_hash: ${ledgerHash}`);
+          // if (ledgerIndex) output.push(`    ledger_index: ${ledgerIndex}`);
+          // if (validated !== null) output.push(`    validated: ${validated}`);
 
           return output.join('\n');
      } catch (error) {
@@ -1105,6 +1139,8 @@ const ledgerEntryTypeFields = {
           fields: [
                { key: 'Account', format: v => v || null },
                { key: 'Authorize', format: v => v || null },
+               { key: 'Flags', format: v => v || null },
+               { key: 'OwnerNode', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },
                { key: 'PreviousTxnLgrSeq', format: v => v || null },
                { key: 'index', format: v => v || null },

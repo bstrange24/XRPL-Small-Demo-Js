@@ -16,6 +16,7 @@ async function sendXRP() {
           balance: document.getElementById('xrpBalanceField'),
           amount: document.getElementById('amountField'),
           destination: document.getElementById('destinationField'),
+          memo: document.getElementById('memoField'),
      };
 
      // Validate DOM elements
@@ -49,6 +50,18 @@ async function sendXRP() {
                Amount: xrpl.xrpToDrops(amount),
                Destination: destination,
           });
+
+          const memoText = fields.memo.value.trim();
+          if (memoText) {
+               preparedTx.Memos = [
+                    {
+                         Memo: {
+                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                         },
+                    },
+               ];
+          }
 
           const signed = wallet.sign(preparedTx);
           const response = await client.submitAndWait(signed.tx_blob);

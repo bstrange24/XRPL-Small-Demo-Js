@@ -316,6 +316,15 @@ input:checked+.slider:before {
      margin: 10px auto;
 }
 
+.memoField {
+     width: 618px;
+     height: 100px;
+     border-radius: 10px;
+     border: 1px solid white;
+     color: white;
+     background-color: #1a1c21;
+}
+
 @keyframes spin {
      to {
           transform: rotate(360deg);

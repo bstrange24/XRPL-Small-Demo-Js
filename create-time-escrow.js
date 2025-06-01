@@ -195,6 +195,14 @@ async function getEscrows() {
 
           console.log('Escrow objects:', tx);
 
+          const sequenceTx = await client.request({
+               command: 'tx',
+               transaction: '50F58CFFEA677BD8BE999CDA0BB8D8F36DE89DE729A1D09840E3ADC61C968EB1',
+          });
+
+          const offerSequence = sequenceTx.result.tx_json.Sequence;
+          console.log('\nEscrow OfferSequence:', offerSequence + '\n');
+
           results += parseXRPLAccountObjects(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
