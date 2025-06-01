@@ -640,6 +640,10 @@ export function convertXRPLTime(rippleTime) {
      return formatter.format(date);
 }
 
+function isValidTransactionHash(hash) {
+     return /^[A-Fa-f0-9]{64}$/.test(hash);
+}
+
 // Decode hex string to ASCII
 const decodeHex = hex => {
      try {
@@ -906,142 +910,6 @@ export function parseXRPLTransaction(response) {
      }
 }
 
-// export function parseXRPLTransaction_PrintNA(response) {
-//      try {
-//           // Initialize output array
-//           const output = [];
-
-//           // Extract root-level fields
-//           const result = response || {};
-//           const closeTimeIso = result.close_time_iso || 'N/A';
-//           const ctid = result.ctid || 'N/A';
-//           const hash = result.hash || 'N/A';
-//           const ledgerHash = result.ledger_hash || 'N/A';
-//           const ledgerIndex = result.ledger_index || 'N/A';
-//           const validated = result.validated || false;
-
-//           // Extract transaction details (tx_json)
-//           const txJson = result.tx_json || {};
-//           output.push('Transaction Details:');
-//           Object.entries(txJson).forEach(([key, value]) => {
-//                if (key === 'date') {
-//                     output.push(`    ${key}: ${convertXRPLTime(value)}`);
-//                } else if (key === 'Fee' || key === 'SendMax') {
-//                     output.push(`    ${key}: ${formatXRPLAmount(value || '0')}`);
-//                } else if (typeof value === 'object' && value !== null) {
-//                     output.push(`    ${key}:`);
-//                     Object.entries(value).forEach(([subKey, subValue]) => {
-//                          output.push(`        ${subKey}: ${subValue || 'N/A'}`);
-//                     });
-//                } else {
-//                     output.push(`    ${key}: ${value || 'N/A'}`);
-//                }
-//           });
-
-//           // Extract metadata
-//           const meta = result.meta || {};
-//           output.push('\nMetadata:');
-//           output.push(`    TransactionResult: ${meta.TransactionResult || 'N/A'}`);
-//           output.push(`    TransactionIndex: ${meta.TransactionIndex || 'N/A'}`);
-//           if (meta.nftoken_id) {
-//                output.push(`    nftoken_id: ${meta.nftoken_id}`);
-//           }
-
-//           // Process AffectedNodes
-//           const affectedNodes = meta.AffectedNodes || [];
-//           output.push('\nAffected Nodes:');
-//           affectedNodes.forEach((node, nodeIndex) => {
-//                output.push(`    Node ${nodeIndex + 1}:`);
-
-//                // Handle ModifiedNode, CreatedNode, or DeletedNode
-//                ['ModifiedNode', 'CreatedNode', 'DeletedNode'].forEach(nodeType => {
-//                     if (node[nodeType]) {
-//                          const nodeData = node[nodeType];
-//                          const entryType = nodeData.LedgerEntryType || 'Unknown';
-//                          const typeConfig = ledgerEntryTypeFields[entryType] || {
-//                               fields: Object.keys(nodeData.FinalFields || nodeData.NewFields || {}).map(key => ({
-//                                    key,
-//                                    format: v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : v || 'N/A'),
-//                               })),
-//                               label: entryType,
-//                          };
-
-//                          output.push(`        ${nodeType}:`);
-//                          output.push(`            LedgerEntryType: ${entryType}`);
-//                          output.push(`            LedgerIndex: ${nodeData.LedgerIndex || 'N/A'}`);
-
-//                          // Process FinalFields or NewFields
-//                          const fields = nodeData.FinalFields || nodeData.NewFields || {};
-//                          output.push(`            FinalFields:`);
-//                          typeConfig.fields.forEach(field => {
-//                               const value = fields[field.key];
-//                               console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
-//                               if (field.key === 'NFTokens' && Array.isArray(value)) {
-//                                    output.push(`                ${field.key}:`);
-//                                    value.forEach(nft => {
-//                                         output.push(`                    NFToken`);
-//                                         Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
-//                                              output.push(`                        ${subKey}: ${subValue || 'N/A'}`);
-//                                         });
-//                                    });
-//                               } else if (typeof value === 'object' && value !== null) {
-//                                    output.push(`                ${field.key}:`);
-//                                    Object.entries(value).forEach(([subKey, subValue]) => {
-//                                         output.push(`                    ${subKey}: ${subValue || 'N/A'}`);
-//                                    });
-//                               } else {
-//                                    output.push(`                ${field.key}: ${field.format ? field.format(value) : value || 'N/A'}`);
-//                               }
-//                          });
-
-//                          // Process PreviousFields (for ModifiedNode)
-//                          if (nodeData.PreviousFields) {
-//                               output.push(`            PreviousFields:`);
-//                               Object.entries(nodeData.PreviousFields).forEach(([key, value]) => {
-//                                    if (key === 'NFTokens' && Array.isArray(value)) {
-//                                         output.push(`                ${key}:`);
-//                                         value.forEach(nft => {
-//                                              output.push(`                    NFToken`);
-//                                              Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
-//                                                   output.push(`                        ${subKey}: ${subValue || 'N/A'}`);
-//                                              });
-//                                         });
-//                                    } else if (key === 'Balance' && value !== null) {
-//                                         output.push(`                Balance: ${formatXRPLAmount(value)}`);
-//                                    } else if (typeof value === 'object' && value !== null) {
-//                                         output.push(`                ${key}:`);
-//                                         Object.entries(value).forEach(([subKey, subValue]) => {
-//                                              output.push(`                    ${subKey}: ${subValue || 'N/A'}`);
-//                                         });
-//                                    } else {
-//                                         output.push(`                ${key}: ${value || 'N/A'}`);
-//                                    }
-//                               });
-//                          }
-
-//                          // PreviousTxnID and PreviousTxnLgrSeq
-//                          output.push(`            PreviousTxnID: ${nodeData.PreviousTxnID || 'N/A'}`);
-//                          output.push(`            PreviousTxnLgrSeq: ${nodeData.PreviousTxnLgrSeq || 'N/A'}`);
-//                     }
-//                });
-//           });
-
-//           // Append general metadata
-//           output.push('\nGeneral Metadata:');
-//           output.push(`    close_time_iso: ${convertToEstTime(closeTimeIso)}`);
-//           output.push(`    ctid: ${ctid}`);
-//           output.push(`    hash: ${hash}`);
-//           output.push(`    ledger_hash: ${ledgerHash}`);
-//           output.push(`    ledger_index: ${ledgerIndex}`);
-//           output.push(`    validated: ${validated}`);
-
-//           return output.join('\n');
-//      } catch (error) {
-//           console.error('Error parsing XRPL transaction:', error);
-//           return `Error: Failed to parse XRPL transaction\nDetails: ${error.message}`;
-//      }
-// }
-
 const ledgerEntryTypeFields = {
      AccountRoot: {
           fields: [
@@ -1222,180 +1090,6 @@ const ledgerEntryTypeFields = {
      },
 };
 
-// const ledgerEntryTypeFields_PRINT_NA = {
-//      AccountRoot: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'Balance', format: v => formatXRPLAmount(v || '0') },
-//                { key: 'Sequence', format: v => v || 'N/A' },
-//                { key: 'OwnerCount', format: v => v || '0' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'FirstNFTokenSequence', format: v => v || 'N/A' },
-//                { key: 'Flags', format: v => v || 'N/A' },
-//                { key: 'MintedNFTokens', format: v => v || 'N/A' },
-//                { key: 'Domain', format: v => v || 'N/A' },
-//                { key: 'EmailHash', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Account',
-//           pluralLabel: 'Accounts',
-//      },
-//      Escrow: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'Amount', format: v => formatXRPLAmount(v || '0') },
-//                { key: 'Destination', format: v => v || 'N/A' },
-//                { key: 'CancelAfter', format: v => (v ? convertXRPLTime(v) : 'N/A') },
-//                { key: 'FinishAfter', format: v => (v ? convertXRPLTime(v) : 'N/A') },
-//                { key: 'Condition', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Escrow',
-//           pluralLabel: 'Escrows',
-//      },
-//      Offer: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'TakerPays', format: v => (typeof v === 'object' ? `${v.value} ${v.currency}` : formatXRPLAmount(v || '0')) },
-//                { key: 'TakerGets', format: v => (typeof v === 'object' ? `${v.value} ${v.currency}` : formatXRPLAmount(v || '0')) },
-//                { key: 'Expiration', format: v => (v ? convertXRPLTime(v) : 'N/A') },
-//                { key: 'OfferSequence', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Offer',
-//           pluralLabel: 'Offers',
-//      },
-//      RippleState: {
-//           fields: [
-//                { key: 'Balance', format: v => (typeof v === 'object' ? formatXRPLAmount(v) : v || 'N/A') },
-//                { key: 'Flags', format: v => v || '0' },
-//                { key: 'HighLimit', format: v => (typeof v === 'object' ? formatXRPLAmount(v) : v || 'N/A') },
-//                { key: 'HighNode', format: v => v || 'N/A' },
-//                { key: 'LedgerEntryType', format: v => v || 'N/A' },
-//                { key: 'LowLimit', format: v => (typeof v === 'object' ? formatXRPLAmount(v) : v || 'N/A') },
-//                { key: 'LowNode', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'RippleState',
-//           pluralLabel: 'RippleStates',
-//      },
-//      PayChannel: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'Destination', format: v => v || 'N/A' },
-//                { key: 'Amount', format: v => formatXRPLAmount(v || '0') },
-//                { key: 'Balance', format: v => formatXRPLAmount(v || '0') },
-//                { key: 'SettleDelay', format: v => v || 'N/A' },
-//                { key: 'Expiration', format: v => (v ? convertXRPLTime(v) : 'N/A') },
-//                { key: 'CancelAfter', format: v => (v ? convertXRPLTime(v) : 'N/A') },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Payment Channel',
-//           pluralLabel: 'Payment Channels',
-//      },
-//      Check: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'Destination', format: v => v || 'N/A' },
-//                { key: 'SendMax', format: v => (typeof v === 'object' ? `${v.value} ${v.currency}` : formatXRPLAmount(v || '0')) },
-//                { key: 'Sequence', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Check',
-//           pluralLabel: 'Checks',
-//      },
-//      DepositPreauth: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'Authorize', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Deposit Preauthorization',
-//           pluralLabel: 'Deposit Preauthorizations',
-//      },
-//      Ticket: {
-//           fields: [
-//                { key: 'Account', format: v => v || 'N/A' },
-//                { key: 'TicketSequence', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Ticket',
-//           pluralLabel: 'Tickets',
-//      },
-//      DirectoryNode: {
-//           fields: [
-//                { key: 'Owner', format: v => v || 'N/A' },
-//                { key: 'Indexes', format: v => (Array.isArray(v) ? v.join(', ') : v || 'N/A') },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Directory',
-//           pluralLabel: 'Directories',
-//      },
-//      AMM: {
-//           fields: [
-//                { key: 'Asset1', format: v => `${v.currency} (Issuer: ${v.issuer || 'N/A'})` },
-//                { key: 'Asset2', format: v => `${v.currency} (Issuer: ${v.issuer || 'N/A'})` },
-//                { key: 'LPTokenBalance', format: v => `${v.value} ${v.currency}` },
-//                { key: 'TradingFee', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Automated Market Maker',
-//           pluralLabel: 'Automated Market Makers',
-//      },
-//      NFTokenPage: {
-//           fields: [
-//                { key: 'Flags', format: v => v || '0' },
-//                { key: 'LedgerEntryType', format: v => v || 'N/A' },
-//                { key: 'NFTokens', format: v => (Array.isArray(v) ? v : 'N/A') },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'NFTokenPage',
-//           pluralLabel: 'NFTokenPages',
-//      },
-//      SignerList: {
-//           fields: [
-//                { key: 'SignerQuorum', format: v => v || 'N/A' },
-//                { key: 'SignerEntries', format: v => (Array.isArray(v) ? v.map(e => e.SignerEntry.Account).join(', ') : 'N/A') },
-//                { key: 'PreviousTxnID', format: v => v || 'N/A' },
-//                { key: 'PreviousTxnLgrSeq', format: v => v || 'N/A' },
-//                { key: 'index', format: v => v || 'N/A' },
-//           ],
-//           label: 'Signer List',
-//           pluralLabel: 'Signer Lists',
-//      },
-//      NFT: {
-//           fields: [
-//                { key: 'Flags', format: v => v || '0' },
-//                { key: 'Issuer', format: v => v || 'N/A' },
-//                { key: 'NFTokenID', format: v => v || 'N/A' },
-//                { key: 'NFTokenTaxon', format: v => (v === 0 ? '0' : v || 'N/A') },
-//                { key: 'URI', format: v => v || 'N/A' },
-//                { key: 'nft_serial', format: v => v || 'N/A' },
-//           ],
-//           label: 'NFT',
-//           pluralLabel: 'NFTs',
-//      },
-// };
-
 export function parseXRPLAccountObjects(response) {
      try {
           // Initialize output array
@@ -1517,119 +1211,6 @@ export function parseXRPLAccountObjects(response) {
      }
 }
 
-// export function parseXRPLAccountObjects_PRINT_NA(response) {
-//      try {
-//           // Initialize output array
-//           const output = [];
-
-//           // Extract general metadata
-//           const ledgerIndex = response.ledger_index || response.ledger_current_index || 'N/A';
-//           const ledgerHash = response.ledger_hash || 'N/A';
-//           const validated = response.validated || false;
-
-//           // Identify all array fields (e.g., account_objects, account_nfts, affected_nodes)
-//           const arrayFields = Object.keys(response).filter(key => Array.isArray(response[key]));
-//           console.log(`Array Fields Found: ${arrayFields.join(', ')}`);
-
-//           // Process each array field
-//           arrayFields.forEach(field => {
-//                const objects = response[field] || [];
-//                console.log(`Processing ${field}:`, objects);
-
-//                // Use appropriate header based on field
-//                const header = field === 'account_nfts' ? 'Account NFTs' : 'Account Objects';
-//                output.push(header);
-
-//                // Group objects by LedgerEntryType
-//                const groupedObjects = {};
-//                objects.forEach(obj => {
-//                     let entryType = obj.LedgerEntryType || (field === 'account_nfts' ? 'NFT' : 'Unknown');
-//                     if (field === 'AffectedNodes' && obj.ModifiedNode) {
-//                          entryType = obj.ModifiedNode.LedgerEntryType || obj.CreatedNode?.LedgerEntryType || 'Unknown';
-//                          obj = { ...obj.ModifiedNode?.FinalFields, ...obj.CreatedNode?.NewFields } || obj;
-//                     }
-//                     if (!groupedObjects[entryType]) {
-//                          groupedObjects[entryType] = [];
-//                     }
-//                     groupedObjects[entryType].push(obj);
-//                });
-
-//                // Process grouped objects
-//                let groupIndex = 1;
-//                Object.entries(groupedObjects).forEach(([entryType, group], groupIdx) => {
-//                     const typeConfig = ledgerEntryTypeFields[entryType] || {
-//                          fields: Object.keys(group[0]).map(key => ({
-//                               key,
-//                               format: v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : v || 'N/A'),
-//                          })),
-//                          label: entryType || 'Unknown',
-//                          pluralLabel: `${entryType}s` || 'Unknowns',
-//                     };
-
-//                     // Use singular or plural label based on count
-//                     const label = group.length > 1 ? typeConfig.pluralLabel : typeConfig.label;
-//                     output.push(`${label} ${groupIndex}`);
-
-//                     if (group.length > 1) {
-//                          // For multiple objects, add LedgerEntryType and pluralized container
-//                          output.push(`    LedgerEntryType: ${entryType === 'NFT' ? 'NFTs' : typeConfig.pluralLabel}`);
-//                          output.push(`    ${typeConfig.pluralLabel}:`);
-//                          group.forEach((obj, objIndex) => {
-//                               output.push(`        ${typeConfig.label}`);
-//                               typeConfig.fields.forEach(field => {
-//                                    const value = obj[field.key];
-//                                    console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
-//                                    if (typeof value === 'object' && value !== null) {
-//                                         output.push(`            ${field.key}:`);
-//                                         Object.entries(value).forEach(([subKey, subValue]) => {
-//                                              output.push(`                ${subKey}: ${subValue || 'N/A'}`);
-//                                         });
-//                                    } else {
-//                                         output.push(`            ${field.key}: ${field.format(value)}`);
-//                                    }
-//                               });
-//                          });
-//                     } else {
-//                          // For single object, list fields directly
-//                          group.forEach(obj => {
-//                               typeConfig.fields.forEach(field => {
-//                                    const value = obj[field.key];
-//                                    console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
-//                                    if (field.key === 'NFTokens' && Array.isArray(value)) {
-//                                         output.push(`    ${field.key}:`);
-//                                         value.forEach((nft, nftIndex) => {
-//                                              output.push(`        NFToken`);
-//                                              Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
-//                                                   output.push(`            ${subKey}: ${subValue || 'N/A'}`);
-//                                              });
-//                                         });
-//                                    } else if (typeof value === 'object' && value !== null) {
-//                                         output.push(`    ${field.key}:`);
-//                                         Object.entries(value).forEach(([subKey, subValue]) => {
-//                                              output.push(`        ${subKey}: ${subValue || 'N/A'}`);
-//                                         });
-//                                    } else {
-//                                         output.push(`    ${field.key}: ${field.format(value)}`);
-//                                    }
-//                               });
-//                          });
-//                     }
-//                     groupIndex += 1;
-//                });
-//           });
-
-//           // Append general metadata
-//           if (ledgerHash !== 'N/A') output.push(`ledger_hash: ${ledgerHash}`);
-//           output.push(`ledger_${response.ledger_index ? 'index' : 'current_index'}: ${ledgerIndex}`);
-//           output.push(`validated: ${validated}`);
-
-//           return output.join('\n');
-//      } catch (error) {
-//           console.error('Error parsing XRPL response:', error);
-//           return `Error: Failed to parse XRPL response\nDetails: ${error.message}`;
-//      }
-// }
-
 export async function getTransaction() {
      console.log('Entering getTransaction');
 
@@ -1639,11 +1220,12 @@ export async function getTransaction() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const transactionHash = document.getElementById('transactionField');
+     let transactionHash = document.getElementById('transactionField');
 
      if (!transactionHash) return setError('ERROR: DOM element "transactionField" not found', spinner);
-
-     if (!validatInput(transactionHash.value)) return setError('ERROR: Transaction field cannot be empty', spinner);
+     transactionHash = transactionHash.value.trim();
+     if (!validatInput(transactionHash)) return setError('ERROR: Transaction field cannot be empty', spinner);
+     if (!isValidTransactionHash(transactionHash)) return setError('ERROR: Invalid Transaction hash', spinner);
 
      try {
           const { environment } = getEnvironment();
@@ -1655,7 +1237,7 @@ export async function getTransaction() {
           const tx = await client.request({
                id: 1,
                command: 'tx',
-               transaction: transactionHash.value,
+               transaction: transactionHash,
           });
 
           console.log('Get transaction tx', tx);
@@ -1712,13 +1294,13 @@ export async function getXrpBalance(accountField, balanceField) {
      try {
           for (let i = 0; i < retries; i++) {
                try {
-                    const balance = await client.getXrpBalance(accountAddressField.value);
-                    console.log(`Account ${accountAddressField.value} is funded. Balance: ${balance} XRP`);
+                    const balance = await client.getXrpBalance(accountAddressField.value.trim());
+                    console.log(`Account ${accountAddressField.value.trim()} is funded. Balance: ${balance} XRP`);
                     xrpBalanceField.value = balance;
                     break;
                } catch (err) {
                     if (err.message.includes('Account not found')) {
-                         console.log(`Waiting for account ${accountAddressField.value} to be activated`);
+                         console.log(`Waiting for account ${accountAddressField.value.trim()} to be activated`);
                          await new Promise(res => setTimeout(res, delayMs));
                     } else {
                          throw err;
@@ -1727,20 +1309,28 @@ export async function getXrpBalance(accountField, balanceField) {
           }
      } catch (error) {
           console.error('Error:', error);
-          xrpBalanceField.value = error.message || 'Unknown error';
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
           await disconnectClient();
      } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
           console.log('Leaving getXrpBalance');
      }
 }
 
 export async function getCurrentLedger(client) {
-     // Get the current ledger index from the client
-     const ledger_info = await client.request({
-          command: 'ledger',
-          ledger_index: 'current',
-     });
-     return ledger_info.result.ledger_current_index;
+     try {
+          // Get the current ledger index from the client
+          const ledger_info = await client.request({
+               command: 'ledger',
+               ledger_index: 'current',
+          });
+          return ledger_info.result.ledger_current_index;
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await disconnectClient();
+     }
 }
 
 const textarea = document.getElementById('resultField');

@@ -74,7 +74,7 @@ async function createConditionalEscrow() {
           }
 
           results += `Escrow created successfully.\n\n`;
-          results += parseXRPLTransaction(response.result);
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -159,7 +159,7 @@ async function finishConditionalEscrow() {
 
           results += `Escrow finished successfully.\n\n`;
 
-          results += parseXRPLTransaction(response.result);
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
