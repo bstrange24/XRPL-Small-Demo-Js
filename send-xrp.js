@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, displayTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -56,13 +56,11 @@ async function sendXRP() {
 
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
           results += `XRP payment finished successfully.\n\n`;
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(response.result);
 
           resultField.value = results;
           resultField.classList.add('success');
@@ -89,3 +87,4 @@ window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;
 window.distributeAccountInfo = distributeAccountInfo;
 window.distributeAccountInfo = distributeAccountInfo;
+window.getTransaction = getTransaction;

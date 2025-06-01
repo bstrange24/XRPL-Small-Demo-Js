@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, displayTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -70,14 +70,11 @@ async function createConditionalEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}, spinner`);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Escrow created successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -157,14 +154,12 @@ async function finishConditionalEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${displayTransaction({ txDetails, accountChanges })}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Escrow finished successfully.\n\n`;
 
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
 

@@ -82,7 +82,51 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Nft Id to use for transactions.">
+                                   <span class="tooltip" tooltip-data="Address to allow minting of NFTs on your behalf.">
+                                        <label for="minterAddressField">Minter Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="minterAddressField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Issuer field for authorized minting.">
+                                        <label for="issuerAddressField">Issuer Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="issuerAddressField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="The NFT sell will expire after the expiration date. This is in hours.">
+                                        <label for="expirationField">Expiration Date (Hours)</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="expirationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="URI field for the minted NFT.">
+                                        <label for="uriField">URI Field</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="uriField" size="85" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="NFT Id to use for transactions.">
                                         <label for="nftIdField">Nft Id</label>
                                    </span>
                               </td>
@@ -111,11 +155,19 @@
                          <tr>
                               <td colspan="2">
                                    <button type="button" onclick="getNFT()">Get NFTs</button>
+                                   <button type="button" onclick="getNFTOffers()">Get NFT Offers</button>
                                    <button type="button" onclick="mintNFT()">Mint NFT</button>
                                    <button type="button" onclick="mintBatchNFT()">Mint Batch NFTs</button>
                                    <button type="button" onclick="sellNFT()">Sell NFT</button>
                                    <button type="button" onclick="buyNFT()">Buy NFT</button>
+                                   <button type="button" onclick="createBuyOfferNFT()">Create Buy Offer NFT</button>
                                    <button type="button" onclick="burnNFT()">Burn NFTs</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onclick="setAuthorizedMinter()">Set Authorized Minter</button>
+                                   <button type="button" onclick="updateNFTMetadata()">Update NFT Metadata</button>
                                    <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>

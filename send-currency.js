@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -74,15 +74,11 @@ async function createTrustLine() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Trustline created successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -186,15 +182,11 @@ async function removeTrustLine() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Trustline removed successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -405,15 +397,11 @@ async function sendCurrency() {
 
           const resultCode = pay_result.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(pay_result.result)}`, spinner);
           }
 
           results += `Currency ${currency.value} successfully sent.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(pay_result.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -534,13 +522,10 @@ async function issueCurrency() {
 
                const resultCode = accountSetResult.result.meta.TransactionResult;
                if (resultCode !== 'tesSUCCESS') {
-                    const { txDetails, accountChanges } = parseXRPLTransaction(accountSetResult.result);
-                    const transactionResults = displayTransaction({ txDetails, accountChanges });
-                    return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(accountSetResult.result)}`, spinner);
                }
 
-               const { txDetails, accountChanges } = parseXRPLTransaction(accountSetResult.result);
-               results += displayTransaction({ txDetails, accountChanges });
+               results += parseXRPLTransaction(accountSetResult.result);
                results += `DefaultRipple enabled.\n`;
                resultField.value = results;
           }
@@ -572,15 +557,11 @@ async function issueCurrency() {
           // Step 5: Check transaction result
           const resultCode = pay_result.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(pay_result.result)}`, spinner);
           }
 
           results += `Currency ${currency.value} successfully issued.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(pay_result.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(pay_result.result);
 
           const updatedTrustLines = await getTrustLines(destinationAddress.value, client);
           const newTrustLine = updatedTrustLines.find(line => line.account === accountAddressField.value && line.currency === currency.value);
@@ -733,6 +714,7 @@ window.getTrustLine = getTrustLine;
 window.sendCurrency = sendCurrency;
 window.issueCurrency = issueCurrency;
 window.getTokenBalance = getTokenBalance;
+window.getTransaction = getTransaction;
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
 window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;

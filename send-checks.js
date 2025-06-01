@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, displayAccountObjects, displayTransaction, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -76,14 +76,12 @@ async function sendCheck() {
           console.log('Response', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          const transactionResults = displayTransaction({ txDetails, accountChanges });
-
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check sent successfully.\n\n${transactionResults}`;
+          results += `Check sent successfully.\n\n`;
+          results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -132,8 +130,7 @@ async function getChecks() {
 
           console.log('Response', check_objects);
 
-          const details = parseXRPLAccountObjects(check_objects.result);
-          results += displayAccountObjects(details);
+          results += parseXRPLAccountObjects(check_objects.result);
           resultField.value = results;
           resultField.classList.add('success');
      } catch (error) {
@@ -223,14 +220,12 @@ async function cashCheck() {
           console.log('Response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          const transactionResults = displayTransaction({ txDetails, accountChanges });
-
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check cashed successfully.\n\n${transactionResults}`;
+          results += `Check cashed successfully.\n\n`;
+          results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -293,14 +288,12 @@ async function cancelCheck() {
           console.log('Response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          const transactionResults = displayTransaction({ txDetails, accountChanges });
-
           if (resultCode !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check cancelled successfully.\n\n${transactionResults}`;
+          results += `Check cancelled successfully.\n\n`;
+          results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -353,6 +346,7 @@ window.sendCheck = sendCheck;
 window.getChecks = getChecks;
 window.cashCheck = cashCheck;
 window.cancelCheck = cancelCheck;
+window.getTransaction = getTransaction;
 window.populateFieldSendCurrency1 = populateFieldSendCurrency1;
 window.populateFieldSendCurrency2 = populateFieldSendCurrency2;
 window.populateFieldSendCurrency3 = populateFieldSendCurrency3;

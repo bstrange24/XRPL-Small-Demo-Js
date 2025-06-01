@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseOffersTransactionDetails, parseTransactionDetails, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, displayAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import BigNumber from 'bignumber.js';
 
@@ -289,7 +289,7 @@ async function createOffer() {
           if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}`);
                resultField.value += `Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}\n`;
-               resultField.value += parseTransactionDetails(tx.result);
+               resultField.value += parseXRPLTransaction(tx.result);
                resultField.classList.add('success');
           } else {
                const errorResults = `Error sending transaction: ${tx.result.meta.TransactionResult}`;
@@ -411,8 +411,7 @@ async function getOffers() {
 
           console.log('offers:', offers);
 
-          const details = parseXRPLAccountObjects(offers.result);
-          results += displayAccountObjects(details);
+          results += parseXRPLAccountObjects(offers.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -489,7 +488,7 @@ async function cancelOffer() {
 
           if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
                results += 'Transaction succeeded:\n';
-               results += results + parseTransactionDetails(tx.result);
+               results += results + parseXRPLTransaction(tx.result);
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
                console.log();
                resultField.value = results;
@@ -928,6 +927,7 @@ window.cancelOffer = cancelOffer;
 window.getOrderBook = getOrderBook;
 window.getCurrencyBalance = getCurrencyBalance;
 window.getXrpBalance = getXrpBalance;
+window.getTransaction = getTransaction;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;

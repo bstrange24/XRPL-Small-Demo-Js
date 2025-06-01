@@ -73,6 +73,17 @@
                               </td>
                               <td></td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                        <label for="transactionField">Transaction</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="transactionField" size="75" />
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
 
                     <table style="float: left">
@@ -189,12 +200,13 @@
                          <th></th>
                          <tr>
                               <td colspan="2">
-                                   <button type="button" onClick="createOffer()">Create Offer</button>
                                    <button type="button" onClick="getOffers()">Get Offers</button>
-                                   <button type="button" onClick="cancelOffer()">Cancel Offer</button>
                                    <button type="button" onClick="getOrderBook()">Get Order Book</button>
-                                   <button type="button" onClick="invertOrder()">Invert Order</button>
                                    <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
+                                   <button type="button" onClick="createOffer()">Create Offer</button>
+                                   <button type="button" onClick="cancelOffer()">Cancel Offer</button>
+                                   <button type="button" onClick="invertOrder()">Invert Order</button>
+                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>

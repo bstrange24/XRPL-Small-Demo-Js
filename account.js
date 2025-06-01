@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, displayAccountObjects, setError, parseXRPLTransaction, displayTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -67,6 +67,7 @@ export async function getAccountInfo() {
           });
 
           console.log('accountInfo', accountInfo);
+          // console.log('accountInfo', JSON.stringify(accountInfo, null, 2));
 
           // Set flags from account info
           flagList.forEach(flag => {
@@ -88,7 +89,7 @@ export async function getAccountInfo() {
 
           const flagsDetails = parseAccountFlagsDetails(accountInfo.account_flags);
           results += `Address: ${wallet.address}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
-          results += displayAccountObjects(parseXRPLAccountObjects(accountObjects));
+          results += parseXRPLAccountObjects(accountObjects);
 
           resultField.value = results;
           resultField.classList.add('success');
@@ -260,8 +261,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
                return setError(`ERROR: Transaction failed: ${txResult}`, spinner);
           }
 
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
-          resultField.value += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
@@ -344,17 +344,15 @@ async function submitFlagTransaction(client, wallet, flagPayload) {
      try {
           const response = await client.submitAndWait(tx, { wallet });
           const txResult = response.result.meta?.TransactionResult;
-          const { txDetails, accountChanges } = parseXRPLTransaction(response.result);
           if (txResult !== 'tesSUCCESS') {
                return {
                     success: false,
-                    message: `ERROR: ${txResult}\n${displayTransaction({ txDetails, accountChanges })}`,
+                    message: `ERROR: ${txResult}\n${parseXRPLTransaction(response.result)}`,
                };
           }
-          const responseFormat = displayTransaction({ txDetails, accountChanges });
           return {
                success: true,
-               message: responseFormat,
+               message: parseXRPLTransaction(response.result),
           };
      } catch (err) {
           return { success: false, message: `ERROR submitting flag: ${err.message}` };
@@ -406,6 +404,7 @@ export async function getTrustLines(account, client) {
 window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
+window.getTransaction = getTransaction;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;

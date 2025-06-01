@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, displayTransaction, parseXRPLAccountObjects, displayAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -65,15 +65,11 @@ async function createTimeBasedEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Escrow created successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -148,15 +144,11 @@ async function finishTimeBasedEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Escrow finsihed successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -203,8 +195,7 @@ async function getEscrows() {
 
           console.log('Escrow objects:', tx);
 
-          const details = parseXRPLAccountObjects(tx.result);
-          results += displayAccountObjects(details);
+          results += parseXRPLAccountObjects(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
      } catch (error) {
@@ -268,15 +259,11 @@ async function cancelEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== 'tesSUCCESS') {
-               const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-               const transactionResults = displayTransaction({ txDetails, accountChanges });
-               return setError(`ERROR: ${resultCode}\n${transactionResults}`, spinner);
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
           results += `Escrow cancelled successfully.\n\n`;
-
-          const { txDetails, accountChanges } = parseXRPLTransaction(tx.result);
-          results += displayTransaction({ txDetails, accountChanges });
+          results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
 
