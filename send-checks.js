@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -9,6 +9,9 @@ async function sendCheck() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -86,7 +89,8 @@ async function sendCheck() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          fields.balance.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          fields.balance.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -106,6 +110,9 @@ async function getChecks() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const accountAddressField = document.getElementById('accountAddressField');
      if (!validatInput(accountAddressField.value)) {
@@ -135,11 +142,14 @@ async function getChecks() {
                results += `No checks found for ${accountAddressField.value}`;
                resultField.value = results;
                resultField.classList.add('success');
-          } else {
-               results += parseXRPLAccountObjects(check_objects.result);
-               resultField.value = results;
-               resultField.classList.add('success');
+               return;
           }
+
+          results += parseXRPLAccountObjects(check_objects.result);
+          resultField.value = results;
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, accountAddressField.value, ownerCountField, totalXrpReservesField);
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -159,6 +169,9 @@ async function cashCheck() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      // Field references
      const fields = {
@@ -237,7 +250,8 @@ async function cashCheck() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          fields.balance.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          fields.balance.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -257,6 +271,9 @@ async function cancelCheck() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           checkId: document.getElementById('checkIdField'),
@@ -306,7 +323,8 @@ async function cancelCheck() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          fields.balance.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          fields.balance.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));

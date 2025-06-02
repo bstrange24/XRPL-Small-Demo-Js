@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -10,6 +10,9 @@ async function createTrustLine() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -83,6 +86,7 @@ async function createTrustLine() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -103,6 +107,9 @@ async function removeTrustLine() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -192,6 +199,7 @@ async function removeTrustLine() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -212,6 +220,9 @@ async function getTrustLine() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           seed: document.getElementById('accountSeedField'),
@@ -269,6 +280,7 @@ async function getTrustLine() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -289,6 +301,9 @@ async function sendCurrency() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
@@ -407,6 +422,7 @@ async function sendCurrency() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -427,6 +443,9 @@ async function issueCurrency() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountAddressField: document.getElementById('accountAddressField'),
@@ -572,6 +591,7 @@ async function issueCurrency() {
           results += `New Balance: ${newTrustLine ? newTrustLine.balance : 'Unknown'} ${currency.value}\n`;
 
           // Step 6: Update issuer's XRP balance
+          await updateOwnerCountAndReserves(client, accountAddressField.value, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(accountAddressField.value);
 
           // Step 7: Check issuer's obligations
@@ -602,6 +622,9 @@ export async function getTokenBalance() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           seed: document.getElementById('accountSeedField'),
@@ -662,6 +685,8 @@ export async function getTokenBalance() {
           results += output;
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -719,9 +744,19 @@ window.sendCurrency = sendCurrency;
 window.issueCurrency = issueCurrency;
 window.getTokenBalance = getTokenBalance;
 window.getTransaction = getTransaction;
+
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
 window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;
+
+window.generateNewWallet = generateNewWallet;
+window.generateNewWalletFromSecretNumbers = generateNewWalletFromSecretNumbers;
+window.generateNewWalletFromMnemonic = generateNewWalletFromMnemonic;
+
+window.getAccountFromSeed = getAccountFromSeed;
+window.getAccountFromMnemonic = getAccountFromMnemonic;
+window.getAccountFromSecretNumbers = getAccountFromSecretNumbers;
+
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

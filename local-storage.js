@@ -77,12 +77,19 @@ export function loadInputValues() {
           }
      }
 
+     // let counter = 0;
      inputIds.forEach(id => {
+          // for (const id of inputIds) {
           const value = localStorage.getItem(id);
           const element = document.getElementById(id);
           if (element && value !== null) {
                element.value = value;
           }
+          // counter++;
+          // if (counter === 15) {
+          // break;
+          // }
+          // }
      });
 
      // Get all navbar links (excluding dropdown toggles)

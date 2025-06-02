@@ -934,6 +934,7 @@ const ledgerEntryTypeFields = {
                { key: 'Account', format: v => v || null },
                { key: 'Amount', format: v => formatXRPLAmount(v || '0') },
                { key: 'Destination', format: v => v || null },
+               { key: 'Sequence', format: v => v || null },
                { key: 'CancelAfter', format: v => (v ? convertXRPLTime(v) : null) },
                { key: 'FinishAfter', format: v => (v ? convertXRPLTime(v) : null) },
                { key: 'Condition', format: v => v || null },
@@ -1331,6 +1332,65 @@ export async function getCurrentLedger(client) {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
           await disconnectClient();
      }
+}
+
+export async function getAccountReserves(client, address) {
+     try {
+          // Get the current ledger index from the client
+          const account_info = await client.request({
+               command: 'account_info',
+               account: address,
+               ledger_index: 'validated',
+          });
+
+          const accountData = account_info.result.account_data;
+          const ownerCount = accountData.OwnerCount;
+
+          const { reserveBaseXRP, reserveIncrementXRP } = await getXrplReserve(client);
+
+          const totalReserveXRP = reserveBaseXRP + ownerCount * reserveIncrementXRP;
+
+          console.log(`OwnerCount: ${ownerCount}`);
+          console.log(`Total reserve: ${totalReserveXRP} XRP`);
+
+          return { ownerCount, totalReserveXRP };
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await disconnectClient();
+     }
+}
+
+export async function getXrplReserve(client) {
+     try {
+          // Get the current ledger index from the client
+          const ledger_info = await client.request({
+               command: 'server_state',
+               ledger_index: 'current',
+          });
+
+          const ledgerData = ledger_info.result.state.validated_ledger;
+          const baseFee = ledgerData.base_fee;
+          const reserveBaseXRP = ledgerData.reserve_base;
+          const reserveIncrementXRP = ledgerData.reserve_inc;
+
+          console.log(`baseFee: ${baseFee}`);
+          console.log(`reserveBaseXRP: ${reserveBaseXRP}`);
+          console.log(`Total reserve: ${reserveIncrementXRP} XRP`);
+
+          return { reserveBaseXRP, reserveIncrementXRP };
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await disconnectClient();
+     }
+}
+
+export async function updateOwnerCountAndReserves(client, address, ownerCountField, totalXrpReservesField) {
+     const { ownerCount, totalReserveXRP } = await getAccountReserves(client, address);
+     console.log(`Owner Count: ${ownerCount} Total XRP Reserves: ${xrpl.dropsToXrp(totalReserveXRP)}`);
+     ownerCountField.value = ownerCount;
+     totalXrpReservesField.value = xrpl.dropsToXrp(totalReserveXRP);
 }
 
 const textarea = document.getElementById('resultField');

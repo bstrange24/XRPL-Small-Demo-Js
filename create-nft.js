@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 
 async function getNFT() {
      console.log('Entering getNFT');
@@ -9,6 +9,9 @@ async function getNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
@@ -37,10 +40,17 @@ async function getNFT() {
           });
           console.log('nftInfo', nftInfo);
 
+          if (nftInfo.result.account_nfts.length <= 0) {
+               resultField.value += `No NFTS found for account ${wallet.address}`;
+               resultField.classList.add('success');
+               return;
+          }
+
           results += parseXRPLAccountObjects(nftInfo.result);
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -61,6 +71,9 @@ async function mintNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -152,6 +165,7 @@ async function mintNFT() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -172,6 +186,9 @@ async function mintBatchNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -249,6 +266,7 @@ async function mintBatchNFT() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -269,6 +287,9 @@ async function setAuthorizedMinter() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -318,6 +339,7 @@ async function setAuthorizedMinter() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -338,6 +360,9 @@ async function sellNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -405,6 +430,7 @@ async function sellNFT() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -421,12 +447,17 @@ async function cancelBuyOffer() {
      console.log('Entering cancelBuyOffer');
 
      const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
      const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const xrpBalanceField = document.getElementById('xrpBalanceField');
+
      const nftIndexField = document.getElementById('nftIndexField');
      const seedField = document.getElementById('accountSeedField');
-
-     resultField?.classList.remove('error', 'success');
-     if (spinner) spinner.style.display = 'block';
 
      // Validate DOM
      if (!nftIndexField || !seedField) {
@@ -468,6 +499,9 @@ async function cancelBuyOffer() {
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -483,12 +517,17 @@ async function cancelSellOffer() {
      console.log('Entering cancelSellOffer');
 
      const resultField = document.getElementById('resultField');
-     const spinner = document.getElementById('spinner');
-     const nftIndexField = document.getElementById('nftIndexField');
-     const seedField = document.getElementById('accountSeedField');
-
      resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const xrpBalanceField = document.getElementById('xrpBalanceField');
+
+     const seedField = document.getElementById('accountSeedField');
+     const nftIndexField = document.getElementById('nftIndexField');
 
      // Validate DOM
      if (!nftIndexField || !seedField) {
@@ -530,6 +569,9 @@ async function cancelSellOffer() {
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -549,6 +591,9 @@ async function buyNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -646,6 +691,7 @@ async function buyNFT() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -666,6 +712,9 @@ async function burnNFT() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -711,6 +760,7 @@ async function burnNFT() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -731,6 +781,9 @@ async function updateNFTMetadata() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -783,6 +836,7 @@ async function updateNFTMetadata() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           fields.balance.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -803,6 +857,10 @@ async function getNFTOffers() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const xrpBalanceField = document.getElementById('xrpBalanceField');
 
      const fields = {
           nftIdField: document.getElementById('nftIdField'),
@@ -917,6 +975,9 @@ async function getNFTOffers() {
 
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, accountAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(accountAddress);
      } catch (error) {
           console.error('Error in getNFTOffers:', error);
           setError(`ERROR: ${error.message || 'Failed to fetch NFT offers'}`);

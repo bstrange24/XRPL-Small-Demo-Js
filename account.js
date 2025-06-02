@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -46,6 +46,9 @@ export async function getAccountInfo() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+
      const { seedField, balanceField } = resolveAccountFields();
 
      if (!seedField || !balanceField) return setError('ERROR: DOM elements not found', spinner);
@@ -67,7 +70,6 @@ export async function getAccountInfo() {
           });
 
           console.log('accountInfo', accountInfo);
-          // console.log('accountInfo', JSON.stringify(accountInfo, null, 2));
 
           // Set flags from account info
           flagList.forEach(flag => {
@@ -89,10 +91,18 @@ export async function getAccountInfo() {
 
           const flagsDetails = parseAccountFlagsDetails(accountInfo.account_flags);
           results += `Address: ${wallet.address}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
-          results += parseXRPLAccountObjects(accountObjects);
+
+          if (accountObjects.account_objects.length <= 0) {
+               results += `No account objects found for ${wallet.address}`;
+          } else {
+               results += parseXRPLAccountObjects(accountObjects);
+          }
 
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -113,9 +123,14 @@ async function updateFlags() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+
      const accountSeedField = resolveAccountSeedField();
      if (!accountSeedField) return setError('ERROR: Account seed field not found', spinner);
      if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty', spinner);
+
+     const { seedField, balanceField } = resolveAccountFields();
 
      const noFreeze = document.getElementById('asfNoFreeze')?.checked;
      const globalFreeze = document.getElementById('asfGlobalFreeze')?.checked;
@@ -159,6 +174,9 @@ async function updateFlags() {
           }
 
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -180,8 +198,13 @@ async function setDepositAuthAccounts(authorizeFlag) {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+
      const selected = getSelectedAccount();
      if (!selected) return setError(`Please select an account.`, spinner);
+
+     const { seedField, balanceField } = resolveAccountFields();
 
      const isAccount1 = selected === 'account1';
      const accountSeedField = document.getElementById(isAccount1 ? 'accountSeed1Field' : 'accountSeed2Field');
@@ -265,6 +288,9 @@ async function setDepositAuthAccounts(authorizeFlag) {
           resultField.value += `Tx Hash: ${response.result.hash}\n\n`;
           resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);

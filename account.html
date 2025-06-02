@@ -27,7 +27,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountName1Field" size="40" readonly />
+                                   <input type="text" id="accountName1Field" size="40" />
                                    <input type="radio" id="account1" name="accounts" value="account1" />
                                    <label for="account1">Account 1</label>
                               </td>
@@ -39,7 +39,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountAddress1Field" size="40" readonly />
+                                   <input type="text" id="accountAddress1Field" size="40" />
                                    <input type="radio" id="account2" name="accounts" value="account2" />
                                    <label for="account2">Account 2</label>
                               </td>
@@ -51,7 +51,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountSeed1Field" size="40" readonly />
+                                   <input type="text" id="accountSeed1Field" size="40" />
                               </td>
                          </tr>
                          <tr>
@@ -61,7 +61,26 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="xrpBalance1Field" size="40" readonly />
+                                   <input type="text" id="xrpBalance1Field" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve">
+                                        <label for="ownerCountField">Owner Count</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <div style="display: inline-block; margin-right: 30px">
+                                        <input type="text" id="ownerCountField" size="10" />
+                                   </div>
+
+                                   <div style="display: inline-block">
+                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
+                                             <label for="totalXrpReservesField" style="display: inline-block; width: 150px; text-align: right; margin-right: 5px">Total XRP Reserves</label>
+                                        </span>
+                                        <input type="text" id="totalXrpReservesField" size="10" />
+                                   </div>
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -86,7 +105,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountName2Field" size="40" readonly />
+                                   <input type="text" id="accountName2Field" size="40" />
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -96,7 +115,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountAddress2Field" size="40" readonly />
+                                   <input type="text" id="accountAddress2Field" size="40" />
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -106,7 +125,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="accountSeed2Field" size="40" readonly />
+                                   <input type="text" id="accountSeed2Field" size="40" />
                               </td>
                          </tr>
                          <tr>
@@ -116,11 +135,10 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="xrpBalance2Field" size="40" readonly />
+                                   <input type="text" id="xrpBalance2Field" size="40" />
                               </td>
                          </tr>
                     </table>
-
                     <table style="float: left">
                          <th></th>
                          <tr>

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -17,6 +17,8 @@ async function createTimeBasedEscrow() {
           escrowCancelTime: document.getElementById('escrowCancelTimeField'),
           amountField: document.getElementById('amountField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // DOM existence check
@@ -24,7 +26,7 @@ async function createTimeBasedEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField } = fields;
+     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
 
      // Validation checks
      const validations = [
@@ -74,7 +76,8 @@ async function createTimeBasedEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -101,6 +104,8 @@ async function finishTimeBasedEscrow() {
           escrowOwnerAddress: document.getElementById('escrowOwnerField'),
           escrowSequenceNumber: document.getElementById('escrowSequenceNumberField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // DOM element check
@@ -108,7 +113,7 @@ async function finishTimeBasedEscrow() {
           if (!el) return setError(`ERROR: DOM element "${key}" not found`, spinner);
      }
 
-     const { accountSeed, accountAddress, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField } = fields;
+     const { accountSeed, accountAddress, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
 
      // Input validation
      const validations = [
@@ -154,7 +159,8 @@ async function finishTimeBasedEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -174,6 +180,9 @@ async function getEscrows() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const accountAddress = document.getElementById('accountAddressField');
      if (!accountAddress) return setError('ERROR: DOM element "accountAddressField" not found', spinner);
@@ -197,17 +206,35 @@ async function getEscrows() {
 
           console.log('Escrow objects:', tx);
 
-          const sequenceTx = await client.request({
-               command: 'tx',
-               transaction: '50F58CFFEA677BD8BE999CDA0BB8D8F36DE89DE729A1D09840E3ADC61C968EB1',
-          });
+          if (tx.result.account_objects.length <= 0) {
+               resultField.value += `No escrow found for ${accountAddress.value}`;
+               resultField.classList.add('success');
+               return;
+          }
 
-          const offerSequence = sequenceTx.result.tx_json.Sequence;
-          console.log('\nEscrow OfferSequence:', offerSequence + '\n');
+          const previousTxnIDs = tx.result.account_objects.map(obj => obj.PreviousTxnID);
+          console.log(previousTxnIDs);
 
-          results += parseXRPLAccountObjects(tx.result);
+          // Get Sequence and add it to the response
+          for (const previousTxnID of previousTxnIDs) {
+               const sequenceTx = await client.request({
+                    command: 'tx',
+                    transaction: previousTxnID,
+               });
+               const offerSequence = sequenceTx.result.tx_json.Sequence;
+               console.log(`\nEscrow OfferSequence: ${offerSequence} Hash: ${sequenceTx.result.hash}\n`);
+               for (const transaction of tx.result.account_objects) {
+                    if (transaction.PreviousTxnID === previousTxnID) {
+                         transaction.Sequence = offerSequence;
+                    }
+               }
+          }
+
+          results += '\n' + parseXRPLAccountObjects(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, accountAddress.value, ownerCountField, totalXrpReservesField);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -232,6 +259,8 @@ async function cancelEscrow() {
      const escrowOwnerAddress = document.getElementById('escrowOwnerField');
      const escrowSequenceNumber = document.getElementById('escrowSequenceNumberField');
      const xrpBalanceField = document.getElementById('xrpBalanceField');
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      if (!accountSeed || !escrowOwnerAddress || !escrowSequenceNumber || !xrpBalanceField) return setError('ERROR: Required DOM elements not found', spinner);
 
@@ -278,7 +307,8 @@ async function cancelEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);

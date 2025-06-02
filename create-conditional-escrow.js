@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -18,6 +18,8 @@ async function createConditionalEscrow() {
           escrowCondition: document.getElementById('escrowConditionField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
           amountField: document.getElementById('amountField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // Check if any required DOM elements are missing
@@ -25,7 +27,7 @@ async function createConditionalEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField } = fields;
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
 
      // Validate input values
      const validations = [
@@ -79,7 +81,8 @@ async function createConditionalEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -108,6 +111,8 @@ async function finishConditionalEscrow() {
           escrowFulfillment: document.getElementById('escrowFulfillmentField'),
           escrowSequenceNumber: document.getElementById('escrowSequenceNumberField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // Check for missing DOM elements
@@ -115,7 +120,7 @@ async function finishConditionalEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountAddress, escrowOwner, accountSeed, escrowCondition, escrowFulfillment, escrowSequenceNumber, xrpBalanceField } = fields;
+     const { accountAddress, escrowOwner, accountSeed, escrowCondition, escrowFulfillment, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
 
      // Input validation
      const validations = [
@@ -164,7 +169,8 @@ async function finishConditionalEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);

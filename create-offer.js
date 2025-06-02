@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import BigNumber from 'bignumber.js';
 
@@ -11,6 +11,9 @@ async function createOffer() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      let we_want;
      let takerGetsString;
@@ -355,6 +358,7 @@ async function createOffer() {
           console.log(`\n${tokenBalance} Updated Balance: ${updatedBalance}`);
           resultField.value += `\n${tokenBalance} Updated Balance: ${updatedBalance}\n`;
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           const finalXrpBalance = await client.getXrpBalance(wallet.address);
           console.log(`Final XRP Balance: ${finalXrpBalance}`);
           resultField.value += `Final XRP Balance: ${finalXrpBalance}\n`;
@@ -386,6 +390,9 @@ async function getOffers() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+
      const accountSeedField = document.getElementById('accountSeedField');
      const xrpBalanceField = document.getElementById('xrpBalanceField');
 
@@ -398,7 +405,7 @@ async function getOffers() {
           const { environment } = getEnvironment();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\n*** Getting Offers ***.\n\n`;
+          let results = `Connected to ${environment}.\nGetting Offers\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -411,10 +418,18 @@ async function getOffers() {
 
           console.log('offers:', offers);
 
+          if (offers.result.offers.length <= 0) {
+               results += `No offers found for ${wallet.address}`;
+               resultField.value = results;
+               resultField.classList.add('success');
+               return;
+          }
+
           results += parseXRPLAccountObjects(offers.result);
           resultField.value = results;
           resultField.classList.add('success');
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -435,6 +450,9 @@ async function cancelOffer() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -499,6 +517,7 @@ async function cancelOffer() {
                resultField.classList.add('error');
           }
 
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(wallet.address);
      } catch (error) {
           console.error('Error:', error);
@@ -519,6 +538,9 @@ async function getOrderBook() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const ownerCountField = document.getElementById('ownerCountField');
+     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountName: document.getElementById('accountNameField'),
@@ -638,6 +660,8 @@ async function getOrderBook() {
 
           resultField.value = results;
           resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);

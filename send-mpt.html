@@ -1,216 +1,334 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
      <head>
-          <title>Send MPT</title>
+          <title>Manage MPT's</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
-          <script src="https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js"></script>
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script src="account-support.js"></script>
-          <script src="send-mpt.js"></script>
-          <script>
-               if (typeof module !== 'undefined') {
-                    const xrpl = require('xrpl');
-               }
-          </script>
+          <script type="module" src="send-mpt.js"></script>
+          <script type="module" src="local-storage.js"></script>
+          <script type="module" src="utils.js"></script>
      </head>
 
-     <!-- ************************************************************** -->
-     <!-- ********************** The Form ****************************** -->
-     <!-- ************************************************************** -->
-
      <body>
-          <h1>Send MPT</h1>
+          <div id="navbar-container"></div>
           <form id="theForm">
-               <span class="tooltip" tooltip-data="Choose the XRPL host server for your account."> Choose your ledger instance: </span>
-               &nbsp;&nbsp;
-               <input type="radio" id="dn" name="server" value="wss://s.devnet.rippletest.net:51233" checked />
-               <label for="dn">Devnet</label>
-               &nbsp;&nbsp;
-               <input type="radio" id="tn" name="server" value="wss://s.altnet.rippletest.net:51233" />
-               <label for="tn">Testnet</label>
-               <br /><br />
-               <table>
-                    <tr>
-                         <td>
-                              <button type="button" onClick="getNewAccount1()">Get New Account 1</button>
-                         </td>
-                         <td>
-                              <button type="button" onClick="getAccountFromSeed1()">Get Account 1 From Seed</button>
-                         </td>
-                         <td>
-                              <button type="button" onClick="getNewAccount2()">Get New Account 2</button>
-                         </td>
-                         <td>
-                              <button type="button" onClick="getAccountFromSeed2()">Get Account 2 From Seed</button>
-                         </td>
-                    </tr>
-                    <tr>
-                         <td>
-                              <span class="tooltip" tooltip-data="Arbitrary human-readable name for the account."><label for="account1name">Account 1 Name</label> </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account1name" size="40" />
-                         </td>
-                         <td>
-                              <span class="tooltip" tooltip-data="Arbitrary human-readable name for the account.">
-                                   <label for="account2name">Account 2 Name</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account2name" size="40" />
-                         </td>
-                    </tr>
-                    <tr>
-                         <td>
-                              <span class="tooltip" tooltip-data="Identifying address for the account.">
-                                   <label for="account1address">Account 1 Address</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account1address" size="40" />
-                         </td>
-                         <td>
-                              <span class="tooltip" tooltip-data="Identifying address for the account.">
-                                   <label for="account2address">Account 2 Address</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account2address" size="40" />
-                         </td>
-                    </tr>
-                    <tr>
-                         <td>
-                              <span class="tooltip" tooltip-data="Seed for deriving public and private keys for the account.">
-                                   <label for="account1seed">Account 1 Seed</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account1seed" size="40" />
-                         </td>
-                         <td>
-                              <span class="tooltip" tooltip-data="Seed for deriving public and private keys for the account.">
-                                   <label for="account2seed">Account 2 Seed</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="account2seed" size="40" />
-                         </td>
-                    </tr>
-               </table>
-               <hr />
-               <table>
-                    <tr valign="top">
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Name of the currently selected account.">
-                                   <label for="accountNameField">Account Name</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="accountNameField" size="40" readonly />
-                              <input type="radio" id="account1" name="accounts" value="account1" />
-                              <label for="account1">Account 1</label>
-                         </td>
-                    </tr>
-                    <tr valign="top">
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Address of the currently selected account.">
-                                   <label for="accountAddressField">Account Address</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="accountAddressField" size="40" readonly />
-                              <input type="radio" id="account2" name="accounts" value="account2" />
-                              <label for="account2">Account 2</label>
-                         </td>
-                    </tr>
-                    <tr valign="top">
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Seed of the currently selected account.">
-                                   <label for="accountSeedField">Account Seed</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="accountSeedField" size="40" readonly />
-                              <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer" />
-                              <label for="accountIssuer">Issuer</label>
-                         </td>
-                    </tr>
-                    <tr>
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
-                                   <label for="xrpBalanceField">XRP Balance</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="xrpBalanceField" size="40" readonly />
-                         </td>
-                    </tr>
-                    <tr>
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Issuance ID of the MPT you want to trade.">
-                                   <lable for="mptIdField">MPT Issuance ID</lable>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="mptIdField" size="40" />
-                              <br />
-                         </td>
-                         <td>
-                              <button type="button" onClick="authorizeMPT()">Authorize MPT</button>
-                         </td>
-                    </tr>
-                    <tr>
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Number of MPTs to send.">
-                                   <label for="amountField">Amount</label>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="amountField" size="40" />
-                              <br />
-                         </td>
-                         <td>
-                              <button type="button" onClick="sendMPT()">Send MPT</button>
-                         </td>
-                    </tr>
-                    <tr>
-                         <td align="right">
-                              <span class="tooltip" tooltip-data="Destination account address for MPT transfer.">
-                                   <lable for="destinationField">Destination</lable>
-                              </span>
-                         </td>
-                         <td>
-                              <input type="text" id="destinationField" size="40" />
-                              <br />
-                         </td>
-                         <td align="left" valign="top">
-                              <button type="button" onClick="getMPTs()">Get MPTs</button>
-                         </td>
-                    </tr>
-                    <tr>
-                         <td colspan="2">
-                              <p align="right">
-                                   <textarea id="resultField" cols="80" rows="20"></textarea>
-                              </p>
-                         </td>
-                         <td align="left" valign="top">
-                              <button type="button" onClick="gatherAccountInfo()">Gather Account Info</button><br />
-                              <button type="button" onClick="distributeAccountInfo()">Distribute Account Info</button>
-                         </td>
-                    </tr>
-               </table>
+               <div id="wallet-input-container"></div>
+               <p></p>
+               <fieldset style="padding: 20px">
+                    <legend style="color: white">Transaction Information</legend>
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                        <label for="accountNameField">Name</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountNameField" size="40" readonly />
+                                   <input type="radio" id="account1" name="accounts" value="account1" />
+                                   <label for="account1">Account 1</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                        <label for="accountAddressField">Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountAddressField" size="40" readonly />
+                                   <input type="radio" id="account2" name="accounts" value="account2" />
+                                   <label for="account2">Account 2</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                        <label for="accountSeedField">Seed</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountSeedField" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                        <label for="xrpBalanceField">Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="xrpBalanceField" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve">
+                                        <label for="ownerCountField">Owner Count</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <div style="display: inline-block; margin-right: 30px">
+                                        <input type="text" id="ownerCountField" size="10" />
+                                   </div>
+
+                                   <div style="display: inline-block">
+                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
+                                             <label for="totalXrpReservesField" style="display: inline-block; width: 150px; text-align: right; margin-right: 5px">Total XRP Reserves</label>
+                                        </span>
+                                        <input type="text" id="totalXrpReservesField" size="10" />
+                                   </div>
+                              </td>
+                         </tr>
+                    </table>
+
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amount of XRP to send.">
+                                        <label for="amountField">Amount</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="amountField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Address to send MPT to.">
+                                        <label for="destinationAddressField">Destination Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="destinationAddressField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="MPT Issuance ID.">
+                                        <label for="mptIssuanceIdField">MPT Issuance ID</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="mptIssuanceIdField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <!-- <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="The NFT sell will expire after the expiration date. This is in hours.">
+                                        <label for="expirationField">Expiration Date (Hours)</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="expirationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr> -->
+                         <!-- <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="URI field for the minted NFT.">
+                                        <label for="uriField">URI Field</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="uriField" size="85" />
+                                   <br />
+                              </td>
+                         </tr> -->
+                         <!-- <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="NFT Id to use for transactions.">
+                                        <label for="nftIdField">Nft Id</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="nftIdField" size="85" />
+                                   <br />
+                              </td>
+                         </tr> -->
+                         <!-- <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="NFT index used to cancel sell offers.">
+                                        <label for="nftIndexField">Nft Index</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="nftIndexField" size="85" />
+                                   <br />
+                              </td>
+                         </tr> -->
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                        <label for="transactionField">Transaction</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="transactionField" size="85" />
+                                   <br />
+                              </td>
+                         </tr>
+                    </table>
+
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
+                    <table style="text-align: left; width: 100%">
+                         <th></th>
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onclick="getMPTs()">Get MPTs</button>
+                                   <button type="button" onclick="sendMPT()">Send MPT</button>
+                                   <button type="button" onclick="authorizeMPT()">Authorize MPT</button>
+                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false"></textarea>
+                              </td>
+                         </tr>
+                    </table>
+               </fieldset>
           </form>
      </body>
+
      <script>
-          let radioButtons = document.querySelectorAll('input[type="radio"]');
-          radioButtons.forEach(radio => {
+          const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
+          accountRadioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
                          populate1();
                     } else if (this.value === 'account2') {
                          populate2();
+                    } else if (this.value === 'accountIssuer') {
+                         populate3();
                     }
                });
           });
+
+          fetch('wallet-input.html')
+               .then(res => res.text())
+               .then(html => {
+                    document.getElementById('wallet-input-container').innerHTML = html;
+
+                    function hideAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
+
+                    function hideAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
+
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    let pageLoad = 'Y';
+                    checkboxes.forEach(checkbox => {
+                         checkbox.addEventListener('change', function () {
+                              pageLoad = 'N';
+                              if (this.checked) {
+                                   if (this.value === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                        showAllGenerateNewWalletButtons();
+                                   } else if (this.value === 'N') {
+                                        hideAllGenerateNewWalletButtons();
+                                        showAllDeriveWalletButtons();
+                                   }
+                              } else {
+                                   console.log(`${this.value} was unchecked`);
+                                   hideAllGenerateNewWalletButtons();
+                                   showAllDeriveWalletButtons();
+                              }
+                         });
+                    });
+
+                    if (pageLoad === 'Y') {
+                         for (const checkbox of checkboxes) {
+                              const isChecked = checkbox.checked;
+                              const checkboxValue = checkbox.value;
+                              console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+                              if (isChecked) {
+                                   if (checkboxValue === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                   } else if (checkboxValue === 'N') {
+                                        console.log('Checkbox N is checked, calling populate2()');
+                                        populate2();
+                                   }
+                              }
+                         }
+                    }
+               })
+               .catch(error => {
+                    console.error('Error loading wallet-input.html:', error);
+               });
+          const textarea = document.getElementById('resultField');
+
+          function autoResize() {
+               textarea.style.height = 'auto'; // Reset height
+               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+          }
+
+          textarea.addEventListener('input', autoResize);
+
+          // Optional: resize on load if there's prefilled content
+          window.addEventListener('load', autoResize);
      </script>
 </html>

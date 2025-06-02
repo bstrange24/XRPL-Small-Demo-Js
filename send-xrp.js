@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction } from './utils.js';
+import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -18,6 +18,8 @@ async function sendXRP() {
           destination: document.getElementById('destinationField'),
           memo: document.getElementById('memoField'),
           destinationTag: document.getElementById('destinationTagField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // Validate DOM elements
@@ -89,7 +91,8 @@ async function sendXRP() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          fields.balance.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.address, fields.ownerCountField, fields.totalXrpReservesField);
+          fields.balance.value = (await client.getXrpBalance(wallet.address)) - fields.totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
