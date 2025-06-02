@@ -325,6 +325,16 @@ input:checked+.slider:before {
      background-color: #1a1c21;
 }
 
+.nftMemoField {
+     width: 1250px;
+     height: 110px;
+     border-radius: 10px;
+     border: 1px solid white;
+     color: white;
+     background-color: #1a1c21;
+     padding: 20px;
+}
+
 @keyframes spin {
      to {
           transform: rotate(360deg);

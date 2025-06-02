@@ -65,6 +65,46 @@
                                    <input type="text" id="xrpBalanceField" size="40" readonly />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Allows anyone to burn the NFT if they hold it">
+                                        <label for="burnableNft">Burnable</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="checkbox" id="burnableNft" />
+                              </td>
+                         </tr>
+                         <tr>
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="NFT can only be bought/sold using XRP (no issued tokens)">
+                                        <label for="onlyXrpNft">Only XRP</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="checkbox" id="onlyXrpNft" />
+                              </td>
+                         </tr>
+                         <tr>
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Allows the NFT to be transferred to others">
+                                        <label for="transferableNft">Transferable</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="checkbox" id="transferableNft" />
+                              </td>
+                         </tr>
+                         <tr>
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="The URI field of the minted NFToken can be updated using the NFTokenModify transaction">
+                                        <label for="mutableNft">Mutable</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="checkbox" id="mutableNft" />
+                              </td>
+                         </tr>
                     </table>
 
                     <table style="float: left">
@@ -137,6 +177,17 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="NFT index used to cancel sell offers.">
+                                        <label for="nftIndexField">Nft Index</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="nftIndexField" size="85" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
                                         <label for="transactionField">Transaction</label>
                                    </span>
@@ -158,10 +209,15 @@
                                    <button type="button" onclick="getNFTOffers()">Get NFT Offers</button>
                                    <button type="button" onclick="mintNFT()">Mint NFT</button>
                                    <button type="button" onclick="mintBatchNFT()">Mint Batch NFTs</button>
-                                   <button type="button" onclick="sellNFT()">Sell NFT</button>
-                                   <button type="button" onclick="buyNFT()">Buy NFT</button>
-                                   <button type="button" onclick="createBuyOfferNFT()">Create Buy Offer NFT</button>
                                    <button type="button" onclick="burnNFT()">Burn NFTs</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onclick="buyNFT()">Create Buy Offer NFT</button>
+                                   <button type="button" onclick="cancelBuyOffer()">Cancel Buy Offer NFT</button>
+                                   <button type="button" onclick="sellNFT()">Create Sell Offer NFT</button>
+                                   <button type="button" onclick="cancelSellOffer()">Cancel Sell Offer NFT</button>
                               </td>
                          </tr>
                          <tr>
@@ -174,6 +230,31 @@
                          <tr>
                               <td colspan="2">
                                    <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false"></textarea>
+                              </td>
+                         </tr>
+                    </table>
+               </fieldset>
+
+               <p></p>
+               <fieldset style="padding: 20px">
+                    <legend style="color: white">NFT Flag Info</legend>
+                    <table style="float: left; color: white">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              </td>
+                              <td>
+                                   <textarea class="nftMemoField" style="padding: 20px;" id="memoField" placeholder="Optional memo...">
+Flag Name          | Hex Value  | Decimal Value | Description                                              
+------------------ | ---------- | ------------- | ---------------------------------------------------------
+tfBurnable         | 0x00000001 |       1       | Allows anyone to burn the NFT if they hold it.           
+tfOnlyXRP          | 0x00000002 |       2       | NFT can only be bought/sold using XRP (no issued tokens).
+tfTransferable     | 0x00000008 |       8       | Allows the NFT to be transferred to others.              
+tfMutable          | 0x00000010 |      10       | The URI field of the minted NFToken can be updated using the NFTokenModify transaction.
+
+Note: Each NFT offer reserves 0.2 XRP on your account until accepted or canceled.     
+                                        </textarea
+                                   >
+                                   <br />
                               </td>
                          </tr>
                     </table>

@@ -69,6 +69,7 @@ async function createTimeBasedEscrow() {
           }
 
           results += `Escrow created successfully.\n\n`;
+          results += `Tx Hash: ${tx.result.hash}\n\n`;
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -148,6 +149,7 @@ async function finishTimeBasedEscrow() {
           }
 
           results += `Escrow finsihed successfully.\n\n`;
+          results += `Tx Hash: ${tx.result.hash}\n\n`;
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -271,6 +273,7 @@ async function cancelEscrow() {
           }
 
           results += `Escrow cancelled successfully.\n\n`;
+          results += `Tx Hash: ${tx.result.hash}\n\n`;
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');

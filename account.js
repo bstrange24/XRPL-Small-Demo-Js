@@ -261,6 +261,8 @@ async function setDepositAuthAccounts(authorizeFlag) {
                return setError(`ERROR: Transaction failed: ${txResult}`, spinner);
           }
 
+          resultField.value += `Deposit Auth finished successfully.\n\n`;
+          resultField.value += `Tx Hash: ${response.result.hash}\n\n`;
           resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
      } catch (error) {

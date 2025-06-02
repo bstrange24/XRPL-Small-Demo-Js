@@ -81,6 +81,7 @@ async function sendCheck() {
           }
 
           results += `Check sent successfully.\n\n`;
+          results += `Tx Hash: ${response.result.hash}\n\n`;
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -130,9 +131,15 @@ async function getChecks() {
 
           console.log('Response', check_objects);
 
-          results += parseXRPLAccountObjects(check_objects.result);
-          resultField.value = results;
-          resultField.classList.add('success');
+          if (check_objects.result.account_objects.length <= 0) {
+               results += `No checks found for ${accountAddressField.value}`;
+               resultField.value = results;
+               resultField.classList.add('success');
+          } else {
+               results += parseXRPLAccountObjects(check_objects.result);
+               resultField.value = results;
+               resultField.classList.add('success');
+          }
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -225,6 +232,7 @@ async function cashCheck() {
           }
 
           results += `Check cashed successfully.\n\n`;
+          results += `Tx Hash: ${response.result.hash}\n\n`;
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -293,6 +301,7 @@ async function cancelCheck() {
           }
 
           results += `Check cancelled successfully.\n\n`;
+          results += `Tx Hash: ${response.result.hash}\n\n`;
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');

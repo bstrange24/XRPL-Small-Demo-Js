@@ -825,7 +825,7 @@ export function parseXRPLTransaction(response) {
                                         const value = fields[field.key];
                                         const formattedValue = field.format(value);
                                         if (formattedValue !== null && formattedValue !== undefined) {
-                                             console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
+                                             // console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
                                              if (field.key === 'NFTokens' && Array.isArray(value)) {
                                                   output.push(`                ${field.key}:`);
                                                   value.forEach(nft => {
@@ -1149,7 +1149,7 @@ export function parseXRPLAccountObjects(response) {
                                    const value = obj[field.key];
                                    const formattedValue = field.format(value);
                                    if (formattedValue !== null && formattedValue !== undefined) {
-                                        console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
+                                        // console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
                                         if (typeof value === 'object' && value !== null) {
                                              output.push(`            ${field.key}:`);
                                              Object.entries(value).forEach(([subKey, subValue]) => {
@@ -1170,7 +1170,7 @@ export function parseXRPLAccountObjects(response) {
                                    const value = obj[field.key];
                                    const formattedValue = field.format(value);
                                    if (formattedValue !== null && formattedValue !== undefined) {
-                                        console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
+                                        // console.log(`Key: ${field.key}, Value: ${value || 'N/A'}`);
                                         if (field.key === 'NFTokens' && Array.isArray(value)) {
                                              output.push(`    ${field.key}:`);
                                              value.forEach(nft => {

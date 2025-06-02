@@ -17,6 +17,7 @@ async function sendXRP() {
           amount: document.getElementById('amountField'),
           destination: document.getElementById('destinationField'),
           memo: document.getElementById('memoField'),
+          destinationTag: document.getElementById('destinationTagField'),
      };
 
      // Validate DOM elements
@@ -27,12 +28,16 @@ async function sendXRP() {
      const seed = fields.seed.value.trim();
      const amount = fields.amount.value.trim();
      const destination = fields.destination.value.trim();
+     const memo = fields.memo.value.trim();
+     const destinationTag = fields.destinationTag.value.trim();
 
      // Validate user inputs
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
      if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty', spinner);
      if (isNaN(amount)) return setError('ERROR: Amount must be a valid number', spinner);
      if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero', spinner);
+     if (isNaN(destinationTag)) return setError('ERROR: Destination Tag must be a valid number', spinner);
+     if (parseFloat(destinationTag) <= 0) return setError('ERROR: Destination Tag must be greater than zero', spinner);
      if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty', spinner);
 
      try {
@@ -51,7 +56,7 @@ async function sendXRP() {
                Destination: destination,
           });
 
-          const memoText = fields.memo.value.trim();
+          const memoText = memo;
           if (memoText) {
                preparedTx.Memos = [
                     {
@@ -61,6 +66,11 @@ async function sendXRP() {
                          },
                     },
                ];
+          }
+
+          const destinationTagText = destinationTag;
+          if (destinationTagText) {
+               preparedTx.DestinationTag = parseInt(destinationTagText, 10);
           }
 
           const signed = wallet.sign(preparedTx);
@@ -73,6 +83,7 @@ async function sendXRP() {
           }
 
           results += `XRP payment finished successfully.\n\n`;
+          results += `Tx Hash: ${response.result.hash}\n\n`;
           results += parseXRPLTransaction(response.result);
 
           resultField.value = results;
