@@ -636,7 +636,6 @@ export function convertXRPLTime(rippleTime) {
      const rippleEpoch = 946684800; // Jan 1, 2000 in Unix time
      const date = new Date((rippleTime + rippleEpoch) * 1000);
      const formatter = dateFormatter();
-     console.log(date);
      return formatter.format(date);
 }
 
