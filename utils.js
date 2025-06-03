@@ -623,6 +623,35 @@ export function addSeconds(numOfSeconds, date = new Date()) {
      return date;
 }
 
+/**
+ * Adds time to the current date and returns the XRPL-compatible time format (Ripple epoch).
+ *
+ * @param {number} amount - The number of time units to add.
+ * @param {'seconds' | 'minutes' | 'hours' | 'days'} unit - The unit of time.
+ * @param {Date} [date=new Date()] - Optional date to add to; defaults to now.
+ * @returns {number} - The Ripple epoch time.
+ */
+export function addTime(amount, unit = 'seconds', date = new Date()) {
+     const multiplierMap = {
+          seconds: 1,
+          minutes: 60,
+          hours: 3600,
+          days: 86400,
+     };
+
+     const multiplier = multiplierMap[unit.toLowerCase()];
+     if (!multiplier) {
+          throw new Error(`Invalid unit: ${unit}. Use 'seconds', 'minutes', 'hours', or 'days'.`);
+     }
+
+     const addedSeconds = amount * multiplier;
+     const unixTimestamp = Math.floor(date.getTime() / 1000) + addedSeconds;
+
+     // Convert from Unix Epoch (1970) to Ripple Epoch (2000)
+     const rippleEpoch = unixTimestamp - 946684800;
+     return rippleEpoch;
+}
+
 function dateFormatter() {
      // Format the date in EST (America/New_York handles EST/EDT automatically)
      return new Intl.DateTimeFormat('en-US', {
@@ -1009,6 +1038,7 @@ const ledgerEntryTypeFields = {
           fields: [
                { key: 'Account', format: v => v || null },
                { key: 'Destination', format: v => v || null },
+               { key: 'Expiration', format: v => (v ? convertXRPLTime(v) : null) },
                { key: 'SendMax', format: v => (typeof v === 'object' ? `${v.value} ${v.currency}` : formatXRPLAmount(v || '0')) },
                { key: 'Sequence', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },

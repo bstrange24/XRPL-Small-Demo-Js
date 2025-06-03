@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -11,6 +11,8 @@ async function createConditionalEscrow() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
+     const cancelUnit = document.getElementById('escrowCancelTimeUnit').value;
+
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
           destinationAddress: document.getElementById('destinationField'),
@@ -20,6 +22,7 @@ async function createConditionalEscrow() {
           amountField: document.getElementById('amountField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          escrowCancelTimeUnitField: document.getElementById('escrowCancelTimeUnit'),
      };
 
      // Check if any required DOM elements are missing
@@ -27,7 +30,7 @@ async function createConditionalEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
 
      // Validate input values
      const validations = [
@@ -35,6 +38,8 @@ async function createConditionalEscrow() {
           [isNaN(amountField.value), 'Amount must be a valid number'],
           [parseFloat(amountField.value) <= 0, 'Amount must be greater than zero'],
           [!validatInput(escrowCancelTime.value), 'Escrow Cancel time cannot be empty'],
+          [isNaN(escrowCancelTime.value), 'Amount must be a valid number'],
+          [parseFloat(escrowCancelTime.value) <= 0, 'Amount must be greater than zero'],
           [!validatInput(accountSeed.value), 'Seed cannot be empty'],
           [!validatInput(destinationAddress.value), 'Destination cannot be empty'],
           [!validatInput(escrowCondition.value), 'Condition cannot be empty'],
@@ -43,6 +48,9 @@ async function createConditionalEscrow() {
      for (const [condition, message] of validations) {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
+
+     const newEscrowCancelTime = addTime(escrowCancelTime.value, cancelUnit);
+     console.log(`newEscrowCancelTime: ${newEscrowCancelTime}`);
 
      try {
           const { environment } = getEnvironment();
@@ -54,14 +62,20 @@ async function createConditionalEscrow() {
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
           console.log('Wallet', wallet);
 
-          const escrowCancelDate = addSeconds(parseInt(escrowCancelTime.value));
+          // const escrowCancelDate = addSeconds(parseInt(escrowCancelTime.value));
+          // console.log(`escrowCancelDate: ${escrowCancelDate}`);
+
+          const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit);
+          console.log(`cancelUnit: ${cancelUnit}`);
+          console.log(`cancelTime: ${convertXRPLTime(cancelAfterTime)}`);
 
           const escrowTx = await client.autofill({
                TransactionType: 'EscrowCreate',
                Account: wallet.address,
                Amount: xrpl.xrpToDrops(amountField.value),
                Destination: destinationAddress.value,
-               CancelAfter: escrowCancelDate,
+               // CancelAfter: escrowCancelDate,
+               CancelAfter: cancelAfterTime,
                Condition: escrowCondition.value,
           });
 

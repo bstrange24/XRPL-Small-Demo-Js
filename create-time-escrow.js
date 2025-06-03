@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -9,6 +9,9 @@ async function createTimeBasedEscrow() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const finishUnit = document.getElementById('escrowFinishTimeUnit').value;
+     const cancelUnit = document.getElementById('escrowCancelTimeUnit').value;
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -53,13 +56,18 @@ async function createTimeBasedEscrow() {
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
 
+          const finishAfterTime = addTime(escrowFinishTime.value, finishUnit);
+          const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit);
+          console.log(`finishUnit: ${finishUnit} cancelUnit: ${cancelUnit}`);
+          console.log(`finishTime: ${convertXRPLTime(finishAfterTime)} cancelTime: ${convertXRPLTime(cancelAfterTime)}`);
+
           const escrowTx = await client.autofill({
                TransactionType: 'EscrowCreate',
                Account: wallet.address,
                Amount: xrpl.xrpToDrops(amountField.value),
                Destination: destinationAddress.value,
-               FinishAfter: addSeconds(parseInt(escrowFinishTime.value)),
-               CancelAfter: addSeconds(parseInt(escrowCancelTime.value)),
+               FinishAfter: finishAfterTime,
+               CancelAfter: cancelAfterTime,
           });
 
           const memoText = memo.value;

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -12,6 +12,8 @@ async function sendCheck() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+
+     const finishUnit = document.getElementById('checkExpirationTime').value;
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -47,7 +49,18 @@ async function sendCheck() {
 
      const memo = fields.memo.value.trim();
      const destinationTag = fields.destinationTag.value.trim();
-     const expirationTime = fields.expirationTime.value.trim();
+
+     const expirationTimeText = fields.expirationTime.value.trim();
+     let expirationTime = '';
+     let checkExpirationTime = '';
+     if (expirationTimeText != '') {
+          if (isNaN(parseFloat(expirationTimeText)) || expirationTimeText <= 0) {
+               return setError('ERROR: Expiration time must be a valid number greater than zero', spinner);
+          }
+          expirationTime = fields.expirationTime.value.trim();
+          checkExpirationTime = addTime(parseInt(expirationTime), finishUnit);
+          console.log(`Raw expirationTime: ${expirationTime} finishUnit: ${finishUnit} checkExpirationTime: ${convertXRPLTime(parseInt(checkExpirationTime))}`);
+     }
 
      try {
           const { environment } = getEnvironment();
@@ -89,14 +102,12 @@ async function sendCheck() {
                ];
           }
 
-          const destinationTagText = destinationTag;
-          if (destinationTagText) {
-               tx.DestinationTag = destinationTagText;
+          if (destinationTag) {
+               tx.DestinationTag = destinationTag;
           }
 
-          const expirationTimeText = expirationTime;
-          if (expirationTimeText) {
-               tx.Expiration = Math.floor(Date.now() / 1000) + parseInt(expirationTimeText);
+          if (expirationTime) {
+               tx.Expiration = checkExpirationTime;
           }
 
           const signed = wallet.sign(tx);

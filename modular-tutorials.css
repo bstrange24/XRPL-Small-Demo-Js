@@ -341,31 +341,10 @@ input:checked+.slider:before {
      }
 }
 
-/* .tooltip-container {
-  position: relative;
-  display: inline-block;
+.timeUnit {
+     color: white;
+     background-color: #1a1c21;
+     border-radius: 10px;
+     height: 23px;
+     border: 1px solid white;
 }
-
-.tooltip-container .tooltip-text {
-  visibility: hidden;
-  width: 160px;
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  padding: 5px 8px;
-  border-radius: 5px;
-
-  position: absolute;
-  z-index: 1;
-  bottom: 125%;
-  left: 50%;
-  transform: translateX(-50%);
-
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.tooltip-container:hover .tooltip-text {
-  visibility: visible;
-  opacity: 1;
-} */

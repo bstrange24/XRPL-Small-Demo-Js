@@ -154,13 +154,18 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Escrow cancel time, in seconds.">
+                                   <span class="tooltip" tooltip-data="Escrow cancel time.">
                                         <label for="escrowCancelDateField">Escrow Cancel Time</label>
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="escrowCancelDateField" size="40" />
-                                   <br />
+                                   <input type="text" id="escrowCancelDateField" size="40" placeholder="Enter time" />
+                                   <select class="timeUnit" id="escrowCancelTimeUnit">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                   </select>
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
