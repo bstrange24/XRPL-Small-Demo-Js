@@ -497,6 +497,11 @@ export async function populate1() {
           amountField.value = '';
      }
 
+     const memoField = document.getElementById('memoField');
+     if (validatInput(memoField)) {
+          memoField.value = '';
+     }
+
      getXrpBalance();
      await getAccountInfo();
 }
@@ -527,6 +532,11 @@ export async function populate2() {
           amountField.value = '';
      }
 
+     const memoField = document.getElementById('memoField');
+     if (validatInput(memoField)) {
+          memoField.value = '';
+     }
+
      getXrpBalance();
      await getAccountInfo();
 }
@@ -555,6 +565,11 @@ export async function populate3() {
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {
           amountField.value = '';
+     }
+
+     const memoField = document.getElementById('memoField');
+     if (validatInput(memoField)) {
+          memoField.value = '';
      }
 
      getXrpBalance();
@@ -738,7 +753,7 @@ export function parseXRPLTransaction(response) {
                          formattedValue = convertXRPLTime(value);
                     } else if (key === 'Fee' || key === 'Amount' || key === 'DeliverMax' || key === 'SendMax') {
                          formattedValue = formatXRPLAmount(value || '0');
-                    } else if (key === 'CancelAfter' || key === 'FinishAfter') {
+                    } else if (key === 'CancelAfter' || key === 'FinishAfter' || key === 'Expiration') {
                          formattedValue = value ? convertXRPLTime(value) : null;
                     } else if (key === 'Memos' && Array.isArray(value)) {
                          output.push(`    ${key}:`);

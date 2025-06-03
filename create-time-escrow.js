@@ -17,6 +17,8 @@ async function createTimeBasedEscrow() {
           escrowCancelTime: document.getElementById('escrowCancelTimeField'),
           amountField: document.getElementById('amountField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          memo: document.getElementById('memoField'),
+          destinationTag: document.getElementById('destinationTagField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
@@ -26,7 +28,7 @@ async function createTimeBasedEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;
+     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, memo, destinationTag } = fields;
 
      // Validation checks
      const validations = [
@@ -59,6 +61,23 @@ async function createTimeBasedEscrow() {
                FinishAfter: addSeconds(parseInt(escrowFinishTime.value)),
                CancelAfter: addSeconds(parseInt(escrowCancelTime.value)),
           });
+
+          const memoText = memo.value;
+          if (memoText) {
+               escrowTx.Memos = [
+                    {
+                         Memo: {
+                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                         },
+                    },
+               ];
+          }
+
+          const destinationTagText = destinationTag.value;
+          if (destinationTagText) {
+               escrowTx.DestinationTag = parseInt(destinationTagText, 10);
+          }
 
           const signed = wallet.sign(escrowTx);
           const tx = await client.submitAndWait(signed.tx_blob);

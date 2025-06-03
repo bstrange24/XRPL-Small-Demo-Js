@@ -20,6 +20,9 @@ async function sendCheck() {
           currency: document.getElementById('currencyField'),
           destination: document.getElementById('destinationField'),
           balance: document.getElementById('xrpBalanceField'),
+          memo: document.getElementById('memoField'),
+          expirationTime: document.getElementById('expirationTimeField'),
+          destinationTag: document.getElementById('destinationTagField'),
      };
 
      // Validate input fields
@@ -41,6 +44,10 @@ async function sendCheck() {
      if (isNaN(amount) || amount <= 0) {
           return setError('ERROR: Amount must be a valid number greater than zero', spinner);
      }
+
+     const memo = fields.memo.value.trim();
+     const destinationTag = fields.destinationTag.value.trim();
+     const expirationTime = fields.expirationTime.value.trim();
 
      try {
           const { environment } = getEnvironment();
@@ -69,6 +76,28 @@ async function sendCheck() {
                SendMax: sendMax,
                Destination: fields.destination.value,
           });
+
+          const memoText = memo;
+          if (memoText) {
+               tx.Memos = [
+                    {
+                         Memo: {
+                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                         },
+                    },
+               ];
+          }
+
+          const destinationTagText = destinationTag;
+          if (destinationTagText) {
+               tx.DestinationTag = destinationTagText;
+          }
+
+          const expirationTimeText = expirationTime;
+          if (expirationTimeText) {
+               tx.Expiration = Math.floor(Date.now() / 1000) + parseInt(expirationTimeText);
+          }
 
           const signed = wallet.sign(tx);
 
@@ -342,6 +371,9 @@ async function populateFieldSendCurrency1() {
      accountSeedField.value = account1seed.value;
      destinationField.value = account2address.value;
      amountField.value = '';
+     memoField.value = '';
+     expirationTimeField.value = '';
+     checkIdField.value = '';
      currencyField.value = 'XRP';
      await getXrpBalance();
      await getAccountInfo();
@@ -353,6 +385,9 @@ async function populateFieldSendCurrency2() {
      accountSeedField.value = account2seed.value;
      destinationField.value = account1address.value;
      amountField.value = '';
+     memoField.value = '';
+     expirationTimeField.value = '';
+     checkIdField.value = '';
      currencyField.value = 'XRP';
      await getXrpBalance();
      await getAccountInfo();

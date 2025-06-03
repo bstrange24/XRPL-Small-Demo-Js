@@ -68,6 +68,28 @@
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve.">
+                                             <label for="ownerCountField">Owner Count</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="ownerCountField" size="40" readonly />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
+                                             <label for="totalXrpReservesField">Total XRP Reserves</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="totalXrpReservesField" size="40" readonly />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <!-- <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve">
                                              <label for="ownerCountField">Owner Count</label>
                                         </span>
@@ -84,7 +106,7 @@
                                              <input type="text" id="totalXrpReservesField" size="5" />
                                         </div>
                                    </td>
-                              </tr>
+                              </tr> -->
                          </th>
                     </table>
 
@@ -125,6 +147,28 @@
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Destination tag to be used when sending to an exchange (i.e. Coinbase).">
+                                             <label for="destinationTagField">Destination Tag</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="destinationTagField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Check will expire after this time (in seconds).">
+                                             <label for="expirationTimeField">Expiration Time</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="expirationTimeField" placeholder="Time in seconds" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Check ID.">
                                              <lable for="checkIdField">Check ID / Ledger Index</lable>
                                         </span>
@@ -146,6 +190,21 @@
                                    </td>
                               </tr>
                          </th>
+                    </table>
+
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
+                                        <label for="destinationField">Memo</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>
