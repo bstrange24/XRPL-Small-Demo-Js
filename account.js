@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -55,11 +55,11 @@ export async function getAccountInfo() {
      if (!validatInput(seedField.value)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
           const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
 
-          let results = `Connected to ${environment}.\nGetting Account Data.\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
           resultField.value = results;
 
           // Fetch account info
@@ -137,11 +137,11 @@ async function updateFlags() {
      if (noFreeze && globalFreeze) return setError('ERROR: Cannot enable both NoFreeze and GlobalFreeze', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
 
-          resultField.value = `Connected to ${environment}.\nGetting Account Data\n`;
+          resultField.value = `Connected to ${environment} ${net}\nGetting Account Data\n`;
 
           const { result: accountInfo } = await client.request({
                method: 'account_info',
@@ -221,11 +221,11 @@ async function setDepositAuthAccounts(authorizeFlag) {
      if (!xrpl.isValidAddress(authorizedAddress)) return setError(`ERROR: Authorized account address is invalid.`, spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
 
-          resultField.value = `Connected to ${environment}.\nSetting Deposit Authorization\n\n`;
+          resultField.value = `Connected to ${environment} ${net}\nSetting Deposit Authorization\n\n`;
 
           // Validate authorized account exists
           try {

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -63,10 +63,10 @@ async function sendCheck() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\n`;
+          let results = `Connected to ${environment} ${net}\\nSending Check\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(fields.seed.value, { algorithm: 'secp256k1' });
@@ -162,10 +162,10 @@ async function getChecks() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting Checks\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting Checks\n\n`;
           resultField.value = results;
 
           const check_objects = await client.request({
@@ -247,10 +247,10 @@ async function cashCheck() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\n`;
+          let results = `Connected to ${environment} ${net}\nCashing Check\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(fields.seed.value, { algorithm: 'secp256k1' });
@@ -334,10 +334,10 @@ async function cancelCheck() {
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCancelling Check\n\n`;
+          let results = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });

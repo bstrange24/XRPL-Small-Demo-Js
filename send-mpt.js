@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 
 async function getMPTs() {
      console.log('Entering getMPTs');
@@ -26,10 +26,10 @@ async function getMPTs() {
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting MPT\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting MPT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -106,10 +106,10 @@ async function sendMPT() {
      const destinationAddressField = fields.destinationAddressField.value.trim();
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting NFT\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -43,10 +43,10 @@ async function sendXRP() {
      if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSending XRP\n\n`;
+          let results = `Connected to ${environment} ${net}\nSending XRP\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });

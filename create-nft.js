@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 
 async function getNFT() {
      console.log('Entering getNFT');
@@ -26,10 +26,10 @@ async function getNFT() {
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting NFT\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -129,10 +129,10 @@ async function mintNFT() {
      console.log('flags ' + flags);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nMinting NFT\n\n`;
+          let results = `Connected to ${environment} ${net}\nMinting NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -212,10 +212,10 @@ async function mintBatchNFT() {
      if (!validatInput(uri)) return setError('ERROR: URI cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nMinting ${nftCount} NFTs\n\n`;
+          let results = `Connected to ${environment} ${net}\nMinting ${nftCount} NFTs\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -310,10 +310,10 @@ async function setAuthorizedMinter() {
      if (!xrpl.isValidAddress(minterAddress)) return setError('ERROR: Invalid minter address', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSetting Authorized Minter\n\n`;
+          let results = `Connected to ${environment} ${net}\nSetting Authorized Minter\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -392,10 +392,10 @@ async function sellNFT() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSelling NFT\n\n`;
+          let results = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -471,10 +471,10 @@ async function cancelBuyOffer() {
      if (!seed) return setError('ERROR: Seed is required.', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCanceling NFT Sell Offer...\n\n`;
+          let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -541,10 +541,10 @@ async function cancelSellOffer() {
      if (!seed) return setError('ERROR: Seed is required.', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCanceling NFT Sell Offer...\n\n`;
+          let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -618,10 +618,10 @@ async function buyNFT() {
      if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSending XRP\n\n`;
+          let results = `Connected to ${environment} ${net}\nBuying NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -734,10 +734,10 @@ async function burnNFT() {
      if (!validatInput(nftId)) return setError('ERROR: NFT Id cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSending XRP\n\n`;
+          let results = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -806,10 +806,10 @@ async function updateNFTMetadata() {
      if (!validatInput(uri)) return setError('ERROR: URI cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nUpdating NFT Metadata\n\n`;
+          let results = `Connected to ${environment} ${net}\nUpdating NFT Metadata\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -881,10 +881,10 @@ async function getNFTOffers() {
 
      let client;
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           client = await getClient();
 
-          let results = `Connected to ${environment}.\nFetching NFT Offers for TokenID: ${nftId}\n\n`;
+          let results = `Connected to ${environment} ${net}\nFetching NFT Offers for TokenID: ${nftId}\n\n`;
           resultField.value = results;
 
           // Check server version

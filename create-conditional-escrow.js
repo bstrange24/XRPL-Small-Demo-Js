@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -53,10 +53,10 @@ async function createConditionalEscrow() {
      console.log(`newEscrowCancelTime: ${newEscrowCancelTime}`);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCreating conditional escrow.\n\n`;
+          let results = `Connected to ${environment} ${net}\nCreating conditional escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
@@ -150,10 +150,10 @@ async function finishConditionalEscrow() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nFulfilling conditional escrow.\n\n`;
+          let results = `Connected to ${environment} ${net}\nFulfilling conditional escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });

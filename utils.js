@@ -699,7 +699,6 @@ const decodeHex = hex => {
 
 const formatXRPLAmount = value => {
      if (value == null || isNaN(value)) {
-          console.warn(`Invalid value: ${value}`);
           return 'Invalid amount';
      }
 
@@ -1162,6 +1161,9 @@ export function parseXRPLAccountObjects(response) {
                const groupedObjects = {};
                objects.forEach(obj => {
                     let entryType = obj.LedgerEntryType || (field === 'account_nfts' ? 'NFT' : 'Unknown');
+                    if (entryType === 'Unknown' && obj.taker_pays != undefined && obj.taker_pays != '') {
+                         entryType = 'Offers';
+                    }
                     if (!groupedObjects[entryType]) {
                          groupedObjects[entryType] = [];
                     }
@@ -1273,10 +1275,10 @@ export async function getTransaction() {
      if (!isValidTransactionHash(transactionHash)) return setError('ERROR: Invalid Transaction hash', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting transaction information.\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;
           resultField.value = results;
 
           const tx = await client.request({
@@ -1391,11 +1393,10 @@ export async function getAccountReserves(client, address) {
           const ownerCount = accountData.OwnerCount;
 
           const { reserveBaseXRP, reserveIncrementXRP } = await getXrplReserve(client);
-
           const totalReserveXRP = reserveBaseXRP + ownerCount * reserveIncrementXRP;
 
-          console.log(`OwnerCount: ${ownerCount}`);
-          console.log(`Total reserve: ${totalReserveXRP} XRP`);
+          // console.log(`OwnerCount: ${ownerCount}`);
+          // console.log(`Total reserve: ${totalReserveXRP} XRP`);
 
           return { ownerCount, totalReserveXRP };
      } catch (error) {
@@ -1418,9 +1419,9 @@ export async function getXrplReserve(client) {
           const reserveBaseXRP = ledgerData.reserve_base;
           const reserveIncrementXRP = ledgerData.reserve_inc;
 
-          console.log(`baseFee: ${baseFee}`);
-          console.log(`reserveBaseXRP: ${reserveBaseXRP}`);
-          console.log(`Total reserve: ${reserveIncrementXRP} XRP`);
+          // console.log(`baseFee: ${baseFee}`);
+          // console.log(`reserveBaseXRP: ${reserveBaseXRP}`);
+          // console.log(`Total reserve: ${reserveIncrementXRP} XRP`);
 
           return { reserveBaseXRP, reserveIncrementXRP };
      } catch (error) {

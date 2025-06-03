@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -46,10 +46,10 @@ async function createTrustLine() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCreating trust line\n\n`;
+          let results = `Connected to ${environment} ${net}\nCreating trust line\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
@@ -139,10 +139,10 @@ async function removeTrustLine() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nRemoving trust line\n\n`;
+          let results = `Connected to ${environment} ${net}\nRemoving trust line\n\n`;
           resultField.value = results;
 
           const trustLines = await getTrustLines(address.value, client);
@@ -244,10 +244,10 @@ async function getTrustLine() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = (resultField.value = `Connected to ${environment}.\nGetting Trust Lines.\n\n`);
+          let results = (resultField.value = `Connected to ${environment} ${net}\nGetting Trust Lines.\n\n`);
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
           const trustLines = await getTrustLines(wallet.address, client);
@@ -275,7 +275,7 @@ async function getTrustLine() {
 
           results += `Active Trust Lines for ${wallet.address}:\n`;
           for (const line of activeTrustLines) {
-               results += `Currency: ${line.currency}, \n\tIssuer: ${line.account}, \n\tLimit: ${line.limit}, \n\tBalance: ${line.balance}, \n\tLimit Peer: ${line.limit_peer},\n\tNo Ripple: ${line.no_ripple_peer},`;
+               results += `\nAccount: ${line.account}\n\tCurrency: ${line.currency}\n\tLimit: ${line.limit}\n\tBalance: ${line.balance}\n\tLimit Peer: ${line.limit_peer}\tNo Ripple Peer: ${line.no_ripple_peer}\tNo Ripple: ${line.no_ripple}\n\tQuality In: ${line.quality_in}\tQuality Out: ${line.quality_out}`;
           }
           resultField.value = results;
           resultField.classList.add('success');
@@ -337,10 +337,10 @@ async function sendCurrency() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSending Currency.\n`;
+          let results = `Connected to ${environment} ${net}\nSending Currency.\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
@@ -479,10 +479,10 @@ async function issueCurrency() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nSetting up issuer and issuing ${currency.value}\n\n`;
+          let results = `Connected to ${environment} ${net}\nSetting up issuer and issuing ${currency.value}\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
@@ -642,10 +642,10 @@ export async function getTokenBalance() {
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting Token Balance\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting Token Balance\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });

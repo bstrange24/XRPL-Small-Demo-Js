@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -49,10 +49,10 @@ async function createTimeBasedEscrow() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCreating time-based escrow.\n\n`;
+          let results = `Connected to ${environment} ${net}\nCreating time-based escrow.\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
 
@@ -155,10 +155,10 @@ async function finishTimeBasedEscrow() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nFinishing escrow.\n\n`;
+          let results = `Connected to ${environment} ${net}\nFinishing escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
@@ -217,10 +217,10 @@ async function getEscrows() {
      if (!validatInput(accountAddress.value)) return setError('ERROR: Address field cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting account escrows.\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting account escrows.\n\n`;
           resultField.value = results;
 
           const tx = await client.request({
@@ -303,10 +303,10 @@ async function cancelEscrow() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCancelling escrow.\n\n`;
+          let results = `Connected to ${environment} ${net}\nCancelling escrow.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });

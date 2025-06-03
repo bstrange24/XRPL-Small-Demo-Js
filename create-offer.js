@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
+import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
 
 async function createOffer() {
@@ -64,7 +65,7 @@ async function createOffer() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}.\nCreating Offer.\n\n`;
+          let results = `Connected to ${environment} ${net}\nCreating Offer.\n\n`;
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           results += accountNameField.value + ' account address: ' + wallet.address + '\n';
           resultField.value = results;
@@ -232,7 +233,7 @@ async function createOffer() {
                     taker_gets: we_spend,
                     taker_pays: we_want,
                });
-               console.log(JSON.stringify(orderbook2_resp.result, null, 2));
+               console.log('orderbook2_resp: ', orderbook2_resp.result);
 
                // Since TakerGets/TakerPays are reversed, the quality is the inverse.
                // You could also calculate this as 1/proposed_quality.
@@ -306,7 +307,7 @@ async function createOffer() {
           // In JavaScript, you can use getBalanceChanges() to help summarize all the
           // balance changes caused by a transaction.
           const balance_changes = xrpl.getBalanceChanges(tx.result.meta);
-          console.log('Total balance changes:', JSON.stringify(balance_changes, null, 2));
+          console.log('Total balance changes:', balance_changes);
 
           let offers_affected = 0;
           for (const affnode of tx.result.meta.AffectedNodes) {
@@ -327,9 +328,7 @@ async function createOffer() {
                          console.log('Created a trust line.');
                     } else if (affnode.CreatedNode.LedgerEntryType == 'Offer') {
                          const offer = affnode.CreatedNode.NewFields;
-                         console.log(`Created an Offer owned by ${offer.Account} with
-                         TakerGets=${amt_str(offer.TakerGets)} and
-                         TakerPays=${amt_str(offer.TakerPays)}.`);
+                         console.log(`Created an Offer owned by ${offer.Account} with TakerGets=${amt_str(offer.TakerGets)} and TakerPays=${amt_str(offer.TakerPays)}.`);
                     }
                }
           }
@@ -343,7 +342,7 @@ async function createOffer() {
                ledger_index: 'validated',
                // You could also use ledger_index: "current" to get pending data
           });
-          console.log(JSON.stringify(balances.result, null, 2));
+          console.log('Balances', balances.result);
 
           // Check Offers --------------------------------------------------------------
           console.log(`Getting outstanding Offers from ${wallet.address} as of validated ledger`);
@@ -352,11 +351,11 @@ async function createOffer() {
                account: wallet.address,
                ledger_index: 'validated',
           });
-          console.log(JSON.stringify(acct_offers.result, null, 2));
+          console.log('Getting outstanding Offers ', acct_offers.result);
 
           const updatedBalance = await getOnlyTokenBalance(client, wallet.address, tokenBalance);
-          console.log(`\n${tokenBalance} Updated Balance: ${updatedBalance}`);
-          resultField.value += `\n${tokenBalance} Updated Balance: ${updatedBalance}\n`;
+          console.log(`${tokenBalance} Updated Balance: ${updatedBalance}`);
+          resultField.value += `\n\n${tokenBalance} Updated Balance: ${updatedBalance}\n`;
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           const finalXrpBalance = await client.getXrpBalance(wallet.address);
@@ -402,10 +401,10 @@ async function getOffers() {
      if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nGetting Offers\n\n`;
+          let results = `Connected to ${environment} ${net}\nGetting Offers\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
@@ -426,6 +425,7 @@ async function getOffers() {
           }
 
           results += parseXRPLAccountObjects(offers.result);
+          // results += parseXRPLTransaction(offers.result);
           resultField.value = results;
           resultField.classList.add('success');
 
@@ -482,10 +482,10 @@ async function cancelOffer() {
      }
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment}.\nCancel Offers.\n\n`;
+          let results = `Connected to ${environment} ${net}\nCancel Offers.\n\n`;
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
@@ -586,12 +586,12 @@ async function getOrderBook() {
      const buildCurrencyObject = (currency, issuer, value) => (currency === 'XRP' ? { currency, value } : { currency, issuer, value });
 
      try {
-          const { environment } = getEnvironment();
+          const { net, environment } = getNet();
           const client = await getClient();
 
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
 
-          let results = `Connected to ${environment}.\nGet Order Book.\n\n`;
+          let results = `Connected to ${environment} ${net}\nGet Order Book.\n\n`;
           results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
 
           const we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
@@ -608,14 +608,21 @@ async function getOrderBook() {
                taker_pays: we_want,
           });
 
-          const sortedOffers = attachRateAndSort(orderBook.result.offers);
-          const stats = computeAverageExchangeRateBothWays(sortedOffers);
-          results += formatOffers(sortedOffers);
-          results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-          results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
-          results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
-          results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} TST/XRP\n`;
-          results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} TST/XRP\n`;
+          console.log('(1) orderBook.result.offers: ' + orderBook.result.offers);
+          let sortedOffers = [];
+          let reverseSorted = [];
+          if (orderBook.result.offers.length <= 0) {
+               results += `No orders in the order book for ${we_spend.currency}/${we_want.currency}\n`;
+          } else {
+               sortedOffers = attachRateAndSort(orderBook.result.offers);
+               const stats = computeAverageExchangeRateBothWays(sortedOffers);
+               results += formatOffers(sortedOffers);
+               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
+               results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
+               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
+               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} TST/XRP\n`;
+               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} TST/XRP\n`;
+          }
 
           // Reverse order book
           results += '\n*** Reverse Order Book ***\n';
@@ -627,14 +634,19 @@ async function getOrderBook() {
                taker_pays: we_spend,
           });
 
-          const reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
-          const reverseStats = computeAverageExchangeRateBothWays(reverseSorted);
-          results += formatOffers(reverseSorted);
-          results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-          results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
-          results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
-          results += `Best Rate: ${reverseStats.inverse.bestRate.toFixed(8)} TST/XRP\n`;
-          results += `Worst Rate: ${reverseStats.inverse.worstRate.toFixed(8)} TST/XRP\n`;
+          console.log('(2) reverseOrderBook.result.offers: ' + reverseOrderBook.result.offers);
+          if (reverseOrderBook.result.offers.length <= 0) {
+               results += `No reverse orders in the order book for ${we_want.currency}/${we_spend.currency}\n`;
+          } else {
+               reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
+               const reverseStats = computeAverageExchangeRateBothWays(reverseSorted);
+               results += formatOffers(reverseSorted);
+               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
+               results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
+               results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
+               results += `Best Rate: ${reverseStats.inverse.bestRate.toFixed(8)} TST/XRP\n`;
+               results += `Worst Rate: ${reverseStats.inverse.worstRate.toFixed(8)} TST/XRP\n`;
+          }
 
           const combinedStats = computeFullExchangeRateStats(sortedOffers, reverseSorted, 20);
 
@@ -709,8 +721,8 @@ function attachRateAndSort(offers) {
 function computeFullExchangeRateStats(forwardOffers, reverseOffers, maxOffers = null) {
      const combinedOffers = [...forwardOffers, ...reverseOffers];
 
-     let forwardRates = []; // TST/XRP
-     let inverseRates = []; // XRP/TST
+     let forwardRates = []; // TOKEN/XRP
+     let inverseRates = []; // XRP/TOKEN
 
      // Process all offers
      combinedOffers.forEach(offer => {
@@ -779,8 +791,8 @@ function computeFullExchangeRateStats(forwardOffers, reverseOffers, maxOffers = 
 function computeAverageExchangeRateBothWays(offers) {
      let totalPays = 0;
      let totalGets = 0;
-     let forwardRates = []; // TST / XRP
-     let inverseRates = []; // XRP / TST
+     let forwardRates = []; // TOKEN / XRP
+     let inverseRates = []; // XRP / TOKEN
 
      offers.forEach(offer => {
           let gets = offer.TakerGets;
@@ -802,8 +814,8 @@ function computeAverageExchangeRateBothWays(offers) {
           }
      });
 
-     const forwardVWAP = totalGets > 0 ? totalPays / totalGets : 0; // TST/XRP
-     const inverseVWAP = totalPays > 0 ? totalGets / totalPays : 0; // XRP/TST
+     const forwardVWAP = totalGets > 0 ? totalPays / totalGets : 0; // TOKEN/XRP
+     const inverseVWAP = totalPays > 0 ? totalGets / totalPays : 0; // XRP/TOKEN
 
      const forwardSimpleAvg = forwardRates.length > 0 ? forwardRates.reduce((a, b) => a + b, 0) / forwardRates.length : 0;
      const inverseSimpleAvg = inverseRates.length > 0 ? inverseRates.reduce((a, b) => a + b, 0) / inverseRates.length : 0;
@@ -952,6 +964,7 @@ window.getOrderBook = getOrderBook;
 window.getCurrencyBalance = getCurrencyBalance;
 window.getXrpBalance = getXrpBalance;
 window.getTransaction = getTransaction;
+window.getTokenBalance = getTokenBalance;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;

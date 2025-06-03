@@ -1324,6 +1324,51 @@ const tx1 = {
      type: 'response',
 };
 
+const offer = {
+     result: {
+          account: 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH',
+          ledger_hash: '86778A9EAEAB76663662F3C3038EC7F65B95AB9BFABA11F5420CCCC52264866C',
+          ledger_index: 7805935,
+          offers: [
+               {
+                    flags: 0,
+                    quality: '0.000003333333333333334',
+                    seq: 7805146,
+                    taker_gets: '3000000',
+                    taker_pays: {
+                         currency: 'DOG',
+                         issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo',
+                         value: '10',
+                    },
+               },
+               {
+                    flags: 0,
+                    quality: '700000',
+                    seq: 7805145,
+                    taker_gets: {
+                         currency: 'DOG',
+                         issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo',
+                         value: '10',
+                    },
+                    taker_pays: '7000000',
+               },
+               {
+                    flags: 0,
+                    quality: '900000',
+                    seq: 7805144,
+                    taker_gets: {
+                         currency: 'DOG',
+                         issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo',
+                         value: '10',
+                    },
+                    taker_pays: '9000000',
+               },
+          ],
+          validated: true,
+     },
+     type: 'response',
+};
+
 const escrow = {
      result: {
           close_time_iso: '2025-05-31T17:57:01Z',
@@ -1431,7 +1476,8 @@ function main() {
      // let response = multiple;
      // let response = tx;
      // let response = tx1;
-     let response = escrow;
+     // let response = escrow;
+     let response = offer;
 
      // Check if a JSON file or string was provided via command-line arguments
      // if (process.argv.length > 2) {
