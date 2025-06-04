@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
 
-const DESTINATION_ADDRESS = 'rDTiHvwyxrnBwResdePxYNs8mQ7j8MMuTP';
+const DESTINATION_ADDRESS = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH';
 const WALLET_COUNT = 5;
 
 async function createAndDrainWallet(client, index) {

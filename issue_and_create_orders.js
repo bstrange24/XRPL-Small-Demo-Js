@@ -103,10 +103,10 @@ async function main() {
                await sleep(1000);
           }
 
-          const amountBOB = 10;
-          const minPrice = 0.1;
-          const maxPrice = 1.0;
-          const step = 0.2;
+          let amountBOB = 8;
+          const minPrice = 0.3;
+          const maxPrice = 1.5;
+          const step = 0.15;
 
           console.log('createBuyOffer: ' + createBuyOffer);
           if (createBuyOffer) {
@@ -134,6 +134,7 @@ async function main() {
                     } catch (err) {
                          console.error(`Buy offer failed at ${price.toFixed(2)} XRP/${CURRENCY}:`, err.message);
                     }
+                    amountBOB = amountBOB + 1;
                     await sleep(1000);
                }
           }
@@ -160,10 +161,11 @@ async function main() {
 
                     try {
                          const res = await client.submitAndWait(sellOffer, { wallet: hot_wallet });
-                         console.log(`Sell: ${amountBOB} ${CURRENCY} @ ${price.toFixed(2)} XRP/${CURRENCY} → ${res.result.meta.TransactionResult}`);
+                         console.log(`Sell: ${amountBOB} ${CURRENCY} @ ${price.toFixed(2)} ${CURRENCY}/XRP → ${res.result.meta.TransactionResult}`);
                     } catch (err) {
                          console.error(`Sell offer failed at ${price.toFixed(2)} XRP/${CURRENCY}:`, err.message);
                     }
+                    amountBOB = amountBOB + 1;
                     await sleep(1000);
                }
           }

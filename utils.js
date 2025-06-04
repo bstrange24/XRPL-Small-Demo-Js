@@ -463,12 +463,16 @@ export async function populateTakerGetsTakerPayFields() {
           document.getElementById('weWantIssuerField').value = account2addressField.value;
      }
 
+     document.getElementById('weWantCurrencyField').value = 'DOG';
      document.getElementById('weWantAmountField').value = '1';
      document.getElementById('weSpendCurrencyField').value = 'XRP';
      document.getElementById('weSpendAmountField').value = '1';
 
-     getXrpBalance();
+     const client = await getClient();
+     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG');
+     await getXrpBalance();
      await getAccountInfo();
+     document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
 }
 
 export async function populate1() {
@@ -685,6 +689,29 @@ export function convertXRPLTime(rippleTime) {
 
 function isValidTransactionHash(hash) {
      return /^[A-Fa-f0-9]{64}$/.test(hash);
+}
+
+// Encode a standard 3-character currency code to a 40-character hex string
+export function encodeCurrencyCode(code) {
+     if (!/^[A-Z0-9]{3}$/.test(code)) {
+          throw new Error('Currency code must be a 3-character alphanumeric string');
+     }
+     const buffer = Buffer.alloc(20);
+     buffer.write(code, 'utf8');
+     return buffer.toString('hex').toUpperCase();
+}
+
+// Decode a 40-character hex currency code to its 3-character representation
+export function decodeCurrencyCode(hexCode) {
+     if (!/^[0-9A-Fa-f]{40}$/.test(hexCode)) {
+          throw new Error('Non-standard currency code must be a 40-character hexadecimal string');
+     }
+     const buffer = Buffer.from(hexCode, 'hex');
+     const code = buffer.toString('utf8', 0, 3);
+     if (buffer.slice(3).every(byte => byte === 0)) {
+          return code;
+     }
+     throw new Error('Invalid non-standard currency code: must be padded with zeros');
 }
 
 // Decode hex string to ASCII
@@ -1394,9 +1421,6 @@ export async function getAccountReserves(client, address) {
 
           const { reserveBaseXRP, reserveIncrementXRP } = await getXrplReserve(client);
           const totalReserveXRP = reserveBaseXRP + ownerCount * reserveIncrementXRP;
-
-          // console.log(`OwnerCount: ${ownerCount}`);
-          // console.log(`Total reserve: ${totalReserveXRP} XRP`);
 
           return { ownerCount, totalReserveXRP };
      } catch (error) {

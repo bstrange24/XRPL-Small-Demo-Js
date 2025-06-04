@@ -162,15 +162,33 @@ async function createOffer() {
           }
           console.log(`we_want ${we_want}`);
           console.log(`we_spend ${we_spend}`);
+          const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
+          console.log(`Offer Type: ${offerType}`);
+
+          // Get reserve requirements
+          const xrpReserve = await getXrpReserveRequirements(client, wallet.address);
 
           // "Quality" is defined as TakerPays / TakerGets. The lower the "quality"
           // number, the better the proposed exchange rate is for the taker.
           // The quality is rounded to a number of significant digits based on the
           // issuer's TickSize value (or the lesser of the two for token-token trades.)
           const proposed_quality = BigNumber(weSpendAmountField.value) / BigNumber(weWantAmountField.value);
+          // Calculate effective rate
+          const effectiveRate = calculateEffectiveRate(proposed_quality, xrpReserve, offerType);
+          console.log(`Proposed rate: ${proposed_quality.toString()}`);
+          console.log(`Effective rate (including reserves): ${effectiveRate.toString()}`);
+
+          resultField.value += `Rate Analysis:\n`;
+          resultField.value += `- Proposed Rate: 1 ${we_want.currency} = ${proposed_quality} ${we_spend.currency}\n`;
+          resultField.value += `- Effective Rate (incl. costs): 1 ${we_want.currency} = ${effectiveRate.toFixed(6)} ${we_spend.currency}\n\n`;
+
+          if (effectiveRate.gt(proposed_quality)) {
+               resultField.value += `Note: Effective rate is worse than proposed due to XRP reserve requirements\n\n`;
+          }
 
           // Look up Offers. -----------------------------------------------------------
-          // To buy TST, look up Offers where "TakerGets" is TST:
+          // To buy TOKEN, look up Offers where "TakerGets" is TOKEN and "TakerPays" is XRP.:
+          resultField.value += `To buy ${we_want.currency}, look up Offers where "TakerGets" is ${we_want.currency} and "TakerPays" is ${we_spend.currency}.\n\n`;
           const orderbook_resp = await client.request({
                method: 'book_offers',
                taker: wallet.address,
@@ -188,6 +206,7 @@ async function createOffer() {
           // uses a TickSize setting other than the default (15). In that case, you
           // can increase the TakerGets amount of your final Offer to compensate.
 
+          const MAX_SLIPPAGE = 0.05; // 5% slippage tolerance
           const offers = orderbook_resp.result.offers;
           const want_amt = BigNumber(we_want.value);
           let running_total = BigNumber(0);
@@ -195,7 +214,30 @@ async function createOffer() {
                console.log(`No Offers in the matching book. Offer probably won't execute immediately.`);
           } else {
                for (const o of offers) {
-                    if (o.quality <= proposed_quality) {
+                    // if (o.quality <= proposed_quality) {
+                    if (o.quality <= effectiveRate) {
+                         // Get the best offer quality (first offer in the list is always best price)
+                         const best_offer_quality = new BigNumber(o.quality);
+                         const proposed_quality = new BigNumber(weSpendAmountField.value).dividedBy(weWantAmountField.value);
+                         console.log(`best_offer_quality: ${best_offer_quality} proposed_quality: ${proposed_quality}`);
+                         console.log(`Best available rate: 1 ${we_want.currency} = ${best_offer_quality} ${we_spend.currency}`);
+                         console.log(`Your proposed rate: 1 ${we_want.currency} = ${proposed_quality} ${we_spend.currency}`);
+
+                         // Calculate slippage percentage
+                         const slippage = proposed_quality.minus(best_offer_quality).dividedBy(best_offer_quality);
+                         console.log(`Slippage: ${slippage}%`);
+                         console.log(`Slippage: ${slippage.times(100).toFixed(2)}%`);
+
+                         if (slippage.gt(MAX_SLIPPAGE)) {
+                              throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+                         }
+
+                         // Add this information to your UI
+                         resultField.value += `\nMarket Analysis:\n`;
+                         resultField.value += `- Best available rate: 1 ${we_want.currency} = ${best_offer_quality.toFixed(6)} ${we_spend.currency}\n`;
+                         resultField.value += `- Your proposed rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
+                         resultField.value += `- Slippage: ${slippage.times(100).toFixed(2)}%\n`;
+
                          console.log(`Matching Offer found, funded with ${o.owner_funds} ${we_want.currency}`);
                          running_total = running_total.plus(BigNumber(o.owner_funds));
                          if (running_total >= want_amt) {
@@ -239,6 +281,19 @@ async function createOffer() {
                // You could also calculate this as 1/proposed_quality.
                const offered_quality = BigNumber(we_want.value) / BigNumber(we_spend.value);
 
+               // Calculate effective rate
+               const effectiveRate = calculateEffectiveRate(proposed_quality, xrpReserve, offerType);
+               console.log(`Proposed rate: ${proposed_quality.toString()}`);
+               console.log(`Effective rate (including reserves): ${effectiveRate.toString()}`);
+
+               resultField.value += `Rate Analysis:\n`;
+               resultField.value += `- Proposed Rate: 1 ${we_spend.currency} = ${proposed_quality} ${we_want.currency}\n`;
+               resultField.value += `- Effective Rate (incl. costs): 1 ${we_spend.currency} = ${effectiveRate.toFixed(6)} ${we_want.currency}\n\n`;
+
+               if (effectiveRate.gt(offered_quality)) {
+                    resultField.value += `Note: Effective rate is worse than proposed due to XRP reserve requirements\n\n`;
+               }
+
                const offers2 = orderbook2_resp.result.offers;
                let tally_currency = we_spend.currency;
                if (tally_currency == 'XRP') {
@@ -249,7 +304,29 @@ async function createOffer() {
                     console.log(`No similar Offers in the book. Ours would be the first.`);
                } else {
                     for (const o of offers2) {
-                         if (o.quality <= offered_quality) {
+                         if (o.quality <= effectiveRate) {
+                              // if (o.quality <= offered_quality) {
+                              // Get the best offer quality (first offer in the list is always best price)
+                              const best_offer_quality = new BigNumber(o.quality);
+                              const proposed_quality = new BigNumber(weSpendAmountField.value).dividedBy(weWantAmountField.value);
+
+                              console.log(`Best available rate: 1 ${we_spend.currency} = ${best_offer_quality} ${we_want.currency}`);
+                              console.log(`Your proposed rate: 1 ${we_spend.currency} = ${proposed_quality} ${we_want.currency}`);
+
+                              // Calculate slippage percentage
+                              const slippage = proposed_quality.minus(best_offer_quality).dividedBy(best_offer_quality);
+                              console.log(`Slippage: ${slippage.times(100).toFixed(2)}%`);
+
+                              if (slippage.gt(MAX_SLIPPAGE)) {
+                                   throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+                              }
+
+                              // Add this information to your UI
+                              resultField.value += `\nMarket Analysis:\n`;
+                              resultField.value += `- Best available rate: 1 ${we_spend.currency} = ${best_offer_quality.toFixed(6)} ${we_want.currency}\n`;
+                              resultField.value += `- Your proposed rate: 1 ${we_spend.currency} = ${proposed_quality.toFixed(6)} ${we_want.currency}\n`;
+                              resultField.value += `- Slippage: ${slippage.times(100).toFixed(2)}%\n`;
+
                               console.log(`Existing offer found, funded with ${o.owner_funds} ${tally_currency}`);
                               running_total2 = running_total2.plus(BigNumber(o.owner_funds));
                          } else {
@@ -596,78 +673,85 @@ async function getOrderBook() {
 
           const we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
           const we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
-
           console.log('we_want:', we_want);
           console.log('we_spend:', we_spend);
 
-          const orderBook = await client.request({
-               method: 'book_offers',
-               taker: wallet.address,
-               ledger_index: 'current',
-               taker_gets: we_spend,
-               taker_pays: we_want,
-          });
+          const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
+          console.log(`Offer Type: ${offerType}`);
+          let orderBook;
+          let buySideOrderBook;
+          let sellSideOrderBook;
+          let spread;
+          let liquidity;
+          if (offerType === 'sell') {
+               console.log(`SELLING`);
+               orderBook = await client.request({
+                    method: 'book_offers',
+                    taker: wallet.address,
+                    ledger_index: 'current',
+                    taker_gets: we_want,
+                    taker_pays: we_spend,
+               });
 
-          console.log('(1) orderBook.result.offers: ' + orderBook.result.offers);
-          let sortedOffers = [];
-          let reverseSorted = [];
+               buySideOrderBook = await client.request({
+                    method: 'book_offers',
+                    taker: wallet.address,
+                    ledger_index: 'current',
+                    taker_gets: we_spend,
+                    taker_pays: we_want,
+               });
+               console.log('buySideOrderBook: ' + JSON.stringify(buySideOrderBook.result.offers, null, 2));
+               spread = computeBidAskSpread(buySideOrderBook.result.offers, orderBook.result.offers);
+               liquidity = computeLiquidityRatio(buySideOrderBook.result.offers, orderBook.result.offers, false);
+          } else {
+               console.log(`BUYING`);
+               orderBook = await client.request({
+                    method: 'book_offers',
+                    taker: wallet.address,
+                    ledger_index: 'current',
+                    taker_gets: we_want,
+                    taker_pays: we_spend,
+               });
+
+               sellSideOrderBook = await client.request({
+                    method: 'book_offers',
+                    taker: wallet.address,
+                    ledger_index: 'current',
+                    taker_gets: we_spend,
+                    taker_pays: we_want,
+               });
+               console.log('sellSideOrderBook: ' + JSON.stringify(sellSideOrderBook.result.offers, null, 2));
+               spread = computeBidAskSpread(orderBook.result.offers, sellSideOrderBook.result.offers);
+               liquidity = computeLiquidityRatio(orderBook.result.offers, sellSideOrderBook.result.offers);
+          }
+
           if (orderBook.result.offers.length <= 0) {
                results += `No orders in the order book for ${we_spend.currency}/${we_want.currency}\n`;
           } else {
-               sortedOffers = attachRateAndSort(orderBook.result.offers);
-               const stats = computeAverageExchangeRateBothWays(sortedOffers);
-               results += formatOffers(sortedOffers);
+               results += formatOffers(orderBook.result.offers);
                results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-               results += `VWAP: ${stats.forward.vwap.toFixed(8)} TST/XRP\n`;
-               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} TST/XRP\n`;
-               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} TST/XRP\n`;
-               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} TST/XRP\n`;
-          }
+               const stats = computeAverageExchangeRateBothWays(orderBook.result.offers, 15);
 
-          // Reverse order book
-          results += '\n*** Reverse Order Book ***\n';
-          const reverseOrderBook = await client.request({
-               method: 'book_offers',
-               taker: wallet.address,
-               ledger_index: 'current',
-               taker_gets: we_want,
-               taker_pays: we_spend,
-          });
+               populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerType);
 
-          console.log('(2) reverseOrderBook.result.offers: ' + reverseOrderBook.result.offers);
-          if (reverseOrderBook.result.offers.length <= 0) {
-               results += `No reverse orders in the order book for ${we_want.currency}/${we_spend.currency}\n`;
-          } else {
-               reverseSorted = attachRateAndSort(reverseOrderBook.result.offers);
-               const reverseStats = computeAverageExchangeRateBothWays(reverseSorted);
-               results += formatOffers(reverseSorted);
-               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
-               results += `VWAP: ${reverseStats.inverse.vwap.toFixed(8)} TST/XRP\n`;
-               results += `Simple Avg: ${reverseStats.inverse.simpleAvg.toFixed(8)} TST/XRP\n`;
-               results += `Best Rate: ${reverseStats.inverse.bestRate.toFixed(8)} TST/XRP\n`;
-               results += `Worst Rate: ${reverseStats.inverse.worstRate.toFixed(8)} TST/XRP\n`;
-          }
+               results += `VWAP: ${stats.forward.vwap.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
 
-          const combinedStats = computeFullExchangeRateStats(sortedOffers, reverseSorted, 20);
-
-          const formatStats = (label, data) => `${label} (from ${data.count} offers)\n` + `    VWAP:        ${data.vwap.toFixed(8)}\n` + `    Average:     ${data.average.toFixed(8)}\n` + `    Median:      ${data.median.toFixed(8)}\n` + `    Mode:        ${data.mode.join(', ')}\n` + `    Best Rate:   ${data.best.toFixed(8)}\n` + `    Worst Rate:  ${data.worst.toFixed(8)}\n`;
-
-          results += '\n--- Combined Exchange Rate Stats ---\n';
-          results += formatStats('BOB/XRP', combinedStats.TOKEN_XRP);
-          results += formatStats('XRP/BOB', combinedStats.XRP_TOKEN);
-          results += '\n--- MINE Combined Exchange Rate Stats ---\n';
-          let weWantCurrency;
-          let weSpendCurrency;
-          if (we_want.currency === 'XRP') {
-               weWantCurrency = 'XRP';
-               weSpendCurrency = we_spend.currency;
-               results += formatStats(weSpendCurrency + '/' + weWantCurrency, combinedStats.TOKEN_XRP);
-               results += formatStats(weWantCurrency + '/' + weSpendCurrency, combinedStats.XRP_TOKEN);
-          } else {
-               weSpendCurrency = 'XRP';
-               weWantCurrency = we_want.currency;
-               results += formatStats(weWantCurrency + '/' + weSpendCurrency, combinedStats.TOKEN_XRP);
-               results += formatStats(weSpendCurrency + '/' + weWantCurrency, combinedStats.XRP_TOKEN);
+               results += `Depth (5% slippage): ${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}\n`;
+               if (stats.forward.insufficientLiquidity) {
+                    results += `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               } else {
+                    results += `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}, Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               }
+               results += `Price Volatility: Mean ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)\n`;
+               if (offerType === 'buy') {
+                    results += `Spread: ${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               } else {
+                    results += `Spread: ${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               }
+               results += `Liquidity Ratio: ${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})\n`;
           }
 
           resultField.value = results;
@@ -685,155 +769,165 @@ async function getOrderBook() {
      }
 }
 
-function attachRateAndSort(offers) {
-     return offers
-          .map(offer => {
-               let gets = offer.TakerGets;
-               let pays = offer.TakerPays;
-               let getsValue = 0;
-               let paysValue = 0;
+function computeBidAskSpread(tokenXrpOffers, xrpTokenOffers) {
+     let bestTokenXrp = 0;
+     if (tokenXrpOffers.length > 0) {
+          const getsValue = tokenXrpOffers[0].TakerGets.value ? parseFloat(tokenXrpOffers[0].TakerGets.value) : parseFloat(tokenXrpOffers[0].TakerGets) / 1_000_000;
+          const paysValue = tokenXrpOffers[0].TakerPays.value ? parseFloat(tokenXrpOffers[0].TakerPays.value) : parseFloat(tokenXrpOffers[0].TakerPays) / 1_000_000;
+          bestTokenXrp = getsValue / paysValue;
+     }
 
-               // Handle drops (XRP)
-               if (typeof gets === 'string') {
-                    getsValue = parseFloat(gets) / 1_000_000;
-               } else if (typeof gets === 'object' && gets !== null) {
-                    getsValue = parseFloat(gets.value);
-               }
+     let bestXrpToken = 0;
+     if (xrpTokenOffers.length > 0) {
+          const getsValue = xrpTokenOffers[0].TakerGets.value ? parseFloat(xrpTokenOffers[0].TakerGets.value) : parseFloat(xrpTokenOffers[0].TakerGets) / 1_000_000;
+          const paysValue = xrpTokenOffers[0].TakerPays.value ? parseFloat(xrpTokenOffers[0].TakerPays.value) : parseFloat(xrpTokenOffers[0].TakerPays) / 1_000_000;
+          bestXrpToken = getsValue / paysValue;
+     }
 
-               if (typeof pays === 'string') {
-                    paysValue = parseFloat(pays) / 1_000_000;
-               } else if (typeof pays === 'object' && pays !== null) {
-                    paysValue = parseFloat(pays.value);
-               }
-
-               // Calculate exchange rate
-               if (getsValue > 0) {
-                    offer._exchangeRate = paysValue / getsValue;
-               } else {
-                    offer._exchangeRate = 0; // or null/undefined if you prefer
-               }
-
-               return offer;
-          })
-          .sort((a, b) => b._exchangeRate - a._exchangeRate); // descending = best rate first
+     const bestXrpTokenInverse = bestXrpToken > 0 ? 1 / bestXrpToken : 0;
+     const spread = bestTokenXrp > 0 && bestXrpToken > 0 ? Math.abs(bestTokenXrp - bestXrpTokenInverse) : 0;
+     const midPrice = bestTokenXrp > 0 && bestXrpToken > 0 ? (bestTokenXrp + bestXrpTokenInverse) / 2 : 0;
+     const spreadPercent = midPrice > 0 ? (spread / midPrice) * 100 : 0;
+     return { spread, spreadPercent, bestTokenXrp, bestXrpToken };
 }
 
-function computeFullExchangeRateStats(forwardOffers, reverseOffers, maxOffers = null) {
-     const combinedOffers = [...forwardOffers, ...reverseOffers];
+function computeLiquidityRatio(tokenXrpOffers, xrpTokenOffers, isTokenXrp = true) {
+     let tokenVolume = 0;
+     if (tokenXrpOffers.length > 0) {
+          tokenVolume = tokenXrpOffers.reduce((sum, offer) => sum + (offer.TakerGets.value ? parseFloat(offer.TakerGets.value) : parseFloat(offer.TakerGets) / 1_000_000), 0);
+     }
 
+     let xrpVolume = 0;
+     if (xrpTokenOffers.length > 0) {
+          xrpVolume = xrpTokenOffers.reduce((sum, offer) => sum + (offer.TakerGets.value ? parseFloat(offer.TakerGets.value) : parseFloat(offer.TakerGets) / 1_000_000), 0);
+     }
+
+     const ratio = isTokenXrp ? (xrpVolume > 0 ? tokenVolume / xrpVolume : 0) : tokenVolume > 0 ? xrpVolume / tokenVolume : 0;
+     return { tokenVolume, xrpVolume, ratio };
+}
+
+function computeAverageExchangeRateBothWays(offers, tradeSizeXRP = 15) {
+     let totalPays = 0; // XRP
+     let totalGets = 0; // TOKEN
      let forwardRates = []; // TOKEN/XRP
      let inverseRates = []; // XRP/TOKEN
-
-     // Process all offers
-     combinedOffers.forEach(offer => {
-          let gets = offer.TakerGets;
-          let pays = offer.TakerPays;
-          let getsValue = 0;
-          let paysValue = 0;
-
-          if (typeof gets === 'string') getsValue = parseFloat(gets) / 1_000_000;
-          else if (typeof gets === 'object' && gets !== null) getsValue = parseFloat(gets.value);
-
-          if (typeof pays === 'string') paysValue = parseFloat(pays) / 1_000_000;
-          else if (typeof pays === 'object' && pays !== null) paysValue = parseFloat(pays.value);
-
-          if (getsValue > 0 && paysValue > 0) {
-               forwardRates.push(paysValue / getsValue);
-               inverseRates.push(getsValue / paysValue);
-          }
-     });
-
-     // Optional: limit depth to top N offers
-     if (maxOffers && maxOffers > 0) {
-          forwardRates = forwardRates.slice(0, maxOffers);
-          inverseRates = inverseRates.slice(0, maxOffers);
-     }
-
-     // Helper to calculate stats
-     function computeStats(rates) {
-          const sorted = [...rates].sort((a, b) => a - b);
-          const total = sorted.reduce((a, b) => a + b, 0);
-          const avg = sorted.length > 0 ? total / sorted.length : 0;
-          const vwap = avg;
-
-          // Median
-          const mid = Math.floor(sorted.length / 2);
-          const median = sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-
-          // Mode (rounded to 8 decimals)
-          const freqMap = {};
-          sorted.forEach(rate => {
-               const key = rate.toFixed(8);
-               freqMap[key] = (freqMap[key] || 0) + 1;
-          });
-          const maxFreq = Math.max(...Object.values(freqMap));
-          const modes = Object.entries(freqMap)
-               .filter(([_, freq]) => freq === maxFreq)
-               .map(([rateStr]) => parseFloat(rateStr));
-
-          return {
-               vwap,
-               average: avg,
-               median,
-               mode: modes,
-               best: Math.max(...sorted),
-               worst: Math.min(...sorted),
-               count: sorted.length,
-          };
-     }
-
-     return {
-          TOKEN_XRP: computeStats(forwardRates),
-          XRP_TOKEN: computeStats(inverseRates),
-     };
-}
-
-function computeAverageExchangeRateBothWays(offers) {
-     let totalPays = 0;
-     let totalGets = 0;
-     let forwardRates = []; // TOKEN / XRP
-     let inverseRates = []; // XRP / TOKEN
+     let bestQuality = Infinity;
 
      offers.forEach(offer => {
-          let gets = offer.TakerGets;
-          let pays = offer.TakerPays;
-          let getsValue = 0;
-          let paysValue = 0;
-
-          if (typeof gets === 'string') getsValue = parseFloat(gets) / 1_000_000;
-          else if (typeof gets === 'object' && gets !== null) getsValue = parseFloat(gets.value);
-
-          if (typeof pays === 'string') paysValue = parseFloat(pays) / 1_000_000;
-          else if (typeof pays === 'object' && pays !== null) paysValue = parseFloat(pays.value);
-
+          let getsValue = typeof offer.TakerGets === 'string' ? parseFloat(offer.TakerGets) / 1_000_000 : parseFloat(offer.TakerGets.value); // TOKEN
+          let paysValue = typeof offer.TakerPays === 'string' ? parseFloat(offer.TakerPays) / 1_000_000 : parseFloat(offer.TakerPays.value); // XRP
           if (getsValue > 0 && paysValue > 0) {
                totalPays += paysValue;
                totalGets += getsValue;
-               forwardRates.push(paysValue / getsValue);
-               inverseRates.push(getsValue / paysValue);
+               forwardRates.push(getsValue / paysValue); // TOKEN/XRP
+               inverseRates.push(paysValue / getsValue); // XRP/TOKEN
+               bestQuality = Math.min(bestQuality, paysValue / getsValue); // Quality = XRP/TOKEN
           }
      });
 
-     const forwardVWAP = totalGets > 0 ? totalPays / totalGets : 0; // TOKEN/XRP
-     const inverseVWAP = totalPays > 0 ? totalGets / totalPays : 0; // XRP/TOKEN
+     // Depth at 5% slippage
+     const maxQuality = bestQuality * 1.05;
+     let depthGets = 0; // TOKEN
+     let depthPays = 0; // XRP
+     offers.forEach(offer => {
+          const getsValue = typeof offer.TakerGets === 'string' ? parseFloat(offer.TakerGets) / 1_000_000 : parseFloat(offer.TakerGets.value);
+          const paysValue = typeof offer.TakerPays === 'string' ? parseFloat(offer.TakerPays) / 1_000_000 : parseFloat(offer.TakerPays.value);
+          if (paysValue / getsValue <= maxQuality) {
+               depthGets += getsValue;
+               depthPays += paysValue;
+          }
+     });
 
-     const forwardSimpleAvg = forwardRates.length > 0 ? forwardRates.reduce((a, b) => a + b, 0) / forwardRates.length : 0;
-     const inverseSimpleAvg = inverseRates.length > 0 ? inverseRates.reduce((a, b) => a + b, 0) / inverseRates.length : 0;
+     // Execution price for paying tradeSizeXRP XRP
+     let execGets = 0; // TOKEN
+     let execPays = 0; // XRP
+     let remainingPays = tradeSizeXRP; // Want to pay tradeSizeXRP XRP
+     let insufficientLiquidity = false;
+     for (const offer of offers) {
+          const getsValue = typeof offer.TakerGets === 'string' ? parseFloat(offer.TakerGets) / 1_000_000 : parseFloat(offer.TakerGets.value);
+          const paysValue = typeof offer.TakerPays === 'string' ? parseFloat(offer.TakerPays) / 1_000_000 : parseFloat(offer.TakerPays.value);
+          const paysToUse = Math.min(remainingPays, paysValue);
+          if (paysToUse > 0) {
+               execGets += (paysToUse / paysValue) * getsValue;
+               execPays += paysToUse;
+               remainingPays -= paysToUse;
+          }
+          if (remainingPays <= 0) break;
+     }
+     if (remainingPays > 0) {
+          insufficientLiquidity = true;
+     }
+
+     // Volatility
+     const meanForward = forwardRates.length > 0 ? forwardRates.reduce((a, b) => a + b, 0) / forwardRates.length : 0;
+     const varianceForward = forwardRates.length > 0 ? forwardRates.reduce((sum, rate) => sum + Math.pow(rate - meanForward, 2), 0) / forwardRates.length : 0;
+     const stdDevForward = Math.sqrt(varianceForward);
 
      return {
           forward: {
-               vwap: forwardVWAP,
-               simpleAvg: forwardSimpleAvg,
-               bestRate: Math.max(...forwardRates),
-               worstRate: Math.min(...forwardRates),
+               // TOKEN/XRP
+               vwap: totalPays > 0 ? totalGets / totalPays : 0,
+               simpleAvg: meanForward,
+               bestRate: forwardRates.length > 0 ? Math.max(...forwardRates) : 0,
+               worstRate: forwardRates.length > 0 ? Math.min(...forwardRates) : 0,
+               depthDOG: depthGets,
+               depthXRP: depthPays,
+               executionPrice: execPays > 0 ? execGets / execPays : 0, // TOKEN/XRP
+               executionDOG: execGets,
+               executionXRP: execPays,
+               insufficientLiquidity,
+               volatility: stdDevForward,
+               volatilityPercent: meanForward > 0 ? (stdDevForward / meanForward) * 100 : 0,
           },
           inverse: {
-               vwap: inverseVWAP,
-               simpleAvg: inverseSimpleAvg,
-               bestRate: Math.max(...inverseRates),
-               worstRate: Math.min(...inverseRates),
+               // XRP/TOKEN
+               vwap: totalGets > 0 ? totalPays / totalGets : 0,
+               simpleAvg: inverseRates.length > 0 ? inverseRates.reduce((a, b) => a + b, 0) / inverseRates.length : 0,
+               bestRate: inverseRates.length > 0 ? Math.max(...inverseRates) : 0,
+               worstRate: inverseRates.length > 0 ? Math.min(...inverseRates) : 0,
           },
      };
+}
+
+async function getXrpReserveRequirements(client, address) {
+     const accountInfo = await client.request({
+          command: 'account_info',
+          account: address,
+          ledger_index: 'validated',
+     });
+
+     // Current XRP reserve requirements (in drops)
+     const ownerReserve = 2 * 1000000; // 2 XRP per owned item (offer/trustline)
+     const baseReserve = 10 * 1000000; // 10 XRP base reserve
+
+     return {
+          baseReserve: baseReserve,
+          ownerReserve: ownerReserve,
+          currentReserve: accountInfo.result.account_data.Reserve,
+          ownerCount: accountInfo.result.account_data.OwnerCount,
+     };
+}
+
+function calculateEffectiveRate(proposedQuality, reserveInfo, offerType) {
+     // Convert to BigNumber for precise calculations
+     const quality = new BigNumber(proposedQuality);
+
+     // Estimate additional reserve requirements for this offer
+     // Each new offer typically requires 2 XRP owner reserve
+     const additionalReserveCost = new BigNumber(reserveInfo.ownerReserve);
+
+     // For simplicity, we'll amortize the reserve cost over the offer amount
+     // This is a simplified model - adjust based on your trading strategy
+     const reserveCostFactor = additionalReserveCost
+          .dividedBy(new BigNumber(10).pow(6)) // Convert to XRP
+          .dividedBy(quality); // Spread over the offer amount
+
+     // Adjust the quality based on reserve costs
+     // For buy offers: effective rate is slightly worse (higher)
+     // For sell offers: effective rate is slightly worse (lower)
+     const adjustmentFactor = offerType === 'buy' ? new BigNumber(1).plus(reserveCostFactor) : new BigNumber(1).minus(reserveCostFactor);
+
+     return quality.multipliedBy(adjustmentFactor);
 }
 
 function formatOffers(offers) {
@@ -859,8 +953,10 @@ function formatOffers(offers) {
                .join('\n')}\n${indent}}`;
      }
 
+     let outputTotal = `Total Offers: ${offers.length}\n`;
      function formatOffer(offer, index) {
-          let output = `Total Offers: ${offers.length} \noffers (${index + 1}):\n`;
+          let output = outputTotal + `offers (${index + 1}):\n`;
+          outputTotal = '';
           let getsXRP = false;
           let paysXRP = false;
           let getsValue = 0;
@@ -925,6 +1021,30 @@ function formatOffers(offers) {
      }
 
      return offers.map((offer, index) => formatOffer(offer, index)).join('\n');
+}
+
+function populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerType) {
+     document.getElementById('orderBookDirectionField').value = `${we_want.currency}/${we_spend.currency}`;
+     document.getElementById('vwapField').value = stats.forward.vwap.toFixed(8);
+     document.getElementById('simpleAverageField').value = stats.forward.simpleAvg.toFixed(8);
+     document.getElementById('bestRateField').value = stats.forward.bestRate.toFixed(8);
+     document.getElementById('worstRateField').value = stats.forward.worstRate.toFixed(8);
+     document.getElementById('depthField').value = `${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}`;
+
+     if (stats.forward.insufficientLiquidity) {
+          document.getElementById('liquidityField').value = `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
+     } else {
+          document.getElementById('liquidityField').value = `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} - Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
+     }
+
+     document.getElementById('liquidityRatioField').value = `${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})`;
+     document.getElementById('priceVolatilityField').value = `${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)`;
+
+     if (offerType === 'buy') {
+          document.getElementById('spreadField').value = `${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)`;
+     } else {
+          document.getElementById('spreadField').value = `${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)`;
+     }
 }
 
 async function getCurrencyBalance(currencyCode) {
