@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -85,7 +85,7 @@ async function sendXRP() {
           }
 
           results += `XRP payment finished successfully.\n\n`;
-          results += `Tx Hash: ${response.result.hash}\n\n`;
+          results += prepareTxHashForOutput(response.result.hash) + '\n';
           results += parseXRPLTransaction(response.result);
 
           resultField.value = results;

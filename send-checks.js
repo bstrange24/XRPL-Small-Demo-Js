@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -124,7 +124,7 @@ async function sendCheck() {
           }
 
           results += `Check sent successfully.\n\n`;
-          results += `Tx Hash: ${response.result.hash}\n\n`;
+          results += prepareTxHashForOutput(response.result.hash) + '\n';
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -285,7 +285,7 @@ async function cashCheck() {
           }
 
           results += `Check cashed successfully.\n\n`;
-          results += `Tx Hash: ${response.result.hash}\n\n`;
+          results += prepareTxHashForOutput(response.result.hash) + '\n';
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -358,7 +358,7 @@ async function cancelCheck() {
           }
 
           results += `Check cancelled successfully.\n\n`;
-          results += `Tx Hash: ${response.result.hash}\n\n`;
+          results += prepareTxHashForOutput(response.result.hash) + '\n';
           results += parseXRPLTransaction(response.result);
           resultField.value = results;
           resultField.classList.add('success');

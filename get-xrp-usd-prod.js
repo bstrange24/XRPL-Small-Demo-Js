@@ -8,6 +8,10 @@ const NET = 'wss://s1.ripple.com';
 // const RIPPLE_RLUSD_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
 // RLUSD Main net Ripple Issuer
 const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
+const RLUSD_CURRENCY = 'RLUSD';
+
+const CIRCLE_USDC_ISSUER = 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'; // CIRCLE_USDC_ISSUER
+const USDC_CURRENCY = 'USDC'; // CIRCLE_USDC_ISSUER
 
 const COMMON_USD_ISSUERS = [
      { name: 'GateHub', address: 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq' },
@@ -22,77 +26,35 @@ function encodeCurrencyCode(code) {
      return buffer.toString('hex').toUpperCase();
 }
 
-function formatRlusdBidsOutput(data, currency = 'RLUSD') {
+export function formatRlusdOutput(data, currency = 'RLUSD', offerType = 'bids') {
      if (!data || data.offerCount === 0) {
-          return `RLUSD Bid-side (Someone is buying XRP using ${currency}) Order Book:\n  No offers available`;
-     }
-
-     const { issuer, offerCount, bids, averagePrice, topPrice, pricePerXrp } = data;
-     let output = `RLUSD Bid-side (Someone is buying XRP using ${currency}) Order Book:\n`;
-     output += `issuer: '${issuer}'\n`;
-     output += `offerCount: ${offerCount}\n`;
-     output += `bids:\n`;
-
-     bids.forEach(b => {
-          output += `\tprice: ${b.price.toFixed(6)} rlusdAmount: ${b.rlusdAmount} xrpAmount: ${b.xrpAmount}\n`;
-     });
-
-     output += `averagePrice: ${averagePrice.toFixed(6)}\n`;
-     output += `topPrice: ${topPrice.toFixed(6)}\n`;
-     output += `pricePerXrp: ${pricePerXrp.toFixed(6)}`;
-
-     return output;
-}
-
-function formatRlusdAsksOutput(data, currency = 'RLUSD') {
-     if (!data || data.offerCount === 0) {
+          if (offerType === 'bids') {
+               return `RLUSD Bid-side (Someone is buying XRP using ${currency}) Order Book:\n  No offers available`;
+          }
           return `RLUSD Ask-side (Someone is selling XRP using ${currency}) Order Book:\n  No offers available`;
      }
 
-     const { issuer, offerCount, asks, averagePrice, topPrice, pricePerXrp } = data;
-     let output = `RLUSD Ask-side (Someone is selling XRP using ${currency}) Order Book:\n`;
-     output += `issuer: '${issuer}'\n`;
-     output += `offerCount: ${offerCount}\n`;
-     output += `asks:\n`;
-
-     asks.forEach(b => {
-          output += `\tprice: ${b.price.toFixed(6)} rlusdAmount: ${b.rlusdAmount} xrpAmount: ${b.xrpAmount}\n`;
-     });
-
-     output += `averagePrice: ${averagePrice.toFixed(6)}\n`;
-     output += `topPrice: ${topPrice.toFixed(6)}\n`;
-     output += `pricePerXrp: ${pricePerXrp.toFixed(6)}`;
-
-     return output;
-}
-
-function formatRlusdOutput(data, currency = 'RLUSD', offerType = 'bids') {
-     if (!data || data.offerCount === 0) {
-          return `RLUSD ${offerType}-side (Someone is selling XRP using ${currency}) Order Book:\n  No offers available`;
+     let issuer, offerCount, bids, asks, averagePrice, topPrice, pricePerXrp, offerOperation;
+     if (offerType === 'bids') {
+          offerOperation = 'buying';
+          ({ issuer, offerCount, bids, averagePrice, topPrice, pricePerXrp } = data);
+     } else {
+          offerOperation = 'selling';
+          ({ issuer, offerCount, asks, averagePrice, topPrice, pricePerXrp } = data);
      }
 
-     const { issuer, offerCount, asks, averagePrice, topPrice, pricePerXrp } = data;
-     // let output = `RLUSD ${offerType}-side (Someone is selling XRP using ${currency}) Order Book:\n`;
-     let output = '';
-     output += `issuer: '${issuer}'\n`;
-     output += `offerCount: ${offerCount}\n`;
-     // output += `${offerType}:\n`;
+     if (offerType === 'bids') {
+          console.table(bids, ['price', 'rlusdAmount', 'xrpAmount']);
+     } else {
+          console.table(asks, ['price', 'rlusdAmount', 'xrpAmount']);
+     }
 
-     // asks.forEach(b => {
-     // output += `\tprice: ${b.price.toFixed(6)} rlusdAmount: ${b.rlusdAmount} xrpAmount: ${b.xrpAmount}\n`;
-     // });
-
-     output += `averagePrice: ${averagePrice.toFixed(6)}\n`;
-     output += `topPrice: ${topPrice.toFixed(6)}\n`;
-     output += `pricePerXrp: ${pricePerXrp.toFixed(6)}`;
-
-     return output;
+     return '';
 }
 
-export async function getXrpRlusdDexBids(client, maxOffers = 5) {
+export async function getXrpRlusdDexBids(client, maxOffers = 15) {
      try {
-          const currency = 'RLUSD';
-          const currencyHex = encodeCurrencyCode(currency);
+          const currencyHex = encodeCurrencyCode(RLUSD_CURRENCY);
           const response = await client.request({
                command: 'book_offers',
                taker_gets: { currency: 'XRP' },
@@ -134,9 +96,9 @@ export async function getXrpRlusdDexBids(client, maxOffers = 5) {
           const rlusdPerXrp = 1 / topPrice; // 1 XRP = n RLUSD
 
           // Log order book for debugging
-          // console.log(`Current XRP/${currency} bids:`);
-          // bids.forEach(b => console.log(`  Price: ${b.price.toFixed(6)} XRP/${currency}, RLUSD Amount: ${b.rlusdAmount.toFixed(6)}, XRP Amount: ${b.xrpAmount.toFixed(6)}`));
-          console.log(`Best XRP/${currency} bid: ${topPrice.toFixed(6)} XRP/${currency} → 1 XRP = ${rlusdPerXrp.toFixed(6)} ${currency}`);
+          console.log(`\nBest XRP/${RLUSD_CURRENCY} bid: ${topPrice.toFixed(6)} XRP/${RLUSD_CURRENCY} → 1 XRP = ${rlusdPerXrp.toFixed(6)} ${RLUSD_CURRENCY}`);
+          console.log(`RLUSD Issuer: ${RIPPLE_RLUSD_ISSUER} Offer Count: ${offers.length}`);
+          console.log(`RLUSD bids-side (Someone is buying XRP using RLUSD) Order Book:`);
 
           // Prepare result object
           const result = {
@@ -149,7 +111,7 @@ export async function getXrpRlusdDexBids(client, maxOffers = 5) {
           };
 
           // Log formatted output
-          console.log(formatRlusdOutput(result, currency, 'bids'));
+          console.log(formatRlusdOutput(result, RLUSD_CURRENCY, 'bids'));
 
           return result;
      } catch (err) {
@@ -159,10 +121,9 @@ export async function getXrpRlusdDexBids(client, maxOffers = 5) {
      }
 }
 
-export async function getXrpRlusdDexAsk(client, maxOffers = 5) {
+export async function getXrpRlusdDexAsk(client, maxOffers = 15) {
      try {
-          const currency = 'RLUSD';
-          const currencyHex = encodeCurrencyCode(currency);
+          const currencyHex = encodeCurrencyCode(RLUSD_CURRENCY);
 
           // Query RLUSD/XRP order book (asks: sell RLUSD for XRP)
           const response = await client.request({
@@ -208,9 +169,9 @@ export async function getXrpRlusdDexAsk(client, maxOffers = 5) {
           const rlusdPerXrp = 1 / topPrice; // 1 XRP = n RLUSD
 
           // Log order book for debugging
-          // console.log(`Current ${currency}/XRP asks:`);
-          // asks.forEach(a => console.log(`  Price: ${a.price.toFixed(6)} XRP/${currency}, RLUSD Amount: ${a.rlusdAmount.toFixed(6)}, XRP Amount: ${a.xrpAmount.toFixed(6)}`));
-          console.log(`Best ${currency}/XRP ask: ${topPrice.toFixed(6)} XRP/${currency} → 1 XRP = ${rlusdPerXrp.toFixed(6)} ${currency}`);
+          console.log(`\nBest ${RLUSD_CURRENCY}/XRP ask: ${topPrice.toFixed(6)} XRP/${RLUSD_CURRENCY} → 1 XRP = ${rlusdPerXrp.toFixed(6)} ${RLUSD_CURRENCY}`);
+          console.log(`RLUSD Issuer: ${RIPPLE_RLUSD_ISSUER} Offer Count: ${offers.length}`);
+          console.log(`RLUSD ask-side (Someone is selling XRP using RLUSD) Order Book:`);
 
           const result = {
                issuer: RIPPLE_RLUSD_ISSUER,
@@ -222,7 +183,7 @@ export async function getXrpRlusdDexAsk(client, maxOffers = 5) {
           };
 
           // Log formatted output
-          console.log(formatRlusdOutput(result, currency, 'asks'));
+          console.log(formatRlusdOutput(result, RLUSD_CURRENCY, 'asks'));
 
           return result;
      } catch (err) {
@@ -232,7 +193,7 @@ export async function getXrpRlusdDexAsk(client, maxOffers = 5) {
      }
 }
 
-export async function getXrpUsdPriceFromDex(client, maxOffers = 5) {
+export async function getXrpUsdPriceFromDex(client, maxOffers = 15) {
      const BITSTAMP_USD_ISSUER = 'rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv'; // Bitstamp
      const GATEHUB_USD_ISSUER = 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq'; // GateHub
      const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De'; // GateHub
@@ -305,7 +266,7 @@ export async function getXrpUsdPriceFromDex(client, maxOffers = 5) {
      }
 }
 
-export async function getActiveUsdIssuers(client, maxOffers = 5) {
+export async function getActiveUsdIssuers(client, maxOffers = 15) {
      const results = [];
 
      for (const issuer of COMMON_USD_ISSUERS) {
@@ -365,6 +326,8 @@ async function main() {
      //      console.log(`Avg Ask Price: ${priceData.averageAsk.toFixed(4)} USD`);
      //      console.log(`Top Bid Price (buy XRP): ${priceData.topBid.toFixed(4)} USD`);
      //      console.log(`Avg Bid Price: ${priceData.averageBid.toFixed(4)} USD`);
+     //      console.log(`Total Ask Count: ${priceData.askCount.toFixed(4)} USD`);
+     //      console.log(`Total Bid Count: ${priceData.bidCount.toFixed(4)} USD`);
      // }
 
      // const issuers = await getActiveUsdIssuers(client);
@@ -372,11 +335,9 @@ async function main() {
 
      await getXrpRlusdDexBids(client);
      // const rlusdDexData = await getXrpRlusdDexBids(client);
-     // console.log('RLUSD Bid-side (Someone is buying XRP using RLUSD) Order Book:', rlusdDexData);
 
      await getXrpRlusdDexAsk(client);
      // const rlusdDexAskData = await getXrpRlusdDexAsk(client);
-     // console.log('RLUSD Ask-side (Someone is selling XRP for RLUSD) Order Book:', rlusdDexAskData);
 
      await client.disconnect();
 }

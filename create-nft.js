@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 
 async function getNFT() {
      console.log('Entering getNFT');
@@ -261,7 +261,7 @@ async function mintBatchNFT() {
           }
 
           results += `Successfully minted ${nftCount} NFTs.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -334,7 +334,7 @@ async function setAuthorizedMinter() {
           }
 
           results += `Authorized minter set successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -425,7 +425,7 @@ async function sellNFT() {
           }
 
           results += `NFT sell offer created successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -495,7 +495,7 @@ async function cancelBuyOffer() {
           }
 
           results += `Sell offer canceled successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -565,7 +565,7 @@ async function cancelSellOffer() {
           }
 
           results += `Sell offer canceled successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -686,7 +686,7 @@ async function buyNFT() {
           }
 
           results += `NFT buy finished successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -755,7 +755,7 @@ async function burnNFT() {
           }
 
           results += `NFT burned finished successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -831,7 +831,7 @@ async function updateNFTMetadata() {
           }
 
           results += `NFT metadata updated successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -278,14 +278,14 @@ async function setDepositAuthAccounts(authorizeFlag) {
           console.log('DepositPreauth Transaction:', tx);
 
           const response = await client.submitAndWait(tx, { wallet });
-          const txResult = response.result.meta?.TransactionResult;
 
-          if (txResult !== 'tesSUCCESS') {
-               return setError(`ERROR: Transaction failed: ${txResult}`, spinner);
+          const resultCode = response.result.meta?.TransactionResult;
+          if (resultCode !== 'tesSUCCESS') {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
           resultField.value += `Deposit Auth finished successfully.\n\n`;
-          resultField.value += `Tx Hash: ${response.result.hash}\n\n`;
+          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
 

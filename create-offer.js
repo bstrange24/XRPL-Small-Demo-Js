@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, safeDrops } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
@@ -118,6 +118,7 @@ async function createOffer() {
 
                     if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
                          results += 'Trustline established between account ' + wallet.address + ' and issuer ' + issuerAddr + ' for ' + issuerCur + ' with amount ' + amountValue.value;
+                         results += prepareTxHashForOutput(tx.result.hash) + '\n';
                     } else {
                          throw new Error(`Unable to create trustLine from ${wallet.address} to ${issuerAddr} \nTransaction failed: ${tx.result.meta.TransactionResult}`);
                     }
@@ -394,8 +395,7 @@ async function createOffer() {
           console.debug(`create offer tx ${tx}`);
 
           if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
-               console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}`);
-               // resultField.value += `Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}\n`;
+               resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
                resultField.value += parseXRPLTransaction(tx.result);
                resultField.classList.add('success');
           } else {
@@ -610,17 +610,15 @@ async function cancelOffer() {
                     throw new Error(err);
                }
 
-               if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
-                    resultField.value += 'Transaction succeeded:\n';
-                    resultField.value += parseXRPLTransaction(tx.result);
-                    // console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
-                    console.log();
-                    resultField.classList.add('success');
-               } else {
-                    results += `Error sending transaction: ${tx.result.meta.TransactionResult}`;
-                    resultField.value += results;
-                    resultField.classList.add('error');
+               const resultCode = tx.result.meta?.TransactionResult;
+               if (resultCode !== 'tesSUCCESS') {
+                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
                }
+
+               resultField.value += 'Transaction succeeded:\n';
+               resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+               resultField.value += parseXRPLTransaction(tx.result);
+               resultField.classList.add('success');
           }
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);

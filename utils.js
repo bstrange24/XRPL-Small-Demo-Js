@@ -9,12 +9,12 @@ let isConnecting = false;
 export function getEnvironment() {
      let environment;
      const network = localStorage.getItem('selectedNetwork');
-     if (network === 'testnet') {
-          environment = 'Testnet';
-     }
-
      if (network === 'devnet') {
           environment = 'Devnet';
+     }
+
+     if (network === 'testnet') {
+          environment = 'Testnet';
      }
 
      if (network === 'mainet') {
@@ -42,6 +42,16 @@ export function getNet() {
           environment = 'Mainnet';
      }
      return { net, environment };
+}
+
+export function prepareTxHashForOutput(hash) {
+     if (getEnvironment().environment === 'Devnet') {
+          return `https://devnet.xrpl.org/transactions/${hash}` + '\n';
+     } else if (getEnvironment().environment === 'Testnet') {
+          return `https://testnet.xrpl.org/transactions/${hash}` + '\n';
+     } else {
+          return `https://livenet.xrpl.org/transactions/${hash}` + '\n';
+     }
 }
 
 export async function getClient() {

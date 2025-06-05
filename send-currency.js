@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -81,7 +81,7 @@ async function createTrustLine() {
           }
 
           results += `Trustline created successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -194,7 +194,7 @@ async function removeTrustLine() {
           }
 
           results += `Trustline removed successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -417,7 +417,7 @@ async function sendCurrency() {
           }
 
           results += `Currency ${currency.value} successfully sent.\n\n`;
-          results += `Tx Hash: ${pay_result.result.hash}\n\n`;
+          results += prepareTxHashForOutput(pay_result.result.hash) + '\n';
           results += parseXRPLTransaction(pay_result.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -546,7 +546,7 @@ async function issueCurrency() {
                     return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(accountSetResult.result)}`, spinner);
                }
 
-               results += `Tx Hash: ${accountSetResult.hash}\n\n`;
+               results += prepareTxHashForOutput(accountSetResult.result.hash) + '\n';
                results += parseXRPLTransaction(accountSetResult.result);
                results += `DefaultRipple enabled.\n`;
                resultField.value = results;
@@ -583,7 +583,7 @@ async function issueCurrency() {
           }
 
           results += `Currency ${currency.value} successfully issued.\n\n`;
-          results += `Tx Hash: ${pay_result.result.hash}\n\n`;
+          results += prepareTxHashForOutput(pay_result.result.hash) + '\n';
           results += parseXRPLTransaction(pay_result.result);
 
           const updatedTrustLines = await getTrustLines(destinationAddress.value, client);

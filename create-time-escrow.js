@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -98,7 +98,7 @@ async function createTimeBasedEscrow() {
           }
 
           results += `Escrow created successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -181,7 +181,7 @@ async function finishTimeBasedEscrow() {
           }
 
           results += `Escrow finsihed successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -329,7 +329,7 @@ async function cancelEscrow() {
           }
 
           results += `Escrow cancelled successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime } from './utils.js';
+import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
 import { generateCondition } from './five-bells.js';
 
 async function createConditionalEscrow() {
@@ -90,7 +90,7 @@ async function createConditionalEscrow() {
           }
 
           results += `Escrow created successfully.\n\n`;
-          resultField.value += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
@@ -178,7 +178,7 @@ async function finishConditionalEscrow() {
           }
 
           results += `Escrow finished successfully.\n\n`;
-          results += `Tx Hash: ${tx.result.hash}\n\n`;
+          results += prepareTxHashForOutput(tx.result.hash) + '\n';
           results += parseXRPLTransaction(tx.result);
           resultField.value = results;
           resultField.classList.add('success');
