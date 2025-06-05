@@ -277,13 +277,15 @@
                </fieldset>
 
                <p></p>
-               <fieldset style="padding: 20px">
-                    <legend style="color: white">NFT Flag Info</legend>
-                    <table style="float: left; color: white">
-                         <th></th>
-                         <tr style="vertical-align: top">
-                              <td>
-                                   <textarea class="nftMemoField" style="padding: 20px" id="memoField" placeholder="Optional memo...">
+               <details>
+                    <summary style="color: white; font-size: 14px; padding-top: 20px; cursor: pointer">NFT Flag Info</summary>
+                    <fieldset style="padding: 20px">
+                         <!-- <legend style="color: white">NFT Flag Info</legend> -->
+                         <table style="float: left; color: white">
+                              <th></th>
+                              <tr style="vertical-align: top">
+                                   <td>
+                                        <textarea class="nftMemoField" style="padding: 20px" id="memoField" placeholder="Optional memo...">
 Flag Name          | Hex Value  | Decimal Value | Description                                              
 ------------------ | ---------- | ------------- | ---------------------------------------------------------
 tfBurnable         | 0x00000001 |       1       | Allows anyone to burn the NFT if they hold it.           
@@ -292,13 +294,13 @@ tfTransferable     | 0x00000008 |       8       | Allows the NFT to be transferr
 tfMutable          | 0x00000010 |      10       | The URI field of the minted NFToken can be updated using the NFTokenModify transaction.
 
 Note: Each NFT offer reserves 0.2 XRP on your account until accepted or canceled.     
-                                        </textarea
-                                   >
-                                   <br />
-                              </td>
-                         </tr>
-                    </table>
-               </fieldset>
+                                        </textarea>
+                                        <br />
+                                   </td>
+                              </tr>
+                         </table>
+                    </fieldset>
+               </details>
           </form>
      </body>
 

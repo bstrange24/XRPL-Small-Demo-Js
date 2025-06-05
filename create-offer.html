@@ -84,25 +84,6 @@
                                    <br />
                               </td>
                          </tr>
-                         <!-- <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve">
-                                        <label for="ownerCountField">Owner Count</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <div style="display: inline-block; margin-right: 10px">
-                                        <input type="text" id="ownerCountField" size="5" />
-                                   </div>
-
-                                   <div style="display: inline-block">
-                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
-                                             <label for="totalXrpReservesField" style="display: inline-block; width: 150px; text-align: right; margin-right: 5px">Total XRP Reserves</label>
-                                        </span>
-                                        <input type="text" id="totalXrpReservesField" size="5" />
-                                   </div>
-                              </td>
-                         </tr> -->
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Sequence number of the offer.">
@@ -123,6 +104,16 @@
                               <td>
                                    <input type="text" id="transactionField" size="75" />
                                    <br />
+                              </td>
+                         </tr>
+                         <tr>
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Check to make this a market order.">
+                                        <label for="isMarketOrder">Market Order</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="checkbox" id="isMarketOrder" />
                               </td>
                          </tr>
                     </table>
@@ -221,6 +212,10 @@
                               </td>
                               <td>
                                    <input type="text" id="weSpendAmountField" size="40" />
+                                   <!-- <select class="timeUnit" id="xrpDropsUnit">
+                                        <option value="drops">Drops</option>
+                                        <option value="xrp">XRP</option>
+                                   </select> -->
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -255,8 +250,7 @@
                                    <div style="display: flex; gap: 20px; align-items: flex-start">
                                         <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false" readonly></textarea>
 
-                                        <!-- Aggregate data -->
-                                        <table style="text-align: left; width: 100%">
+                                        <table style="text-align: left; width: 30%">
                                              <tr style="vertical-align: top">
                                                   <td style="text-align: right">
                                                        <span class="tooltip" tooltip-data="Order book direction.">
@@ -264,7 +258,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="orderBookDirectionField" size="60" />
+                                                       <input type="text" id="orderBookDirectionField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -274,7 +268,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="vwapField" size="60" />
+                                                       <input type="text" id="vwapField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -284,7 +278,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="simpleAverageField" size="60" />
+                                                       <input type="text" id="simpleAverageField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -294,7 +288,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="bestRateField" size="60" />
+                                                       <input type="text" id="bestRateField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -304,7 +298,17 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="worstRateField" size="60" />
+                                                       <input type="text" id="worstRateField" size="30" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Average Rate for order book.">
+                                                            <label for="averageRateField">Average Rate</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="averageRateField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -314,7 +318,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="depthField" size="60" />
+                                                       <input type="text" id="depthField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -324,9 +328,10 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="liquidityField" size="60" />
+                                                       <input type="text" id="liquidityField" size="30" />
                                                   </td>
                                              </tr>
+
                                              <tr style="vertical-align: top">
                                                   <td style="text-align: right">
                                                        <span class="tooltip" tooltip-data="Liquidity Ratio for order book.">
@@ -334,7 +339,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="liquidityRatioField" size="60" />
+                                                       <input type="text" id="liquidityRatioField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -344,7 +349,17 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="priceVolatilityField" size="60" />
+                                                       <input type="text" id="priceVolatilityField" size="30" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Standard Deviation from the mean for order book.">
+                                                            <label for="stdDeviationField">Std Deviation (Mean)</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="stdDeviationField" size="30" />
                                                   </td>
                                              </tr>
                                              <tr style="vertical-align: top">
@@ -354,7 +369,7 @@
                                                        </span>
                                                   </td>
                                                   <td>
-                                                       <input type="text" id="spreadField" size="60" />
+                                                       <input type="text" id="spreadField" size="30" />
                                                   </td>
                                              </tr>
                                         </table>

@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, safeDrops } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
@@ -12,6 +12,9 @@ async function createOffer() {
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
+
+     const isMarketOrder = document.getElementById('isMarketOrder')?.checked;
+     // const unit = document.getElementById('unitSelect').value;
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
@@ -36,7 +39,11 @@ async function createOffer() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      // Destructure fields
@@ -126,42 +133,24 @@ async function createOffer() {
           console.log(`XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`);
           resultField.value += `Initial XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
 
-          let tokenBalance;
-          if (weSpendCurrencyField.value === 'XRP' || weSpendCurrencyField.value === '') {
-               tokenBalance = weWantCurrencyField.value;
-          } else {
-               tokenBalance = weSpendCurrencyField.value;
-          }
-
+          let tokenBalance = weSpendCurrencyField.value === 'XRP' ? weWantCurrencyField.value : weSpendCurrencyField.value;
           const tstBalance = await getOnlyTokenBalance(client, wallet.address, tokenBalance);
           console.log(`${tokenBalance} Balance: ${tstBalance}`);
           resultField.value += `\nInital ${tokenBalance} Balance: ${tstBalance}\n\n`;
 
-          if (weWantCurrencyField.value == 'XRP') {
-               takerGetsString = '{"currency": "' + weWantCurrencyField.value + '",\n' + '"value": "' + weWantAmountField.value + '"}';
-               we_want = JSON.parse(takerGetsString);
-          } else {
-               takerGetsString = '{"currency": "' + weWantCurrencyField.value + '",\n' + '"issuer": "' + weWantIssuerField.value + '",\n' + '"value": "' + weWantAmountField.value + '"}';
-               we_want = JSON.parse(takerGetsString);
+          // Build currency objects
+          let we_want = weWantCurrencyField.value === 'XRP' ? { currency: 'XRP', value: weWantAmountField.value } : { currency: weWantCurrencyField.value, issuer: weWantIssuerField.value, value: weWantAmountField.value };
+          let we_spend = weSpendCurrencyField.value === 'XRP' ? { currency: 'XRP', value: weSpendAmountField.value } : { currency: weSpendCurrencyField.value, issuer: weSpendIssuerField.value, value: weSpendAmountField.value };
+
+          if (weSpendCurrencyField.value === 'XRP' && xrpl.xrpToDrops(xrpBalance) < Number(weSpendAmountField.value)) {
+               throw new Error('Insufficient XRP balance');
+          } else if (weSpendCurrencyField.value !== 'XRP' && tstBalance < weSpendAmountField.value) {
+               throw new Error(`Insufficient ${weSpendCurrencyField.value} balance`);
           }
 
-          if (weSpendCurrencyField.value == 'XRP') {
-               takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
-               we_spend = JSON.parse(takerPaysString);
-
-               if (xrpl.xrpToDrops(xrpBalance) < weWantAmountField.value) {
-                    throw new Error('Insufficient XRP to fund the buy offer');
-               }
-          } else {
-               takerPaysString = '{"currency": "' + weSpendCurrencyField.value + '",\n' + '"issuer": "' + weSpendIssuerField.value + '",\n' + '"value": "' + weSpendAmountField.value + '"}';
-               we_spend = JSON.parse(takerPaysString);
-
-               if (tstBalance < weSpendAmountField.value) {
-                    throw new Error(`Insufficient ${weSpendCurrencyField.value} balance`);
-               }
-          }
           console.log(`we_want ${we_want}`);
           console.log(`we_spend ${we_spend}`);
+
           const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
           console.log(`Offer Type: ${offerType}`);
 
@@ -172,23 +161,25 @@ async function createOffer() {
           // number, the better the proposed exchange rate is for the taker.
           // The quality is rounded to a number of significant digits based on the
           // issuer's TickSize value (or the lesser of the two for token-token trades.)
-          const proposed_quality = BigNumber(weSpendAmountField.value) / BigNumber(weWantAmountField.value);
+
+          // const proposed_quality = BigNumber(weSpendAmountField.value) / BigNumber(weWantAmountField.value);
+          const proposed_quality = new BigNumber(weSpendAmountField.value).dividedBy(weWantAmountField.value); // XRP/TOKEN
+
           // Calculate effective rate
           const effectiveRate = calculateEffectiveRate(proposed_quality, xrpReserve, offerType);
           console.log(`Proposed rate: ${proposed_quality.toString()}`);
           console.log(`Effective rate (including reserves): ${effectiveRate.toString()}`);
 
-          resultField.value += `Rate Analysis:\n`;
-          resultField.value += `- Proposed Rate: 1 ${we_want.currency} = ${proposed_quality} ${we_spend.currency}\n`;
-          resultField.value += `- Effective Rate (incl. costs): 1 ${we_want.currency} = ${effectiveRate.toFixed(6)} ${we_spend.currency}\n\n`;
+          resultField.value += `Rate Analysis:\n- Proposed Rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
+          resultField.value += `- Effective Rate: 1 ${we_want.currency} = ${effectiveRate.toFixed(6)} ${we_spend.currency}\n\n`;
 
           if (effectiveRate.gt(proposed_quality)) {
-               resultField.value += `Note: Effective rate is worse than proposed due to XRP reserve requirements\n\n`;
+               console.log(`Note: Effective rate is worse than proposed due to XRP reserve requirements`);
           }
 
           // Look up Offers. -----------------------------------------------------------
           // To buy TOKEN, look up Offers where "TakerGets" is TOKEN and "TakerPays" is XRP.:
-          resultField.value += `To buy ${we_want.currency}, look up Offers where "TakerGets" is ${we_want.currency} and "TakerPays" is ${we_spend.currency}.\n\n`;
+          console.log(`To buy ${we_want.currency}, look up Offers where "TakerGets" is ${we_want.currency} and "TakerPays" is ${we_spend.currency}.`);
           const orderbook_resp = await client.request({
                method: 'book_offers',
                taker: wallet.address,
@@ -197,6 +188,15 @@ async function createOffer() {
                taker_pays: we_spend,
           });
           console.log(`orderbook_resp: ${orderbook_resp.result}`);
+
+          let oppositeOrderBook = await client.request({
+               method: 'book_offers',
+               taker: wallet.address,
+               ledger_index: 'current',
+               taker_gets: we_spend,
+               taker_pays: we_want,
+          });
+          console.log(`oppositeOrderBook: ${oppositeOrderBook.result}`);
 
           // Estimate whether a proposed Offer would execute immediately, and...
           // If so, how much of it? (Partial execution is possible)
@@ -208,55 +208,77 @@ async function createOffer() {
 
           const MAX_SLIPPAGE = 0.05; // 5% slippage tolerance
           const offers = orderbook_resp.result.offers;
-          const want_amt = BigNumber(we_want.value);
-          let running_total = BigNumber(0);
-          if (!offers) {
-               console.log(`No Offers in the matching book. Offer probably won't execute immediately.`);
-          } else {
+          let running_total = new BigNumber(0);
+          const want_amt = new BigNumber(we_want.value);
+          let best_offer_quality = new BigNumber(0);
+
+          if (offers.length > 0) {
                for (const o of offers) {
-                    // if (o.quality <= proposed_quality) {
-                    if (o.quality <= effectiveRate) {
-                         // Get the best offer quality (first offer in the list is always best price)
-                         const best_offer_quality = new BigNumber(o.quality);
-                         const proposed_quality = new BigNumber(weSpendAmountField.value).dividedBy(weWantAmountField.value);
-                         console.log(`best_offer_quality: ${best_offer_quality} proposed_quality: ${proposed_quality}`);
-                         console.log(`Best available rate: 1 ${we_want.currency} = ${best_offer_quality} ${we_spend.currency}`);
-                         console.log(`Your proposed rate: 1 ${we_want.currency} = ${proposed_quality} ${we_spend.currency}`);
-
-                         // Calculate slippage percentage
-                         const slippage = proposed_quality.minus(best_offer_quality).dividedBy(best_offer_quality);
-                         console.log(`Slippage: ${slippage}%`);
-                         console.log(`Slippage: ${slippage.times(100).toFixed(2)}%`);
-
+                    const offer_quality = new BigNumber(o.quality);
+                    if (!best_offer_quality || offer_quality.lt(best_offer_quality)) {
+                         best_offer_quality = offer_quality;
+                    }
+                    if (offer_quality.lte(effectiveRate.times(1 + MAX_SLIPPAGE))) {
+                         const slippage = proposed_quality.minus(offer_quality).dividedBy(offer_quality);
                          if (slippage.gt(MAX_SLIPPAGE)) {
-                              throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+                              throw new Error(`Slippage ${slippage.times(100).toFixed(2)}% exceeds ${MAX_SLIPPAGE * 100}%`);
                          }
-
-                         // Add this information to your UI
-                         resultField.value += `\nMarket Analysis:\n`;
-                         resultField.value += `- Best available rate: 1 ${we_want.currency} = ${best_offer_quality.toFixed(6)} ${we_spend.currency}\n`;
-                         resultField.value += `- Your proposed rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
+                         resultField.value += `Market Analysis:\n- Best Rate: 1 ${we_want.currency} = ${offer_quality.toFixed(6)} ${we_spend.currency}\n`;
+                         resultField.value += `- Proposed Rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
                          resultField.value += `- Slippage: ${slippage.times(100).toFixed(2)}%\n`;
-
-                         console.log(`Matching Offer found, funded with ${o.owner_funds} ${we_want.currency}`);
-                         running_total = running_total.plus(BigNumber(o.owner_funds));
-                         if (running_total >= want_amt) {
-                              console.log('Full Offer will probably fill');
-                              break;
-                         }
-                    } else {
-                         // Offers are in ascending quality order, so no others after this
-                         // will match, either
-                         console.log(`Remaining orders too expensive.`);
-                         break;
+                         running_total = running_total.plus(new BigNumber(o.owner_funds || o.TakerGets.value));
+                         if (running_total.gte(want_amt)) break;
                     }
                }
-
-               console.log(`Total matched: ${Math.min(running_total, want_amt)} ${we_want.currency}`);
-               if (running_total > 0 && running_total < want_amt) {
-                    console.log(`Remaining ${want_amt - running_total} ${we_want.currency} would probably be placed on top of the order book.`);
-               }
           }
+
+          // if (!offers) {
+          //      console.log(`No Offers in the matching book. Offer probably won't execute immediately.`);
+          // } else {
+          //      for (const o of offers) {
+          //           // if (o.quality <= proposed_quality) {
+          //           if (o.quality <= effectiveRate) {
+          //                // Get the best offer quality (first offer in the list is always best price)
+          //                const best_offer_quality = new BigNumber(o.quality);
+          //                const proposed_quality = new BigNumber(weSpendAmountField.value).dividedBy(weWantAmountField.value);
+          //                console.log(`best_offer_quality: ${best_offer_quality} proposed_quality: ${proposed_quality}`);
+          //                console.log(`Best available rate: 1 ${we_want.currency} = ${best_offer_quality} ${we_spend.currency}`);
+          //                console.log(`Your proposed rate: 1 ${we_want.currency} = ${proposed_quality} ${we_spend.currency}`);
+
+          //                // Calculate slippage percentage
+          //                const slippage = proposed_quality.minus(best_offer_quality).dividedBy(best_offer_quality);
+          //                console.log(`Slippage: ${slippage}%`);
+          //                console.log(`Slippage: ${slippage.times(100).toFixed(2)}%`);
+
+          //                if (slippage.gt(MAX_SLIPPAGE)) {
+          //                     throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+          //                }
+
+          //                // Add this information to your UI
+          //                resultField.value += `\nMarket Analysis:\n`;
+          //                resultField.value += `- Best available rate: 1 ${we_want.currency} = ${best_offer_quality.toFixed(6)} ${we_spend.currency}\n`;
+          //                resultField.value += `- Your proposed rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
+          //                resultField.value += `- Slippage: ${slippage.times(100).toFixed(2)}%\n`;
+
+          //                console.log(`Matching Offer found, funded with ${o.owner_funds} ${we_want.currency}`);
+          //                running_total = running_total.plus(BigNumber(o.owner_funds));
+          //                if (running_total >= want_amt) {
+          //                     console.log('Full Offer will probably fill');
+          //                     break;
+          //                }
+          //           } else {
+          //                // Offers are in ascending quality order, so no others after this
+          //                // will match, either
+          //                console.log(`Remaining orders too expensive.`);
+          //                break;
+          //           }
+          //      }
+
+          //      console.log(`Total matched: ${Math.min(running_total, want_amt)} ${we_want.currency}`);
+          //      if (running_total > 0 && running_total < want_amt) {
+          //           console.log(`Remaining ${want_amt - running_total} ${we_want.currency} would probably be placed on top of the order book.`);
+          //      }
+          // }
 
           if (running_total == 0) {
                // If part of the Offer was expected to cross, then the rest would be placed
@@ -350,6 +372,7 @@ async function createOffer() {
                     Account: wallet.address,
                     TakerGets: we_spend.value,
                     TakerPays: we_want,
+                    Flags: isMarketOrder ? xrpl.OfferCreateFlags.tfImmediateOrCancel : 0,
                });
           } else {
                prepared = await client.autofill({
@@ -357,6 +380,7 @@ async function createOffer() {
                     Account: wallet.address,
                     TakerGets: we_spend,
                     TakerPays: we_want.value,
+                    Flags: isMarketOrder ? xrpl.OfferCreateFlags.tfImmediateOrCancel : 0,
                });
           }
 
@@ -729,29 +753,29 @@ async function getOrderBook() {
                results += `No orders in the order book for ${we_spend.currency}/${we_want.currency}\n`;
           } else {
                results += formatOffers(orderBook.result.offers);
-               results += `\n--- Aggregate Exchange Rate Stats ---\n`;
+               // results += `\n--- Aggregate Exchange Rate Stats ---\n`;
                const stats = computeAverageExchangeRateBothWays(orderBook.result.offers, 15);
 
                populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerType);
 
-               results += `VWAP: ${stats.forward.vwap.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // results += `VWAP: ${stats.forward.vwap.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
 
-               results += `Depth (5% slippage): ${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}\n`;
-               if (stats.forward.insufficientLiquidity) {
-                    results += `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               } else {
-                    results += `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}, Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               }
-               results += `Price Volatility: Mean ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)\n`;
-               if (offerType === 'buy') {
-                    results += `Spread: ${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
-               } else {
-                    results += `Spread: ${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
-               }
-               results += `Liquidity Ratio: ${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})\n`;
+               // results += `Depth (5% slippage): ${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}\n`;
+               // if (stats.forward.insufficientLiquidity) {
+               //      results += `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // } else {
+               //      results += `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}, Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               // }
+               // results += `Price Volatility: Mean ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)\n`;
+               // if (offerType === 'buy') {
+               //      results += `Spread: ${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               // } else {
+               //      results += `Spread: ${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               // }
+               // results += `Liquidity Ratio: ${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})\n`;
           }
 
           resultField.value = results;
@@ -1032,13 +1056,16 @@ function populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerT
      document.getElementById('depthField').value = `${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}`;
 
      if (stats.forward.insufficientLiquidity) {
-          document.getElementById('liquidityField').value = `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
+          document.getElementById('liquidityField').value = `${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available)`;
+          document.getElementById('averageRateField').value = `${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
      } else {
-          document.getElementById('liquidityField').value = `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} - Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
+          document.getElementById('liquidityField').value = `${15} ${we_spend.currency} for ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}`;
+          document.getElementById('averageRateField').value = `${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
      }
 
      document.getElementById('liquidityRatioField').value = `${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})`;
-     document.getElementById('priceVolatilityField').value = `${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)`;
+     document.getElementById('priceVolatilityField').value = `${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}`;
+     document.getElementById('stdDeviationField').value = `${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)`;
 
      if (offerType === 'buy') {
           document.getElementById('spreadField').value = `${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)`;

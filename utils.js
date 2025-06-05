@@ -580,6 +580,10 @@ export async function populate3() {
      await getAccountInfo();
 }
 
+export function safeDrops(input) {
+     return BigInt(xrpl.xrpToDrops(input.toString().trim()));
+}
+
 export function validatInput(value) {
      return !!(value !== null && value !== undefined && value !== '');
 }
@@ -1302,7 +1306,7 @@ export async function getTransaction() {
      if (!isValidTransactionHash(transactionHash)) return setError('ERROR: Invalid Transaction hash', spinner);
 
      try {
-          const { environment } = getNet();
+          const { net, environment } = getNet();
           const client = await getClient();
 
           let results = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;

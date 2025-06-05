@@ -121,21 +121,15 @@ input:read-only {
 
 #resultField.error {
      color: red;
-     /* background-color: rgb(236, 160, 160); */
      background-color: #1a1c21;
-     /* background-color: black; */
 }
 
 #resultField.success {
-     /* color: green; */
      color: #62bb8b;
-     /* background-color: rgb(197, 245, 198); */
      background-color: #1a1c21;
-     /* background-color: black; */
 }
 
-#resultField {
-     /* color: green; */
+/* #resultField {
      color: #62bb8b;
      background-color: #1a1c21;
      box-sizing: border-box;
@@ -143,6 +137,30 @@ input:read-only {
      border: 1px solid white;
      font-family: monospace;
      white-space: pre;
+} */
+
+#resultField {
+     width: 50%;
+     overflow: auto;
+     /* Changed from 'hidden' to 'auto' to allow scrolling */
+     resize: none;
+     font-size: 12px;
+     padding: 15px;
+     /* Inner spacing (already set) */
+     color: #62bb8b;
+     background-color: #1a1c21;
+     box-sizing: border-box;
+     border-radius: 10px;
+     border: 1px solid white;
+     font-family: monospace;
+     white-space: pre-wrap;
+     /* Changed from 'pre' to 'pre-wrap' for text wrapping */
+     word-break: break-word;
+     /* Ensures long words break instead of overflowing */
+     line-height: 1.5;
+     /* Improves readability */
+     margin: 10px 0;
+     /* Optional: Adds outer spacing */
 }
 
 table {
@@ -347,4 +365,19 @@ input:checked+.slider:before {
      border-radius: 10px;
      height: 23px;
      border: 1px solid white;
+}
+
+summary::marker {
+     content: '▶ ';
+}
+
+details[open] summary::marker {
+     content: '▼ ';
+}
+
+summary {
+     color: white;
+     font-weight: bold;
+     cursor: pointer;
+     margin-bottom: 10px;
 }
