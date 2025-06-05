@@ -393,7 +393,7 @@ async function createOffer() {
 
           if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}`);
-               resultField.value += `Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}\n`;
+               // resultField.value += `Transaction succeeded: https://testnet.xrpl.org/transactions/${signed.hash}\n`;
                resultField.value += parseXRPLTransaction(tx.result);
                resultField.classList.add('success');
           } else {
@@ -586,8 +586,7 @@ async function cancelOffer() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nCancel Offers.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nCancel Offers.\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           let tx;
@@ -606,15 +605,14 @@ async function cancelOffer() {
           }
 
           if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
-               results += 'Transaction succeeded:\n';
-               results += results + parseXRPLTransaction(tx.result);
+               resultField.value += 'Transaction succeeded:\n';
+               resultField.value += parseXRPLTransaction(tx.result);
                console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
                console.log();
-               resultField.value = results;
                resultField.classList.add('success');
           } else {
                results += `Error sending transaction: ${tx.result.meta.TransactionResult}`;
-               resultField.value = results;
+               resultField.value += results;
                resultField.classList.add('error');
           }
 

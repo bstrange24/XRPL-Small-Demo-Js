@@ -1,13 +1,13 @@
 import * as xrpl from 'xrpl';
 
 // const NET = 'wss://s.devnet.rippletest.net:51233/';
-const NET = 'wss://s.altnet.rippletest.net:51233/';
-// const NET = 'wss://s1.ripple.com';
+// const NET = 'wss://s.altnet.rippletest.net:51233/';
+const NET = 'wss://s1.ripple.com';
 
 // RLUSD Test net Ripple Issuer
-const RIPPLE_RLUSD_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
+// const RIPPLE_RLUSD_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
 // RLUSD Main net Ripple Issuer
-// const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
+const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
 
 const COMMON_USD_ISSUERS = [
      { name: 'GateHub', address: 'rhub8VRN55s94qWKDv6jmDy1pUykJzF3wq' },
@@ -67,9 +67,24 @@ export async function getXrpRlusdDexBids(client, maxOffers = 20) {
 
           const averagePrice = bids.reduce((sum, b) => sum + b.price, 0) / bids.length;
 
+          // const bids1 = offers.map(o => {
+          //      const price = typeof o.TakerGets === 'string' ? parseFloat(o.TakerGets) / 1e6 / parseFloat(o.TakerPays.value) : parseFloat(o.TakerGets.value) / parseFloat(o.TakerPays);
+          //      let amount;
+          //      if (typeof o.TakerPays === 'object' && o.TakerPays.value) {
+          //           amount = parseFloat(o.TakerPays.value);
+          //      } else {
+          //           console.warn('Invalid TakerPays format:', o.TakerPays);
+          //           amount = NaN;
+          //      }
+          //      return { price, amount };
+          // });
+
+          // const bestBids1 = offers.length ? (typeof offers[0].TakerGets === 'string' ? parseFloat(offers[0].TakerGets) / 1e6 / parseFloat(offers[0].TakerPays.value) : parseFloat(offers[0].TakerGets.value) / parseFloat(offers[0].TakerPays)) : 0.1;
+
           return {
                issuer: RIPPLE_RLUSD_ISSUER,
                offerCount: offers.length,
+               // bestBids1: bestBids1,
                bids,
                averagePrice: parseFloat(averagePrice.toFixed(6)),
                topPrice: bids[0].price,
@@ -282,14 +297,14 @@ async function main() {
      //      console.log(`Avg Bid Price: ${priceData.averageBid.toFixed(4)} USD`);
      // }
 
-     const issuers = await getActiveUsdIssuers(client);
-     console.log('Active USD issuers:', issuers);
+     // const issuers = await getActiveUsdIssuers(client);
+     // console.log('Active USD issuers:', issuers);
 
      const rlusdDexData = await getXrpRlusdDexBids(client);
      console.log('RLUSD Bid-side (Someone is buying XRP using RLUSD) Order Book:', rlusdDexData);
 
-     const rlusdDexAskData = await getXrpRlusdDexAsk(client);
-     console.log('RLUSD Ask-side (Someone is selling XRP for RLUSD) Order Book:', rlusdDexAskData);
+     // const rlusdDexAskData = await getXrpRlusdDexAsk(client);
+     // console.log('RLUSD Ask-side (Someone is selling XRP for RLUSD) Order Book:', rlusdDexAskData);
 
      await client.disconnect();
 }

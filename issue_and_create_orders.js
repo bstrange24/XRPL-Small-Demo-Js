@@ -6,7 +6,7 @@ function sleep(ms) {
 }
 
 //   Usage
-//   node issue_and_create_orders.js X T P B S G
+//   node issue_and_create_orders.js X T P B S G OB
 //
 
 const CURRENCY = 'DOG';
@@ -24,6 +24,7 @@ async function main() {
      const createBuyOffer = args.includes('B');
      const createSellOffer = args.includes('S');
      const getOffers = args.includes('G');
+     const getOrderBook = args.includes('OB');
 
      const client = new xrpl.Client(NET);
      await client.connect();
@@ -103,21 +104,15 @@ async function main() {
                await sleep(1000);
           }
 
-          // let amountBOB = 8;
-          // const minPrice = 0.3;
-          // const maxPrice = 1.5;
-          // const step = 0.15;
-          let amountBOB = 8;
           const minPrice = 0.05; // More aggressive
           const maxPrice = 3.0; // Wider range
           const step = 0.3; // Larger steps
-
-          console.log('createBuyOffer: ' + createBuyOffer);
           const baseAmount = 8;
           const numSteps = 10;
           const weight = 2;
           const spreadFactor = 0.95;
 
+          console.log('createBuyOffer: ' + createBuyOffer);
           if (createBuyOffer) {
                console.log(`\n=== Placing BUY Offers (XRP → ${CURRENCY}) ===`);
                const dogXrpBook = await client.request({
@@ -126,6 +121,7 @@ async function main() {
                     taker_pays: { currency: 'XRP' },
                });
                const bestAsk = dogXrpBook.result.offers.length ? (typeof dogXrpBook.result.offers[0].TakerPays === 'string' ? parseFloat(dogXrpBook.result.offers[0].TakerPays) / 1e6 / parseFloat(dogXrpBook.result.offers[0].TakerGets.value) : parseFloat(dogXrpBook.result.offers[0].TakerPays.value) / parseFloat(dogXrpBook.result.offers[0].TakerGets)) : 0.1;
+               console.log(`Current XRP/${CURRENCY} ask: ${bestAsk}`);
 
                for (let i = 0; i < numSteps; i++) {
                     let price = minPrice * Math.pow(maxPrice / minPrice, i / (numSteps - 1));
@@ -157,37 +153,7 @@ async function main() {
                     await sleep(1000);
                }
           }
-          // if (createBuyOffer) {
-          //      console.log(`\n=== Placing BUY Offers (XRP → ${CURRENCY}) ===`);
-          //      for (let price = minPrice; price <= maxPrice; price += step) {
-          //           const totalXRP = (amountBOB * price).toFixed(6);
-          //           const takerGets = xrpl.xrpToDrops(totalXRP);
-          //           const takerPays = {
-          //                currency: CURRENCY,
-          //                issuer: cold_wallet.address,
-          //                value: amountBOB.toString(),
-          //           };
 
-          //           const offer = {
-          //                TransactionType: 'OfferCreate',
-          //                Account: hot_wallet.address,
-          //                TakerGets: takerGets, // Pay XRP
-          //                TakerPays: takerPays, // Receive BOB
-          //                Flags: 0,
-          //           };
-
-          //           try {
-          //                const res = await client.submitAndWait(offer, { wallet: hot_wallet });
-          //                console.log(`Buy: ${amountBOB} ${CURRENCY} @ ${price.toFixed(2)} XRP/${CURRENCY} → ${res.result.meta.TransactionResult}`);
-          //           } catch (err) {
-          //                console.error(`Buy offer failed at ${price.toFixed(2)} XRP/${CURRENCY}:`, err.message);
-          //           }
-          //           amountBOB = amountBOB + 1;
-          //           await sleep(1000);
-          //      }
-          // }
-
-          console.log('createSellOffer: ' + createSellOffer);
           const sellBaseAmount = 8;
           const sellMinPrice = 0.05; // XRP/DOG (e.g., 20 DOG/XRP)
           const sellMaxPrice = 3.0; // XRP/DOG (e.g., 0.3333 DOG/XRP)
@@ -195,6 +161,7 @@ async function main() {
           const sellWeight = 2; // Controls amount scaling
           const sellSpreadFactor = 1.05; // 5% above best bid
 
+          console.log('createSellOffer: ' + createSellOffer);
           if (createSellOffer) {
                console.log(`\n=== Placing SELL Offers (${CURRENCY} → XRP) ===`);
                // Fetch XRP/DOG order book to get best bid
@@ -207,7 +174,7 @@ async function main() {
                     price: typeof o.TakerGets === 'string' ? parseFloat(o.TakerGets) / 1e6 / parseFloat(o.TakerPays.value) : parseFloat(o.TakerGets.value) / parseFloat(o.TakerPays), // XRP/DOG
                     amount: parseFloat(o.TakerPays.value), // DOG
                }));
-               console.log('Current XRP/DOG bids:', bids);
+               console.log(`Current XRP/${CURRENCY} bids ${bids}`);
 
                // Get best bid (highest XRP/DOG price)
                const bestBid = bids.length ? Math.max(...bids.map(b => b.price)) : 0.45; // Fallback to 0.45 XRP/DOG
@@ -242,35 +209,72 @@ async function main() {
                     await sleep(1000);
                }
           }
-          // if (createSellOffer) {
-          //      console.log(`\n=== Placing SELL Offers (${CURRENCY} → XRP) ===`);
-          //      for (let price = minPrice; price <= maxPrice; price += step) {
-          //           const takerGets = {
-          //                currency: CURRENCY,
-          //                issuer: cold_wallet.address,
-          //                value: amountBOB.toString(),
-          //           };
-          //           const totalXRP = (amountBOB * price).toFixed(6);
-          //           const takerPays = xrpl.xrpToDrops(totalXRP);
 
-          //           const sellOffer = {
-          //                TransactionType: 'OfferCreate',
-          //                Account: hot_wallet.address,
-          //                TakerGets: takerGets, // Pay BOB
-          //                TakerPays: takerPays, // Receive XRP
-          //                Flags: 0,
-          //           };
+          console.log('getOrderBook: ' + getOrderBook);
+          if (getOrderBook) {
+               console.log(`\n=== Placing BUY Offers (XRP → ${CURRENCY}) ===`);
+               const dogXrpBook = await client.request({
+                    command: 'book_offers',
+                    taker_gets: { currency: CURRENCY, issuer: cold_wallet.address },
+                    taker_pays: { currency: 'XRP' },
+               });
+               // console.log('Raw DOG/XRP offers:', JSON.stringify(dogXrpBook.result.offers, null, 2));
 
-          //           try {
-          //                const res = await client.submitAndWait(sellOffer, { wallet: hot_wallet });
-          //                console.log(`Sell: ${amountBOB} ${CURRENCY} @ ${price.toFixed(2)} ${CURRENCY}/XRP → ${res.result.meta.TransactionResult}`);
-          //           } catch (err) {
-          //                console.error(`Sell offer failed at ${price.toFixed(2)} XRP/${CURRENCY}:`, err.message);
-          //           }
-          //           amountBOB = amountBOB + 1;
-          //           await sleep(1000);
-          //      }
-          // }
+               const ask = dogXrpBook.result.offers.map(o => {
+                    const price = typeof o.TakerPays === 'string' ? parseFloat(o.TakerPays) / 1e6 / parseFloat(o.TakerGets.value) : parseFloat(o.TakerPays.value) / parseFloat(o.TakerGets);
+                    let amount;
+                    if (typeof o.TakerGets === 'object' && o.TakerGets.value) {
+                         amount = parseFloat(o.TakerGets.value);
+                    } else {
+                         console.warn('Invalid TakerGets format:', o.TakerGets);
+                         amount = NaN;
+                    }
+                    return { price, amount };
+               });
+
+               const bestAsk = dogXrpBook.result.offers.length ? (typeof dogXrpBook.result.offers[0].TakerPays === 'string' ? parseFloat(dogXrpBook.result.offers[0].TakerPays) / 1e6 / parseFloat(dogXrpBook.result.offers[0].TakerGets.value) : parseFloat(dogXrpBook.result.offers[0].TakerPays.value) / parseFloat(dogXrpBook.result.offers[0].TakerGets)) : 0.1;
+
+               console.log(`Current ${CURRENCY}/XRP ask:`);
+               ask.forEach(o => {
+                    if (!isNaN(o.amount)) {
+                         console.log(`  Price: ${o.price.toFixed(6)} XRP/${CURRENCY}, Amount: ${o.amount.toFixed(6)} ${CURRENCY}`);
+                    } else {
+                         console.log(`  Price: ${o.price.toFixed(6)} XRP/${CURRENCY}, Amount: Invalid`);
+                    }
+               });
+               console.log(`bestAsk: ${bestAsk}`);
+
+               const xrpDogBook = await client.request({
+                    command: 'book_offers',
+                    taker_gets: { currency: 'XRP' },
+                    taker_pays: { currency: CURRENCY, issuer: cold_wallet.address },
+               });
+               // console.log('Raw XRP/DOG offers:', JSON.stringify(xrpDogBook.result.offers, null, 2));
+
+               const bids = xrpDogBook.result.offers.map(o => {
+                    const price = typeof o.TakerGets === 'string' ? parseFloat(o.TakerGets) / 1e6 / parseFloat(o.TakerPays.value) : parseFloat(o.TakerGets.value) / parseFloat(o.TakerPays);
+                    let amount;
+                    if (typeof o.TakerPays === 'object' && o.TakerPays.value) {
+                         amount = parseFloat(o.TakerPays.value);
+                    } else {
+                         console.warn('Invalid TakerPays format:', o.TakerPays);
+                         amount = NaN;
+                    }
+                    return { price, amount };
+               });
+
+               const bestBids = xrpDogBook.result.offers.length ? (typeof xrpDogBook.result.offers[0].TakerGets === 'string' ? parseFloat(xrpDogBook.result.offers[0].TakerGets) / 1e6 / parseFloat(xrpDogBook.result.offers[0].TakerPays.value) : parseFloat(xrpDogBook.result.offers[0].TakerGets.value) / parseFloat(xrpDogBook.result.offers[0].TakerPays)) : 0.1;
+
+               console.log(`Current XRP/${CURRENCY} bids:`);
+               bids.forEach(o => {
+                    if (!isNaN(o.amount)) {
+                         console.log(`  Price: ${o.price.toFixed(6)} XRP/${CURRENCY}, Amount: ${o.amount.toFixed(6)} ${CURRENCY}`);
+                    } else {
+                         console.log(`  Price: ${o.price.toFixed(6)} XRP/${CURRENCY}, Amount: Invalid`);
+                    }
+               });
+               console.log(`bestBid: ${bestBids}`);
+          }
 
           const h_wallet_addr = hot_wallet.address;
           const c_wallet_addr = cold_wallet.address;
