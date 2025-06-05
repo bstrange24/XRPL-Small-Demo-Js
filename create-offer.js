@@ -221,7 +221,8 @@ async function createOffer() {
                     if (offer_quality.lte(effectiveRate.times(1 + MAX_SLIPPAGE))) {
                          const slippage = proposed_quality.minus(offer_quality).dividedBy(offer_quality);
                          if (slippage.gt(MAX_SLIPPAGE)) {
-                              throw new Error(`Slippage ${slippage.times(100).toFixed(2)}% exceeds ${MAX_SLIPPAGE * 100}%`);
+                              // throw new Error(`Slippage ${slippage.times(100).toFixed(2)}% exceeds ${MAX_SLIPPAGE * 100}%`);
+                              resultField.value += `Slippage ${slippage.times(100).toFixed(2)}% exceeds ${MAX_SLIPPAGE * 100}%`;
                          }
                          resultField.value += `Market Analysis:\n- Best Rate: 1 ${we_want.currency} = ${offer_quality.toFixed(6)} ${we_spend.currency}\n`;
                          resultField.value += `- Proposed Rate: 1 ${we_want.currency} = ${proposed_quality.toFixed(6)} ${we_spend.currency}\n`;
@@ -340,7 +341,8 @@ async function createOffer() {
                               console.log(`Slippage: ${slippage.times(100).toFixed(2)}%`);
 
                               if (slippage.gt(MAX_SLIPPAGE)) {
-                                   throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+                                   // throw new Error(`Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`);
+                                   resultField.value += `Potential slippage ${slippage.times(100).toFixed(2)}% exceeds maximum allowed ${MAX_SLIPPAGE * 100}%`;
                               }
 
                               // Add this information to your UI
@@ -574,8 +576,8 @@ async function cancelOffer() {
           [!validatInput(accountSeedField.value), 'ERROR: Account seed amount can not be empty'],
           [!validatInput(xrpBalanceField.value), 'ERROR: XRP balance can not be empty'],
           [!validatInput(offerSequenceField.value), 'ERROR: Offer Sequence amount cannot be empty'],
-          [isNaN(offerSequenceField.value), 'ERROR: Offer Sequence must be a valid number'],
-          [parseFloat(offerSequenceField.value) <= 0, 'ERROR: Offer Sequence must be greater than zero'],
+          // [isNaN(offerSequenceField.value), 'ERROR: Offer Sequence must be a valid number'],
+          // [parseFloat(offerSequenceField.value) <= 0, 'ERROR: Offer Sequence must be greater than zero'],
      ];
 
      for (const [condition, message] of validations) {
@@ -588,32 +590,37 @@ async function cancelOffer() {
 
           resultField.value = `Connected to ${environment} ${net}\nCancel Offers.\n\n`;
 
+          const offerSequenceArray = offerSequenceField.value.split(',').map(item => item.trim());
+
           const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
           let tx;
+
           /* OfferSequence is the Seq value when you getOffers. */
-          try {
-               const prepared = await client.autofill({
-                    TransactionType: 'OfferCancel',
-                    Account: wallet.address,
-                    OfferSequence: parseInt(offerSequenceField.value),
-               });
+          for (const element of offerSequenceArray) {
+               try {
+                    const prepared = await client.autofill({
+                         TransactionType: 'OfferCancel',
+                         Account: wallet.address,
+                         OfferSequence: parseInt(offerSequenceField.value),
+                    });
 
-               const signed = wallet.sign(prepared);
-               tx = await client.submitAndWait(signed.tx_blob);
-          } catch (err) {
-               throw new Error(err);
-          }
+                    const signed = wallet.sign(prepared);
+                    tx = await client.submitAndWait(signed.tx_blob);
+               } catch (err) {
+                    throw new Error(err);
+               }
 
-          if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
-               resultField.value += 'Transaction succeeded:\n';
-               resultField.value += parseXRPLTransaction(tx.result);
-               console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
-               console.log();
-               resultField.classList.add('success');
-          } else {
-               results += `Error sending transaction: ${tx.result.meta.TransactionResult}`;
-               resultField.value += results;
-               resultField.classList.add('error');
+               if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
+                    resultField.value += 'Transaction succeeded:\n';
+                    resultField.value += parseXRPLTransaction(tx.result);
+                    // console.log(`Transaction succeeded: https://testnet.xrpl.org/transactions/${tx.result.hash}`);
+                    console.log();
+                    resultField.classList.add('success');
+               } else {
+                    results += `Error sending transaction: ${tx.result.meta.TransactionResult}`;
+                    resultField.value += results;
+                    resultField.classList.add('error');
+               }
           }
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
@@ -706,7 +713,7 @@ async function getOrderBook() {
           let spread;
           let liquidity;
           if (offerType === 'sell') {
-               console.log(`SELLING`);
+               console.log(`SELLING ${we_spend.currency} BUYING ${we_want.currency}`);
                orderBook = await client.request({
                     method: 'book_offers',
                     taker: wallet.address,
@@ -722,11 +729,11 @@ async function getOrderBook() {
                     taker_gets: we_spend,
                     taker_pays: we_want,
                });
-               console.log('buySideOrderBook: ' + JSON.stringify(buySideOrderBook.result.offers, null, 2));
+               // console.log('buySideOrderBook: ' + JSON.stringify(buySideOrderBook.result.offers, null, 2));
                spread = computeBidAskSpread(buySideOrderBook.result.offers, orderBook.result.offers);
                liquidity = computeLiquidityRatio(buySideOrderBook.result.offers, orderBook.result.offers, false);
           } else {
-               console.log(`BUYING`);
+               console.log(`BUYING ${we_want.currency} SELLING ${we_spend.currency}`);
                orderBook = await client.request({
                     method: 'book_offers',
                     taker: wallet.address,
@@ -742,7 +749,7 @@ async function getOrderBook() {
                     taker_gets: we_spend,
                     taker_pays: we_want,
                });
-               console.log('sellSideOrderBook: ' + JSON.stringify(sellSideOrderBook.result.offers, null, 2));
+               // console.log('sellSideOrderBook: ' + JSON.stringify(sellSideOrderBook.result.offers, null, 2));
                spread = computeBidAskSpread(orderBook.result.offers, sellSideOrderBook.result.offers);
                liquidity = computeLiquidityRatio(orderBook.result.offers, sellSideOrderBook.result.offers);
           }
@@ -756,24 +763,24 @@ async function getOrderBook() {
 
                populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerType);
 
-               // results += `VWAP: ${stats.forward.vwap.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               // results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               // results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               // results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `VWAP: ${stats.forward.vwap.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Simple Avg: ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Best Rate: ${stats.forward.bestRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               results += `Worst Rate: ${stats.forward.worstRate.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
 
-               // results += `Depth (5% slippage): ${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}\n`;
-               // if (stats.forward.insufficientLiquidity) {
-               //      results += `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               // } else {
-               //      results += `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}, Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
-               // }
-               // results += `Price Volatility: Mean ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)\n`;
-               // if (offerType === 'buy') {
-               //      results += `Spread: ${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
-               // } else {
-               //      results += `Spread: ${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
-               // }
-               // results += `Liquidity Ratio: ${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})\n`;
+               results += `Depth (5% slippage): ${stats.forward.depthDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.depthXRP.toFixed(2)} ${we_spend.currency}\n`;
+               if (stats.forward.insufficientLiquidity) {
+                    results += `For ${15} ${we_spend.currency}: Insufficient liquidity (only ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency} for ${stats.forward.executionXRP.toFixed(2)} ${we_spend.currency} available), Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               } else {
+                    results += `For ${15} ${we_spend.currency}: Receive ${stats.forward.executionDOG.toFixed(2)} ${we_want.currency}, Avg Rate: ${stats.forward.executionPrice.toFixed(8)} ${we_want.currency}/${we_spend.currency}\n`;
+               }
+               results += `Price Volatility: Mean ${stats.forward.simpleAvg.toFixed(8)} ${we_want.currency}/${we_spend.currency}, StdDev ${stats.forward.volatility.toFixed(8)} (${stats.forward.volatilityPercent.toFixed(2)}%)\n`;
+               if (offerType === 'buy') {
+                    results += `Spread: ${spread.spread.toFixed(8)} ${we_want.currency}/${we_spend.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               } else {
+                    results += `Spread: ${spread.spread.toFixed(8)} ${we_spend.currency}/${we_want.currency} (${spread.spreadPercent.toFixed(2)}%)\n`;
+               }
+               results += `Liquidity Ratio: ${liquidity.ratio.toFixed(2)} (${we_want.currency}/${we_spend.currency} vs ${we_spend.currency}/${we_want.currency})\n`;
           }
 
           resultField.value = results;

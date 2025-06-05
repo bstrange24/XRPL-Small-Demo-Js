@@ -4,6 +4,10 @@ const NET = 'wss://s.altnet.rippletest.net:51233/';
 const CURRENCY = 'DOG';
 const ISSUER = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo';
 const WALLET_ADDRESS = 'rDTzDGqWyh5myV9Y9mmjhzpc1F5xLBDTSN';
+// RLUSD Test net Ripple Issuer
+// const RIPPLE_RLUSD_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
+// RLUSD Main net Ripple Issuer
+const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
 
 async function main() {
      const client = new xrpl.Client(NET);
@@ -31,6 +35,12 @@ async function main() {
      // Subscribe to order books and account
      async function subscribe() {
           try {
+               // const response = await client.request({
+               // command: 'subscribe',
+               // books: [{ taker_gets: { currency: 'XRP' }, taker_pays: { currency: 'RLUSD', issuer: RIPPLE_RLUSD_ISSUER } }],
+               // accounts: [hot_wallet.address],
+               // });
+
                const response = await client.request({
                     command: 'subscribe',
                     books: [
@@ -77,6 +87,11 @@ async function main() {
                               takerPays: transaction.TakerPays,
                               quality: typeof transaction.TakerPays === 'string' ? parseFloat(transaction.TakerPays) / 1_000_000 / parseFloat(transaction.TakerGets.value) : parseFloat(transaction.TakerPays.value) / parseFloat(transaction.TakerGets),
                          });
+                         // console.log('Order book update:', {
+                         // orderBook: transaction.TakerGets.currency === 'XRP' ? 'XRP/RLUSD' : 'RLUSD/XRP',
+                         // price: typeof transaction.TakerPays === 'string' ? parseFloat(transaction.TakerPays) / 1e6 / parseFloat(transaction.TakerGets.value) : parseFloat(transaction.TakerPays.value) / parseFloat(transaction.TakerGets),
+                         // amount: parseFloat(transaction.TakerGets.value || xrpl.dropsToXrp(transaction.TakerGets)),
+                         // });
                     } else if (txType === 'OfferCancel') {
                          console.log('Your OfferCancel:', {
                               offerSequence: transaction.OfferSequence,
