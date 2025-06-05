@@ -1214,13 +1214,18 @@ export function parseXRPLAccountObjects(response) {
                     };
 
                     // Use singular or plural label based on count
-                    const label = group.length > 1 ? typeConfig.pluralLabel : typeConfig.label;
+                    let label = group.length > 1 ? typeConfig.pluralLabel : typeConfig.label;
+                    if (label.endsWith('s')) {
+                         label = label.slice(0, -1); // removes last character
+                    }
                     output.push(`${label} ${groupIndex}`);
 
                     if (group.length > 1) {
                          // For multiple objects, add LedgerEntryType and pluralized container
-                         output.push(`    LedgerEntryType: ${entryType === 'NFT' ? 'NFTs' : typeConfig.pluralLabel}`);
-                         output.push(`    ${typeConfig.pluralLabel}:`);
+                         // output.push(`    LedgerEntryType: ${entryType === 'NFT' ? 'NFTs' : typeConfig.pluralLabel}`);
+                         // output.push(`    ${typeConfig.pluralLabel}:`);
+                         output.push(`    LedgerEntryType: ${entryType === 'NFT' ? 'NFTs' : label}`);
+                         output.push(`    ${label}:`);
                          group.forEach(obj => {
                               output.push(`        ${typeConfig.label}`);
                               typeConfig.fields.forEach(field => {
