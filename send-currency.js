@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, getEnvironment, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -55,6 +55,10 @@ async function createTrustLine() {
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: 'secp256k1' });
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
+
+          if (currency.value.length > 3) {
+               currency.value = encodeCurrencyCode(currency.value);
+          }
 
           const trustSetTx = {
                TransactionType: 'TrustSet',
@@ -169,6 +173,10 @@ async function removeTrustLine() {
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
+          if (currency.value.length > 3) {
+               currency.value = encodeCurrencyCode(currency.value);
+          }
+
           const trustSetTx = {
                TransactionType: 'TrustSet',
                Account: address.value,
@@ -275,6 +283,9 @@ async function getTrustLine() {
 
           results += `Active Trust Lines for ${wallet.address}:\n`;
           for (const line of activeTrustLines) {
+               if (line.currency.length > 3) {
+                    line.currency = decodeCurrencyCode(line.currency);
+               }
                results += `\nAccount: ${line.account}\n\tCurrency: ${line.currency}\n\tLimit: ${line.limit}\n\tBalance: ${line.balance}\n\tLimit Peer: ${line.limit_peer}\tNo Ripple Peer: ${line.no_ripple_peer}\tNo Ripple: ${line.no_ripple}\n\tQuality In: ${line.quality_in}\tQuality Out: ${line.quality_out}`;
           }
           resultField.value = results;
@@ -389,6 +400,10 @@ async function sendCurrency() {
           // Step 3: Get current ledger index
           const currentLedger = await getCurrentLedger(client);
           const { result: feeResponse } = await client.request({ command: 'fee' });
+
+          if (currency.value.length > 3) {
+               currency.value = encodeCurrencyCode(currency.value);
+          }
 
           const send_currency_tx = {
                TransactionType: 'Payment',
@@ -555,6 +570,10 @@ async function issueCurrency() {
           // Step 4: Issue TST
           const currentLedger2 = await getCurrentLedger(client);
           const { result: feeResponse2 } = await client.request({ command: 'fee' });
+
+          if (currency.value.length > 3) {
+               currency.value = encodeCurrencyCode(currency.value);
+          }
 
           const paymentTx = {
                TransactionType: 'Payment',

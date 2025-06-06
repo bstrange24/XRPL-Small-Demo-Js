@@ -17,7 +17,7 @@ export function getEnvironment() {
           environment = 'Testnet';
      }
 
-     if (network === 'mainet') {
+     if (network === 'mainnet') {
           environment = 'Mainnet';
      }
      return { environment };
@@ -37,8 +37,8 @@ export function getNet() {
           environment = 'Devnet';
      }
 
-     if (network === 'mainet') {
-          net = 'wss://s1.ripple.com_not';
+     if (network === 'mainnet') {
+          net = 'wss://s1.ripple.com';
           environment = 'Mainnet';
      }
      return { net, environment };
@@ -705,27 +705,24 @@ function isValidTransactionHash(hash) {
      return /^[A-Fa-f0-9]{64}$/.test(hash);
 }
 
-// Encode a standard 3-character currency code to a 40-character hex string
 export function encodeCurrencyCode(code) {
-     if (!/^[A-Z0-9]{3}$/.test(code)) {
-          throw new Error('Currency code must be a 3-character alphanumeric string');
-     }
-     const buffer = Buffer.alloc(20);
-     buffer.write(code, 'utf8');
-     return buffer.toString('hex').toUpperCase();
+     const encoder = new TextEncoder();
+     const codeBytes = encoder.encode(code);
+
+     if (codeBytes.length > 20) throw new Error('Currency code too long');
+
+     // Pad to 20 bytes
+     const padded = new Uint8Array(20);
+     padded.set(codeBytes);
+
+     return Buffer.from(padded).toString('hex').toUpperCase(); // 40-char hex string
 }
 
 // Decode a 40-character hex currency code to its 3-character representation
 export function decodeCurrencyCode(hexCode) {
-     if (!/^[0-9A-Fa-f]{40}$/.test(hexCode)) {
-          throw new Error('Non-standard currency code must be a 40-character hexadecimal string');
-     }
      const buffer = Buffer.from(hexCode, 'hex');
-     const code = buffer.toString('utf8', 0, 3);
-     if (buffer.slice(3).every(byte => byte === 0)) {
-          return code;
-     }
-     throw new Error('Invalid non-standard currency code: must be padded with zeros');
+     const trimmed = buffer.subarray(0, buffer.findIndex(byte => byte === 0) === -1 ? 20 : buffer.findIndex(byte => byte === 0));
+     return new TextDecoder().decode(trimmed);
 }
 
 // Decode hex string to ASCII
@@ -845,6 +842,9 @@ export function parseXRPLTransaction(response) {
                               output.push(`    ${key}:`);
                               Object.entries(value).forEach(([subKey, subValue]) => {
                                    if (subValue !== null && subValue !== undefined) {
+                                        if (subValue.length == 40) {
+                                             subValue = decodeCurrencyCode(subValue);
+                                        }
                                         output.push(`        ${subKey}: ${subValue}`);
                                    }
                               });
@@ -915,6 +915,9 @@ export function parseXRPLTransaction(response) {
                                                        output.push(`                    NFToken`);
                                                        Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
+                                                                 if (subValue.length == 40) {
+                                                                      subValue = decodeCurrencyCode(subValue);
+                                                                 }
                                                                  output.push(`                        ${subKey}: ${subValue}`);
                                                             }
                                                        });
@@ -923,6 +926,9 @@ export function parseXRPLTransaction(response) {
                                                   output.push(`                ${field.key}:`);
                                                   Object.entries(value).forEach(([subKey, subValue]) => {
                                                        if (subValue !== null && subValue !== undefined) {
+                                                            if (subValue.length == 40) {
+                                                                 subValue = decodeCurrencyCode(subValue);
+                                                            }
                                                             output.push(`                    ${subKey}: ${subValue}`);
                                                        }
                                                   });
@@ -946,6 +952,9 @@ export function parseXRPLTransaction(response) {
                                                             output.push(`                    NFToken`);
                                                             Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                                  if (subValue !== null && subValue !== undefined) {
+                                                                      if (subValue.length == 40) {
+                                                                           subValue = decodeCurrencyCode(subValue);
+                                                                      }
                                                                       output.push(`                        ${subKey}: ${subValue}`);
                                                                  }
                                                             });
@@ -954,6 +963,9 @@ export function parseXRPLTransaction(response) {
                                                        output.push(`                ${key}:`);
                                                        Object.entries(value).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
+                                                                 if (subValue.length == 40) {
+                                                                      subValue = decodeCurrencyCode(subValue);
+                                                                 }
                                                                  output.push(`                    ${subKey}: ${subValue}`);
                                                             }
                                                        });
@@ -1247,6 +1259,9 @@ export function parseXRPLAccountObjects(response) {
                                              output.push(`            ${field.key}:`);
                                              Object.entries(value).forEach(([subKey, subValue]) => {
                                                   if (subValue !== null && subValue !== undefined) {
+                                                       if (subValue.length == 40) {
+                                                            subValue = decodeCurrencyCode(subValue);
+                                                       }
                                                        output.push(`                ${subKey}: ${subValue}`);
                                                   }
                                              });
@@ -1270,6 +1285,9 @@ export function parseXRPLAccountObjects(response) {
                                                   output.push(`        NFToken`);
                                                   Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                        if (subValue !== null && subValue !== undefined) {
+                                                            if (subValue.length == 40) {
+                                                                 subValue = decodeCurrencyCode(subValue);
+                                                            }
                                                             output.push(`            ${subKey}: ${subValue}`);
                                                        }
                                                   });
@@ -1278,6 +1296,9 @@ export function parseXRPLAccountObjects(response) {
                                              output.push(`    ${field.key}:`);
                                              Object.entries(value).forEach(([subKey, subValue]) => {
                                                   if (subValue !== null && subValue !== undefined) {
+                                                       if (subValue.length == 40) {
+                                                            subValue = decodeCurrencyCode(subValue);
+                                                       }
                                                        output.push(`        ${subKey}: ${subValue}`);
                                                   }
                                              });

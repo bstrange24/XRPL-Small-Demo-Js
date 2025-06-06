@@ -71,7 +71,7 @@ export function loadInputValues() {
           } else if (network === 'testnet') {
                localStorage.setItem('server', 'wss://s.altnet.rippletest.net:51233');
           } else if (network === 'mainnet') {
-               localStorage.setItem('server', 'wss://s1.ripple.com_not');
+               localStorage.setItem('server', 'wss://s1.ripple.com');
           } else {
                localStorage.setItem('server', 'wss://s.altnet.rippletest.net:51233');
           }

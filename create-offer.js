@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
@@ -151,6 +151,14 @@ async function createOffer() {
 
           console.log(`we_want ${we_want}`);
           console.log(`we_spend ${we_spend}`);
+
+          if (we_want.currency.length > 3) {
+               we_want.currency = encodeCurrencyCode(we_want.currency);
+          }
+
+          if (we_spend.currency.length > 3) {
+               we_spend.currency = encodeCurrencyCode(we_spend.currency);
+          }
 
           const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
           console.log(`Offer Type: ${offerType}`);
@@ -674,7 +682,9 @@ async function getOrderBook() {
           [!validatInput(accountSeedField.value), 'ERROR: Account seed amount can not be empty'],
           [!validatInput(xrpBalanceField.value), 'ERROR: XRP balance can not be empty'],
           [!validatInput(weWantCurrencyField.value), 'ERROR: Taker Gets currency can not be empty'],
+          [weWantCurrencyField.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
           [!validatInput(weSpendCurrencyField.value), 'ERROR: Taker Pays currency can not be empty'],
+          [weSpendCurrencyField.value.length < 3, 'Invalid Taker Pays currency. Length must be greater than 3'],
           [!validatInput(weWantAmountField.value), 'ERROR: Taker Gets amount cannot be empty'],
           [isNaN(weWantAmountField.value), 'ERROR: Taker Gets amount must be a valid number'],
           [parseFloat(weWantAmountField.value) <= 0, 'ERROR: Taker Gets amount must be greater than zero'],
@@ -698,8 +708,24 @@ async function getOrderBook() {
           let results = `Connected to ${environment} ${net}\nGet Order Book.\n\n`;
           results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
 
-          const we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
-          const we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
+          let encodedCurrencyCode;
+          let we_want;
+          let we_spend;
+          if (weWantCurrencyField.value.length <= 3 && weSpendCurrencyField.value.length <= 3) {
+               we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
+               we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
+          } else if (weWantCurrencyField.value.length > 3) {
+               encodedCurrencyCode = encodeCurrencyCode(weWantCurrencyField.value);
+               we_want = buildCurrencyObject(encodedCurrencyCode, weWantIssuerField.value, weWantAmountField.value);
+               we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
+          } else if (weSpendCurrencyField.value.length > 3) {
+               encodedCurrencyCode = encodeCurrencyCode(weSpendCurrencyField.value);
+               we_spend = buildCurrencyObject(encodedCurrencyCode, weSpendIssuerField.value, weSpendAmountField.value);
+               we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
+          }
+
+          // we_want = buildCurrencyObject(weWantCurrencyField.value, weWantIssuerField.value, weWantAmountField.value);
+          // we_spend = buildCurrencyObject(weSpendCurrencyField.value, weSpendIssuerField.value, weSpendAmountField.value);
           console.log('we_want:', we_want);
           console.log('we_spend:', we_spend);
 
@@ -755,6 +781,14 @@ async function getOrderBook() {
           if (orderBook.result.offers.length <= 0) {
                results += `No orders in the order book for ${we_spend.currency}/${we_want.currency}\n`;
           } else {
+               if (we_want.currency.length > 3) {
+                    const decodeCurCode = decodeCurrencyCode(we_want.currency);
+                    we_want.currency = decodeCurCode;
+               } else if (we_spend.currency.length > 3) {
+                    const decodeCurCode = decodeCurrencyCode(we_spend.currency);
+                    we_spend.currency = decodeCurCode;
+               }
+
                results += formatOffers(orderBook.result.offers);
                // results += `\n--- Aggregate Exchange Rate Stats ---\n`;
                const stats = computeAverageExchangeRateBothWays(orderBook.result.offers, 15);
@@ -1003,7 +1037,12 @@ function formatOffers(offers) {
                               formattedValue = `${getsValue.toFixed(6)} XRP (${drops} drops)`;
                          } else if (typeof value === 'object' && value !== null) {
                               getsValue = parseFloat(value.value);
-                              getsCurrency = value.currency;
+                              if (value.currency.length > 3) {
+                                   getsCurrency = decodeCurrencyCode(value.currency);
+                                   value.currency = getsCurrency;
+                              } else {
+                                   getsCurrency = value.currency;
+                              }
                               formattedValue = formatNestedObject(value);
                          } else {
                               formattedValue = 'Invalid TakerGets format';
@@ -1016,7 +1055,12 @@ function formatOffers(offers) {
                               formattedValue = `${paysValue.toFixed(6)} XRP (${drops} drops)`;
                          } else if (typeof value === 'object' && value !== null) {
                               paysValue = parseFloat(value.value);
-                              paysCurrency = value.currency;
+                              if (value.currency.length > 3) {
+                                   paysCurrency = decodeCurrencyCode(value.currency);
+                                   value.currency = paysCurrency;
+                              } else {
+                                   paysCurrency = value.currency;
+                              }
                               formattedValue = formatNestedObject(value);
                          } else {
                               formattedValue = 'Invalid TakerPays format';

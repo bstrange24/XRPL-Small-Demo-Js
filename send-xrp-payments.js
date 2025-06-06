@@ -1,7 +1,7 @@
 import * as xrpl from 'xrpl';
 
-const DESTINATION_ADDRESS = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH';
-const WALLET_COUNT = 5;
+const DESTINATION_ADDRESS = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo';
+const WALLET_COUNT = 15;
 
 async function createAndDrainWallet(client, index) {
      // Create funded wallet
