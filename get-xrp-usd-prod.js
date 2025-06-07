@@ -721,7 +721,7 @@ function formatProfitResult(data, currency = 'RLUSD') {
      if (buyPrice) {
           output += ` Buy Price: ${buyPrice.toFixed(6)} XRP/${currency}`;
           if (buyPrice != null) {
-               output += ` in drops: ${xrpl.xrpToDrops(buyPrice)}\n`;
+               output += ` in drops: ${xrpl.xrpToDrops(buyPrice.toFixed(8))}\n`;
           } else {
                output += `\n`;
           }
@@ -731,7 +731,7 @@ function formatProfitResult(data, currency = 'RLUSD') {
      if (sellPrice) {
           output += ` Sell Price: ${sellPrice.toFixed(6)} XRP/${currency}`;
           if (sellPrice != null) {
-               output += ` in drops: ${xrpl.xrpToDrops(sellPrice)}\n`;
+               output += ` in drops: ${xrpl.xrpToDrops(sellPrice.toFixed(8))}\n`;
           } else {
                output += `\n`;
           }
@@ -788,8 +788,20 @@ async function main() {
      // const rlusdDexData = await getXrpRlusdDexBids(client);
      // const rlusdDexAskData = await getXrpRlusdDexAsk(client);
 
+     // Allowed trade types
+     const allowedTypes = ['buy', 'sell', 'round-trip'];
+
      // 'buy', 'sell', or 'round-trip'
-     const tradeType = 'sell';
+     const args = process.argv.slice(2);
+
+     // Show usage if no argument or too many arguments
+     if (args.length !== 1 || !allowedTypes.includes(args[0].toLowerCase())) {
+          console.log('Usage: node get-xrp-usd-prod.js <tradeType>');
+          console.log('  <tradeType> must be one of: buy, sell, round-trip');
+          process.exit(1);
+     }
+
+     const tradeType = args[0].toLowerCase();
 
      if (tradeType === 'round-trip') {
           await getXrpRlusdDexBids(client);

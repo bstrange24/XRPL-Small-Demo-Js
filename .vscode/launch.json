@@ -15,7 +15,8 @@
                "program": "${workspaceFolder}\\get-xrp-usd-prod.js",
                "outFiles": [
                     "${workspaceFolder}/**/*.js"
-               ]
+               ],
+                "args": ["buy"] // <-- Add this line. Change "buy" to "sell" or "round-trip" as needed.
           }
      ]
 }
