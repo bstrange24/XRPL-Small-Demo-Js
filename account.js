@@ -57,7 +57,13 @@ export async function getAccountInfo() {
      try {
           const { net, environment } = getNet();
           const client = await getClient();
-          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
+
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
           resultField.value = results;
@@ -139,7 +145,13 @@ async function updateFlags() {
      try {
           const { net, environment } = getNet();
           const client = await getClient();
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           resultField.value = `Connected to ${environment} ${net}\nGetting Account Data\n`;
 
@@ -223,7 +235,13 @@ async function setDepositAuthAccounts(authorizeFlag) {
      try {
           const { net, environment } = getNet();
           const client = await getClient();
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           resultField.value = `Connected to ${environment} ${net}\nSetting Deposit Authorization\n\n`;
 

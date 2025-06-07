@@ -32,7 +32,12 @@ async function getNFT() {
           let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const nftInfo = await client.request({
                command: 'account_nfts',
@@ -135,7 +140,12 @@ async function mintNFT() {
           let results = `Connected to ${environment} ${net}\nMinting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenMint',
@@ -218,7 +228,12 @@ async function mintBatchNFT() {
           let results = `Connected to ${environment} ${net}\nMinting ${nftCount} NFTs\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           // Use Batch Transactions if supported (rippled 2.5.0+)
           const transactions = [];
@@ -316,7 +331,12 @@ async function setAuthorizedMinter() {
           let results = `Connected to ${environment} ${net}\nSetting Authorized Minter\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'AccountSet',
@@ -398,7 +418,12 @@ async function sellNFT() {
           let results = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenCreateOffer',
@@ -477,7 +502,12 @@ async function cancelBuyOffer() {
           let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenCancelOffer',
@@ -547,7 +577,12 @@ async function cancelSellOffer() {
           let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenCancelOffer',
@@ -624,7 +659,12 @@ async function buyNFT() {
           let results = `Connected to ${environment} ${net}\nBuying NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           // Fetch sell offers
           let response = '';
@@ -740,7 +780,12 @@ async function burnNFT() {
           let results = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenBurn',
@@ -812,7 +857,12 @@ async function updateNFTMetadata() {
           let results = `Connected to ${environment} ${net}\nUpdating NFT Metadata\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const transaction = {
                TransactionType: 'NFTokenModify',

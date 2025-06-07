@@ -32,7 +32,12 @@ async function getMPTs() {
           let results = `Connected to ${environment} ${net}\nGetting MPT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           resultField.value = results;
           const mpts = await client.request({
@@ -112,7 +117,13 @@ async function sendMPT() {
           let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
+
           const mpt_issuance_id = mptIssuanceIdField;
           const mpt_quantity = amountField;
           const send_mpt_tx = {

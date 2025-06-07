@@ -54,7 +54,12 @@ async function createTimeBasedEscrow() {
 
           let results = `Connected to ${environment} ${net}\nCreating time-based escrow.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const finishAfterTime = addTime(escrowFinishTime.value, finishUnit);
           const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit);
@@ -161,7 +166,12 @@ async function finishTimeBasedEscrow() {
           let results = `Connected to ${environment} ${net}\nFinishing escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
@@ -309,7 +319,12 @@ async function cancelEscrow() {
           let results = `Connected to ${environment} ${net}\nCancelling escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowCancel',

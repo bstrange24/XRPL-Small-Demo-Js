@@ -49,7 +49,12 @@ async function sendXRP() {
           let results = `Connected to ${environment} ${net}\nSending XRP\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const preparedTx = await client.autofill({
                TransactionType: 'Payment',

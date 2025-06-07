@@ -2,6 +2,11 @@
 
 https://app.pinata.cloud/ipfs/files
 
+npm start
+node monitor-dex.js
+node issue_and_create_orders.js X X X X X B X
+node get-xrp-usd-prod.js
+
 Offers and NFT
 TESTNET
 Account 1

@@ -73,7 +73,12 @@ async function createOffer() {
           const client = await getClient();
 
           let results = `Connected to ${environment} ${net}\nCreating Offer.\n\n`;
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
           results += accountNameField.value + ' account address: ' + wallet.address + '\n';
           resultField.value = results;
 
@@ -518,7 +523,12 @@ async function getOffers() {
           let results = `Connected to ${environment} ${net}\nGetting Offers\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           const offers = await client.request({
                method: 'account_offers',
@@ -600,7 +610,13 @@ async function cancelOffer() {
 
           const offerSequenceArray = offerSequenceField.value.split(',').map(item => item.trim());
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
+
           let tx;
 
           /* OfferSequence is the Seq value when you getOffers. */
@@ -703,7 +719,12 @@ async function getOrderBook() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          let wallet;
+          if (environment === 'Mainnet') {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          }
 
           let results = `Connected to ${environment} ${net}\nGet Order Book.\n\n`;
           results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
