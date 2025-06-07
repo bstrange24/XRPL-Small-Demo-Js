@@ -60,9 +60,9 @@ export async function getAccountInfo() {
 
           let wallet;
           if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'ed25519' });
           } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
           }
 
           let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
