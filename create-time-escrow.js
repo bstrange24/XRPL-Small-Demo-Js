@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, convertToEstTime } from './utils.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -108,6 +108,7 @@ async function createTimeBasedEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
@@ -196,6 +197,7 @@ async function finishTimeBasedEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
@@ -271,6 +273,7 @@ async function getEscrows() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           await updateOwnerCountAndReserves(client, accountAddress.value, ownerCountField, totalXrpReservesField);
      } catch (error) {
           console.error('Error:', error);
@@ -349,6 +352,7 @@ async function cancelEscrow() {
           resultField.value = results;
           resultField.classList.add('success');
 
+          document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
      } catch (error) {
@@ -372,3 +376,4 @@ window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;
 window.distributeAccountInfo = distributeAccountInfo;
+window.convertToEstTime = convertToEstTime;

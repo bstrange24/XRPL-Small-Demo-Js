@@ -197,6 +197,17 @@
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Current Time in EST">
+                                             <label for="currentTimeField">Current Time in EST</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="currentTimeField" size="40" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
                                              <label for="transactionField">Transaction</label>
                                         </span>
@@ -271,6 +282,23 @@ After `Escrow Cancel Time`                             | No          | Yes
      </body>
 
      <script>
+          document.addEventListener('DOMContentLoaded', () => {
+               console.log('DOM fully loaded at', new Date().toISOString());
+               // document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
+
+               // Function to update the time field
+               function updateTimeField() {
+                    document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
+                    console.log('Here');
+               }
+
+               // Set initial time
+               updateTimeField();
+
+               // Update every 5 seconds (5000 milliseconds)
+               setInterval(updateTimeField, 5000);
+          });
+
           const radioButtons = document.querySelectorAll('input[type="radio"]');
           radioButtons.forEach(radio => {
                radio.addEventListener('change', function () {

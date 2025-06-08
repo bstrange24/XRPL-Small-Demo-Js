@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -50,6 +50,7 @@ export async function getAccountInfo() {
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
      const currencyBalanceField = document.getElementById('currencyBalanceField');
      const currencyField = document.getElementById('currencyField');
+     const currentTimeField = document.getElementById('currentTimeField');
 
      const { seedField, balanceField } = resolveAccountFields();
 
@@ -114,6 +115,10 @@ export async function getAccountInfo() {
                if (currencyField) {
                     currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.address, currencyField.value);
                }
+          }
+
+          if (currentTimeField) {
+               document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           }
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
@@ -460,6 +465,7 @@ window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
 window.getTransaction = getTransaction;
+window.convertToEstTime = convertToEstTime;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
