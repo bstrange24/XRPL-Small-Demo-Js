@@ -1177,6 +1177,7 @@ window.getOffers = getOffers;
 window.cancelOffer = cancelOffer;
 window.getOrderBook = getOrderBook;
 window.getCurrencyBalance = getCurrencyBalance;
+window.encodeCurrencyCode = encodeCurrencyCode;
 window.getXrpBalance = getXrpBalance;
 window.getTransaction = getTransaction;
 window.getTokenBalance = getTokenBalance;

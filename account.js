@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance } from './utils.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -48,11 +48,13 @@ export async function getAccountInfo() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const currencyBalanceField = document.getElementById('currencyBalanceField');
 
      const { seedField, balanceField } = resolveAccountFields();
 
      if (!seedField || !balanceField) return setError('ERROR: DOM elements not found', spinner);
      if (!validatInput(seedField.value)) return setError('ERROR: Seed cannot be empty', spinner);
+     if (seedField.value === 'None') return setError('ERROR: Seed is set to None', spinner);
 
      try {
           const { net, environment } = getNet();
@@ -60,9 +62,9 @@ export async function getAccountInfo() {
 
           let wallet;
           if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'ed25519' });
           } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
           }
 
           let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
@@ -106,6 +108,10 @@ export async function getAccountInfo() {
 
           resultField.value = results;
           resultField.classList.add('success');
+
+          if (currencyBalanceField) {
+               currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.address, 'DOG');
+          }
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
           balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
@@ -238,9 +244,9 @@ async function setDepositAuthAccounts(authorizeFlag) {
 
           let wallet;
           if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+               wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'ed25519' });
           } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+               wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
           }
 
           resultField.value = `Connected to ${environment} ${net}\nSetting Deposit Authorization\n\n`;

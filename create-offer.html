@@ -139,7 +139,14 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="weWantCurrencyField" size="40" />
+                                   <!-- <input type="text" id="weWantCurrencyField" size="40" /> -->
+                                   <select class="timeUnit" id="weWantCurrencyField">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -193,7 +200,14 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="weSpendCurrencyField" size="40" />
+                                   <!-- <input type="text" id="weSpendCurrencyField" size="40" /> -->
+                                   <select class="timeUnit" id="weSpendCurrencyField">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -530,9 +544,9 @@
                     console.error('Error loading wallet-issuer-input.html:', error);
                });
 
-          // Update event listener for async
-          document.getElementById('weWantCurrencyField').addEventListener('blur', async function () {
-               const currencyCode = this.value.trim();
+          // Event listener for weWantCurrencyField dropdown
+          document.getElementById('weWantCurrencyField').addEventListener('change', async function () {
+               let currencyCode = this.value;
                const balanceField = document.getElementById('weWantTokenBalanceField');
 
                if (currencyCode) {
@@ -540,6 +554,9 @@
                     if (currencyCode === 'XRP') {
                          balance = await getXrpBalance();
                     } else {
+                         if (currencyCode.length > 3) {
+                              currencyCode = encodeCurrencyCode(currencyCode);
+                         }
                          balance = await getCurrencyBalance(currencyCode);
                     }
 
@@ -553,8 +570,9 @@
                }
           });
 
-          document.getElementById('weSpendCurrencyField').addEventListener('blur', async function () {
-               const currencyCode = this.value.trim();
+          // Event listener for weSpendCurrencyField dropdown
+          document.getElementById('weSpendCurrencyField').addEventListener('change', async function () {
+               let currencyCode = this.value;
                const balanceField = document.getElementById('weSpendTokenBalanceField');
 
                if (currencyCode) {
@@ -574,6 +592,53 @@
                     balanceField.value = '';
                }
           });
+          // // Update event listener for async
+          // document.getElementById('weWantCurrencyField').addEventListener('blur', async function () {
+          //      let currencyCode = this.value.trim();
+          //      const balanceField = document.getElementById('weWantTokenBalanceField');
+
+          //      if (currencyCode) {
+          //           let balance = '';
+          //           if (currencyCode === 'XRP') {
+          //                balance = await getXrpBalance();
+          //           } else {
+          //                if (currencyCode.length > 3) {
+          //                     currencyCode = encodeCurrencyCode(currencyCode);
+          //                }
+          //                balance = await getCurrencyBalance(currencyCode);
+          //           }
+
+          //           if (balance !== null) {
+          //                balanceField.value = balance;
+          //           } else {
+          //                balanceField.value = '0'; // Or "Currency not found"
+          //           }
+          //      } else {
+          //           balanceField.value = '';
+          //      }
+          // });
+
+          // document.getElementById('weSpendCurrencyField').addEventListener('blur', async function () {
+          //      const currencyCode = this.value.trim();
+          //      const balanceField = document.getElementById('weSpendTokenBalanceField');
+
+          //      if (currencyCode) {
+          //           let balance = '';
+          //           if (currencyCode === 'XRP') {
+          //                balance = await getXrpBalance();
+          //           } else {
+          //                balance = await getCurrencyBalance(currencyCode);
+          //           }
+
+          //           if (balance !== null) {
+          //                balanceField.value = balance;
+          //           } else {
+          //                balanceField.value = '0'; // Or "Currency not found"
+          //           }
+          //      } else {
+          //           balanceField.value = '';
+          //      }
+          // });
 
           const textarea = document.getElementById('resultField');
 

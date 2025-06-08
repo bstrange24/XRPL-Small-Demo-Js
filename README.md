@@ -2,6 +2,8 @@
 
 https://app.pinata.cloud/ipfs/files
 
+cd /c/app/XRPL-Small-Demo-Js
+
 npm start
 node monitor-dex.js
 node issue_and_create_orders.js X X X X X B X

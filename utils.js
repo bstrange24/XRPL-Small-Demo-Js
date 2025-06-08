@@ -473,13 +473,13 @@ export async function populateTakerGetsTakerPayFields() {
           document.getElementById('weWantIssuerField').value = account2addressField.value;
      }
 
-     document.getElementById('weWantCurrencyField').value = 'DOG';
+     document.getElementById('weWantCurrencyField').value = 'RLUSD'; // DOGGY
      document.getElementById('weWantAmountField').value = '1';
      document.getElementById('weSpendCurrencyField').value = 'XRP';
      document.getElementById('weSpendAmountField').value = '1';
 
      const client = await getClient();
-     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG');
+     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'RLUSD'); // DOGGY
      await getXrpBalance();
      await getAccountInfo();
      document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
@@ -1376,12 +1376,16 @@ export async function getOnlyTokenBalance(client, wallet, currency) {
                command: 'account_lines',
                account: wallet,
           });
+
+          if (currency.length > 3) {
+               currency = encodeCurrencyCode(currency);
+          }
           const tstLines = lines.result.lines.filter(line => line.currency === currency);
           const tstBalance = tstLines.reduce((sum, line) => sum + parseFloat(line.balance), 0);
           return tstBalance;
      } catch (error) {
           log.error('Error fetching token balance:', error);
-          return 0;
+          return error;
      }
 }
 

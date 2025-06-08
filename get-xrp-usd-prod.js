@@ -1,22 +1,23 @@
 import * as xrpl from 'xrpl';
 
 // const NET = 'wss://s.devnet.rippletest.net:51233/';
-const NET = 'wss://s.altnet.rippletest.net:51233/';
-// const NET = 'wss://s1.ripple.com';
+// const NET = 'wss://s.altnet.rippletest.net:51233/';
+const NET = 'wss://s1.ripple.com';
 
 // const MY_WALLET_ADDRESS = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo'; // RLUSD
-const MY_WALLET_ADDRESS = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH'; // DOG
+// const MY_WALLET_ADDRESS = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH'; // DOG
+const MY_WALLET_ADDRESS = 'rJRrXZhPL996Bx9rJVbb9BDXCYkJ7Jvwfc'; // BOTICUS
 
 // RLUSD Test net Ripple Issuer
 // const RIPPLE_RLUSD_ISSUER = 'rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV';
 // RLUSD Main net Ripple Issuer
-// const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
+const RIPPLE_RLUSD_ISSUER = 'rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De';
 
-// const RLUSD_CURRENCY = 'RLUSD';
+const RLUSD_CURRENCY = 'RLUSD';
 const RLUSD_AMOUNT = 1;
 
-const RIPPLE_RLUSD_ISSUER = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo';
-const RLUSD_CURRENCY = 'DOG';
+// const RIPPLE_RLUSD_ISSUER = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo';
+// const RLUSD_CURRENCY = 'DOG';
 
 // const CIRCLE_USDC_ISSUER = 'rMwjYedjc7qqtKYVLiAccJSmCwih4LnE2q'; // CIRCLE_USDC_ISSUER
 // const USDC_CURRENCY = 'USDC'; // CIRCLE_USDC_ISSUER
@@ -721,7 +722,7 @@ function formatProfitResult(data, currency = 'RLUSD') {
      if (buyPrice) {
           output += ` Buy Price: ${buyPrice.toFixed(6)} XRP/${currency}`;
           if (buyPrice != null) {
-               output += ` in drops: ${xrpl.xrpToDrops(buyPrice.toFixed(8))}\n`;
+               output += ` in drops: ${xrpl.xrpToDrops(buyPrice.toFixed(6))}\n`;
           } else {
                output += `\n`;
           }
@@ -731,7 +732,7 @@ function formatProfitResult(data, currency = 'RLUSD') {
      if (sellPrice) {
           output += ` Sell Price: ${sellPrice.toFixed(6)} XRP/${currency}`;
           if (sellPrice != null) {
-               output += ` in drops: ${xrpl.xrpToDrops(sellPrice.toFixed(8))}\n`;
+               output += ` in drops: ${xrpl.xrpToDrops(sellPrice.toFixed(6))}\n`;
           } else {
                output += `\n`;
           }

@@ -725,8 +725,11 @@ export async function getTokenBalance() {
           output += '\nBalances (Held by You):\n';
           if (balance.result.assets && Object.keys(balance.result.assets).length > 0) {
                for (const [issuer, currencies] of Object.entries(balance.result.assets)) {
-                    for (const { currency, value } of currencies) {
-                         output += `- ${currency} from ${issuer}: ${value}\n`;
+                    for (let { currency, value } of currencies) {
+                         if (currency.length > 3) {
+                              currency = decodeCurrencyCode(currency);
+                         }
+                         output += `- ${currency} from ${issuer} Amount: ${value}\n`;
                     }
                }
           } else {
