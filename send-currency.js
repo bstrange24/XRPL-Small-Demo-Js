@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
+import { getCurrencyBalance } from './create-offer.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
 
 async function createTrustLine() {
@@ -798,6 +799,7 @@ window.sendCurrency = sendCurrency;
 window.issueCurrency = issueCurrency;
 window.getTokenBalance = getTokenBalance;
 window.getTransaction = getTransaction;
+window.getCurrencyBalance = getCurrencyBalance;
 
 window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
 window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;

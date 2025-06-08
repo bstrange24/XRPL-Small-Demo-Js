@@ -1142,7 +1142,7 @@ function populateStatsFields(stats, we_want, we_spend, spread, liquidity, offerT
      }
 }
 
-async function getCurrencyBalance(currencyCode) {
+export async function getCurrencyBalance(currencyCode) {
      try {
           const accountAddressField = document.getElementById('accountAddressField');
           const response = await fetchAccountObjects(accountAddressField);

@@ -131,8 +131,16 @@
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="currencyField" size="40" />
-                                   <br />
+                                   <!-- <input type="text" id="currencyField" size="40" /> -->
+                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
+                                   <p></p>
+                                   <!-- <br /> -->
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -184,7 +192,7 @@
                          <tr>
                               <td colspan="2">
                                    <button type="button" onClick="getTrustLine()">Get Trust Lines</button>
-                                   <button type="button" onClick="createTrustLine()">Create Trust Line</button>
+                                   <button type="button" onClick="createTrustLine()">Set Trust Line</button>
                                    <button type="button" onClick="removeTrustLine()">Remove Trust Line</button>
                                    <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
@@ -211,6 +219,32 @@
                          populateFieldIssueCurrency3();
                     }
                });
+          });
+
+          document.getElementById('currencyField').addEventListener('change', async function () {
+               let currencyCode = this.value;
+               const balanceField = document.getElementById('currencyBalanceField');
+
+               if (currencyCode) {
+                    let balance = '';
+                    if (currencyCode === 'XRP') {
+                         balance = await getXrpBalance();
+                         balance = balance - parseFloat(document.getElementById('totalXrpReservesField').value);
+                    } else {
+                         if (currencyCode.length > 3) {
+                              currencyCode = encodeCurrencyCode(currencyCode);
+                         }
+                         balance = await getCurrencyBalance(currencyCode);
+                    }
+
+                    if (balance !== null) {
+                         balanceField.value = balance;
+                    } else {
+                         balanceField.value = '0'; // Or "Currency not found"
+                    }
+               } else {
+                    balanceField.value = '';
+               }
           });
 
           fetch('wallet-issuer-input.html')

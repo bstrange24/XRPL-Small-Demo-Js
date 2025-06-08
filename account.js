@@ -49,6 +49,7 @@ export async function getAccountInfo() {
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
      const currencyBalanceField = document.getElementById('currencyBalanceField');
+     const currencyField = document.getElementById('currencyField');
 
      const { seedField, balanceField } = resolveAccountFields();
 
@@ -110,7 +111,9 @@ export async function getAccountInfo() {
           resultField.classList.add('success');
 
           if (currencyBalanceField) {
-               currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.address, 'DOG');
+               if (currencyField) {
+                    currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.address, currencyField.value);
+               }
           }
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
