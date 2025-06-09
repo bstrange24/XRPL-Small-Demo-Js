@@ -69,12 +69,14 @@ async function sendCheck() {
           let results = `Connected to ${environment} ${net}\\nSending Check\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           // Build SendMax amount
           let sendMax;
@@ -258,12 +260,14 @@ async function cashCheck() {
           let results = `Connected to ${environment} ${net}\nCashing Check\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           // Build amount object depending on currency
           const amountToCash =
@@ -350,12 +354,14 @@ async function cancelCheck() {
           let results = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           const tx = await client.autofill({
                TransactionType: 'CheckCancel',

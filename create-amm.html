@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+     <head>
+          <title>Offers</title>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
+          <link href="modular-tutorials.css" rel="stylesheet" />
+          <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+          <script type="module" src="create-amm.js"></script>
+          <script type="module" src="local-storage.js"></script>
+     </head>
+
+     <body>
+          <div id="navbar-container"></div>
+          <form id="theForm">
+               <div id="wallet-input-container"></div>
+               <p></p>
+               <fieldset style="padding: 20px">
+                    <legend style="color: white">Transaction Information</legend>
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                        <label for="accountNameField">Name</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountNameField" size="40" />
+                                   <input type="radio" id="account1" name="accounts" value="account1" />
+                                   <label for="account1">Account 1</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                        <label for="accountAddressField">Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountAddressField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                        <label for="accountSeedField">Seed</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountSeedField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                        <label for="xrpBalanceField">Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="xrpBalanceField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve.">
+                                        <label for="ownerCountField">Owner Count</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="ownerCountField" size="40" readonly />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
+                                        <label for="totalXrpReservesField">Total XRP Reserves</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="totalXrpReservesField" size="40" readonly />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="LP Token Balance.">
+                                        <label for="lpTokenBalanceField">LP Token Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="lpTokenBalanceField" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amount of LP Token(s) to withdrawl from pool.">
+                                        <label for="withdrawlLpTokenFromPoolField">withdrawl LP Token From Pool</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="withdrawlLpTokenFromPoolField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                        <label for="transactionField">Transaction</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="transactionField" size="75" />
+                                   <br />
+                              </td>
+                         </tr>
+                    </table>
+
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right; padding-bottom: 10px">
+                                   <span class="tooltip" tooltip-data="Taker Gets.">
+                                        <label for="weWantCurrencyField">Taker Gets</label>
+                                   </span>
+                              </td>
+                              <td style="text-align: left">
+                                   <span class="tooltip" tooltip-data="This is what I want to buy.">
+                                        <label for="weWantCurrencyField">This is what I'm buying (weWant)</label>
+                                   </span>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
+                                        <label for="weWantCurrencyField">Currency Code</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <!-- <input type="text" id="weWantCurrencyField" size="40" /> -->
+                                   <select class="timeUnit" id="weWantCurrencyField" style="width: 305px; height: 25px">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
+                                   <p></p>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
+                                        <label for="weWantIssuerField">Issuer</label>
+                                   </span>
+                              </td>
+                              <td><input type="text" id="weWantIssuerField" size="40" />&nbsp;&nbsp;</td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of offered currencies.">
+                                        <label for="amountField">Amount</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="weWantAmountField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of currencies I hold">
+                                        <label for="weWantTokenBalance">Currency Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="weWantTokenBalanceField" size="40" />
+                              </td>
+                         </tr>
+                    </table>
+
+                    <table style="float: left">
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right; padding-bottom: 10px">
+                                   <span class="tooltip" tooltip-data="Taker Pays.">
+                                        <label for="weWantCurrencyField">Taker Pays</label>
+                                   </span>
+                              </td>
+                              <td style="text-align: left; padding-bottom: 10px">
+                                   <span class="tooltip" tooltip-data="This is what I am selling.">
+                                        <label for="weWantCurrencyField">This is what I'm selling (weSpend)</label>
+                                   </span>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Currency codes for the Pay and Get offers.">
+                                        <label for="weWantCurrencyField">Currency Code</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <!-- <input type="text" id="weSpendCurrencyField" size="40" /> -->
+                                   <select class="timeUnit" id="weSpendCurrencyField" style="width: 305px; height: 25px">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
+                                   <p></p>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Issuers of the offered currencies.">
+                                        <label for="weWantIssuerField">Issuer</label>
+                                   </span>
+                              </td>
+                              <td><input type="text" id="weSpendIssuerField" size="40" />&nbsp;&nbsp;</td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of offered currencies.">
+                                        <label for="amountField">Amount</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="weSpendAmountField" size="40" />
+                                   <!-- <select class="timeUnit" id="xrpDropsUnit" style="width: 305px; height: 25px">
+                                        <option value="drops">Drops</option>
+                                        <option value="xrp">XRP</option>
+                                   </select> -->
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of currencies I hold.">
+                                        <label for="weSpendTokenBalance">Currency Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="weSpendTokenBalanceField" size="40" />
+                              </td>
+                         </tr>
+                    </table>
+
+                    <div id="spinner" style="display: none" class="spinner"></div>
+
+                    <table style="text-align: left; width: 100%">
+                         <th></th>
+                         <tr>
+                              <td colspan="2">
+                                   <button type="button" onClick="getAMMPoolInfo()">Get AMM Pool Info</button>
+                                   <button type="button" onClick="createAMMPool()">Create AMM Pool</button>
+                                   <button type="button" onClick="depositToAMM()">Deposit to AMM Pool</button>
+                                   <button type="button" onClick="withdrawFromAMM()">Withdrawl From AMM</button>
+                                   <button type="button" onClick="swapViaAMM()">Swap via AMM</button>
+
+                                   <button type="button" onClick="deleteAMMPool()">Delete AMM Pool</button>
+                                   <button type="button" onClick="invertOrder()">Invert AMM Pool</button>
+                                   <button type="button" onClick="disableNoRipple(document.getElementById('accountSeedField').value)">Disable NoRipple</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
+                                   <div style="display: flex; gap: 20px; align-items: flex-start">
+                                        <textarea id="resultField" style="width: 50%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false" readonly></textarea>
+
+                                        <!-- <table style="text-align: left; width: 30%">
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Order book direction.">
+                                                            <label for="orderBookDirectionField">Order Book Direction</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="orderBookDirectionField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="VWAP for order book.">
+                                                            <label for="vwapField">VWAP</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="vwapField" size="40" />
+                                                  </td>
+                                             </tr>
+
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Simple Average for order book.">
+                                                            <label for="simpleAverageField">Simple Average</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="simpleAverageField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Best Rate for order book.">
+                                                            <label for="bestRateField">Best Rate</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="bestRateField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Worst Rate for order book.">
+                                                            <label for="worstRateField">Worst Rate</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="worstRateField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Average Rate for order book.">
+                                                            <label for="averageRateField">Average Rate</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="averageRateField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Depth for order book.">
+                                                            <label for="depthField">Depth (5% slippage)</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="depthField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Liquidity for order book.">
+                                                            <label for="liquidityField">Liquidity</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="liquidityField" size="40" />
+                                                  </td>
+                                             </tr>
+
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Liquidity Ratio for order book.">
+                                                            <label for="liquidityRatioField">Liquidity Ratio</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="liquidityRatioField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Price Volatility for order book.">
+                                                            <label for="priceVolatilityField">Price Volatility (Mean)</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="priceVolatilityField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Standard Deviation from the mean for order book.">
+                                                            <label for="stdDeviationField">Std Deviation (Mean)</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="stdDeviationField" size="40" />
+                                                  </td>
+                                             </tr>
+                                             <tr style="vertical-align: top">
+                                                  <td style="text-align: right">
+                                                       <span class="tooltip" tooltip-data="Spread for order book.">
+                                                            <label for="spreadField">Spread</label>
+                                                       </span>
+                                                  </td>
+                                                  <td>
+                                                       <input type="text" id="spreadField" size="40" />
+                                                  </td>
+                                             </tr>
+                                        </table> -->
+                                   </div>
+                              </td>
+                         </tr>
+                    </table>
+               </fieldset>
+          </form>
+     </body>
+
+     <script>
+          function invertOrder() {
+               const weWantCurrencyField = document.getElementById('weWantCurrencyField').value;
+               const weWantIssuerField = document.getElementById('weWantIssuerField').value;
+               const weWantAmountField = document.getElementById('weWantAmountField').value;
+               const weWantTokenBalanceField = document.getElementById('weWantTokenBalanceField').value;
+
+               const weWantCurrencyFieldTemp = weWantCurrencyField;
+               const weWantIssuerFieldTemp = weWantIssuerField;
+               const weWantAmountFieldTemp = weWantAmountField;
+               const weWantTokenBalanceTemp = weWantTokenBalanceField;
+
+               const weSpendCurrencyField = document.getElementById('weSpendCurrencyField').value;
+               const weSpendIssuerField = document.getElementById('weSpendIssuerField').value;
+               const weSpendAmountField = document.getElementById('weSpendAmountField').value;
+               const weSpendTokenBalanceField = document.getElementById('weSpendTokenBalanceField').value;
+
+               document.getElementById('weWantCurrencyField').value = weSpendCurrencyField;
+               document.getElementById('weWantIssuerField').value = weSpendIssuerField;
+               document.getElementById('weWantAmountField').value = weSpendAmountField;
+               document.getElementById('weWantTokenBalanceField').value = weSpendTokenBalanceField;
+
+               document.getElementById('weSpendCurrencyField').value = weWantCurrencyFieldTemp;
+               document.getElementById('weSpendIssuerField').value = weWantIssuerFieldTemp;
+               document.getElementById('weSpendAmountField').value = weWantAmountFieldTemp;
+               document.getElementById('weSpendTokenBalanceField').value = weWantTokenBalanceTemp;
+          }
+
+          const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
+          accountRadioButtons.forEach(radio => {
+               radio.addEventListener('change', function () {
+                    if (this.value === 'account1') {
+                         populateTakerGetsTakerPayFields();
+                    }
+               });
+          });
+
+          fetch('wallet-input.html')
+               .then(res => res.text())
+               .then(html => {
+                    document.getElementById('wallet-input-container').innerHTML = html;
+
+                    function hideAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllGenerateNewWalletButtons() {
+                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
+                         generateButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
+                         generateMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
+                         generateNewWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
+
+                    function hideAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'none';
+                         });
+                    }
+
+                    function showAllDeriveWalletButtons() {
+                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
+                         derivederiveWalletSeedButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
+                         deriveWalletMnemonicButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
+                         deriveWalletSecretButtons.forEach(button => {
+                              button.style.display = 'inline-block';
+                         });
+                    }
+
+                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                    let pageLoad = 'Y';
+                    checkboxes.forEach(checkbox => {
+                         checkbox.addEventListener('change', function () {
+                              pageLoad = 'N';
+                              if (this.checked) {
+                                   if (this.value === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                        showAllGenerateNewWalletButtons();
+                                   } else if (this.value === 'N') {
+                                        hideAllGenerateNewWalletButtons();
+                                        showAllDeriveWalletButtons();
+                                   }
+                              } else {
+                                   console.log(`${this.value} was unchecked`);
+                                   hideAllGenerateNewWalletButtons();
+                                   showAllDeriveWalletButtons();
+                              }
+                         });
+                    });
+
+                    if (pageLoad === 'Y') {
+                         for (const checkbox of checkboxes) {
+                              const isChecked = checkbox.checked;
+                              const checkboxValue = checkbox.value;
+                              console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
+                              if (isChecked) {
+                                   if (checkboxValue === 'Y') {
+                                        hideAllDeriveWalletButtons();
+                                   } else if (checkboxValue === 'N') {
+                                        console.log('Checkbox N is checked, calling populate2()');
+                                        populate2();
+                                   }
+                              }
+                         }
+                    }
+               })
+               .catch(error => {
+                    console.error('Error loading wallet-issuer-input.html:', error);
+               });
+
+          // Event listener for weWantCurrencyField dropdown
+          document.getElementById('weWantCurrencyField').addEventListener('change', async function () {
+               let currencyCode = this.value;
+               const balanceField = document.getElementById('weWantTokenBalanceField');
+
+               if (currencyCode) {
+                    let balance = '';
+                    if (currencyCode === 'XRP') {
+                         balance = await getXrpBalance();
+                    } else {
+                         if (currencyCode.length > 3) {
+                              currencyCode = encodeCurrencyCode(currencyCode);
+                         }
+                         balance = await getCurrencyBalance(currencyCode);
+                    }
+
+                    if (balance !== null) {
+                         balanceField.value = balance;
+                    } else {
+                         balanceField.value = '0'; // Or "Currency not found"
+                    }
+               } else {
+                    balanceField.value = '';
+               }
+          });
+
+          // Event listener for weSpendCurrencyField dropdown
+          document.getElementById('weSpendCurrencyField').addEventListener('change', async function () {
+               let currencyCode = this.value;
+               const balanceField = document.getElementById('weSpendTokenBalanceField');
+
+               if (currencyCode) {
+                    let balance = '';
+                    if (currencyCode === 'XRP') {
+                         balance = await getXrpBalance();
+                    } else {
+                         balance = await getCurrencyBalance(currencyCode);
+                    }
+
+                    if (balance !== null) {
+                         balanceField.value = balance;
+                    } else {
+                         balanceField.value = '0'; // Or "Currency not found"
+                    }
+               } else {
+                    balanceField.value = '';
+               }
+          });
+          // // Update event listener for async
+          // document.getElementById('weWantCurrencyField').addEventListener('blur', async function () {
+          //      let currencyCode = this.value.trim();
+          //      const balanceField = document.getElementById('weWantTokenBalanceField');
+
+          //      if (currencyCode) {
+          //           let balance = '';
+          //           if (currencyCode === 'XRP') {
+          //                balance = await getXrpBalance();
+          //           } else {
+          //                if (currencyCode.length > 3) {
+          //                     currencyCode = encodeCurrencyCode(currencyCode);
+          //                }
+          //                balance = await getCurrencyBalance(currencyCode);
+          //           }
+
+          //           if (balance !== null) {
+          //                balanceField.value = balance;
+          //           } else {
+          //                balanceField.value = '0'; // Or "Currency not found"
+          //           }
+          //      } else {
+          //           balanceField.value = '';
+          //      }
+          // });
+
+          // document.getElementById('weSpendCurrencyField').addEventListener('blur', async function () {
+          //      const currencyCode = this.value.trim();
+          //      const balanceField = document.getElementById('weSpendTokenBalanceField');
+
+          //      if (currencyCode) {
+          //           let balance = '';
+          //           if (currencyCode === 'XRP') {
+          //                balance = await getXrpBalance();
+          //           } else {
+          //                balance = await getCurrencyBalance(currencyCode);
+          //           }
+
+          //           if (balance !== null) {
+          //                balanceField.value = balance;
+          //           } else {
+          //                balanceField.value = '0'; // Or "Currency not found"
+          //           }
+          //      } else {
+          //           balanceField.value = '';
+          //      }
+          // });
+
+          const textarea = document.getElementById('resultField');
+
+          function autoResize() {
+               textarea.style.height = 'auto'; // Reset height
+               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
+          }
+
+          textarea.addEventListener('input', autoResize);
+
+          // Optional: resize on load if there's prefilled content
+          window.addEventListener('load', autoResize);
+     </script>
+</html>

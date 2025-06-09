@@ -62,12 +62,14 @@ export async function getAccountInfo() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
+          // }
 
           let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
           resultField.value = results;
@@ -160,12 +162,14 @@ async function updateFlags() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           resultField.value = `Connected to ${environment} ${net}\nGetting Account Data\n`;
 

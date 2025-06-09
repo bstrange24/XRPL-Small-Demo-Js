@@ -59,12 +59,14 @@ async function createConditionalEscrow() {
           let results = `Connected to ${environment} ${net}\nCreating conditional escrow.\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           console.log('Wallet', wallet);
 
@@ -162,12 +164,14 @@ async function finishConditionalEscrow() {
           let results = `Connected to ${environment} ${net}\nFulfilling conditional escrow.\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',

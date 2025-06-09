@@ -53,12 +53,14 @@ async function createTrustLine() {
           let results = `Connected to ${environment} ${net}\nCreating trust line\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
@@ -175,12 +177,14 @@ async function removeTrustLine() {
                return setError(`ERROR: Cannot remove trust line: Balance is ${targetLine.balance}. Balance must be 0.`, spinner);
           }
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
@@ -268,12 +272,14 @@ async function getTrustLine() {
 
           let results = (resultField.value = `Connected to ${environment} ${net}\nGetting Trust Lines.\n\n`);
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           const trustLines = await getTrustLines(wallet.address, client);
 
@@ -371,12 +377,14 @@ async function sendCurrency() {
           let results = `Connected to ${environment} ${net}\nSending Currency.\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           // Step 1: Check sender's trust line and balance
           const senderTrustLines = await getTrustLines(accountAddress.value, client);
@@ -522,12 +530,14 @@ async function issueCurrency() {
           let results = `Connected to ${environment} ${net}\nSetting up issuer and issuing ${currency.value}\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           // Step 1: Verify issuer account
           const accountInfo = await getLedgerAccountInfo(client, accountAddressField.value, 'validated');
@@ -694,12 +704,14 @@ export async function getTokenBalance() {
           let results = `Connected to ${environment} ${net}\nGetting Token Balance\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+
+          // let wallet;
+          // if (environment === 'Mainnet') {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // } else {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          // }
 
           results += 'Getting account balance\n';
           resultField.value = results;

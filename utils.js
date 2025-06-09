@@ -705,6 +705,14 @@ function isValidTransactionHash(hash) {
      return /^[A-Fa-f0-9]{64}$/.test(hash);
 }
 
+export function labelCurrencyCode(code) {
+     if (code.length === 40) {
+          return `LP-${code.slice(0, 40).toUpperCase()}`;
+     } else {
+          return code;
+     }
+}
+
 export function encodeCurrencyCode(code) {
      const encoder = new TextEncoder();
      const codeBytes = encoder.encode(code);
@@ -843,7 +851,13 @@ export function parseXRPLTransaction(response) {
                               Object.entries(value).forEach(([subKey, subValue]) => {
                                    if (subValue !== null && subValue !== undefined) {
                                         if (subValue.length == 40) {
-                                             subValue = decodeCurrencyCode(subValue);
+                                             // subValue = decodeCurrencyCode(subValue);
+                                             let subValueTemp = decodeCurrencyCode(subValue);
+                                             if (subValueTemp.length > 10) {
+                                                  subValue = labelCurrencyCode(subValue);
+                                             } else {
+                                                  subValue = subValueTemp;
+                                             }
                                         }
                                         output.push(`        ${subKey}: ${subValue}`);
                                    }
@@ -916,7 +930,13 @@ export function parseXRPLTransaction(response) {
                                                        Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
                                                                  if (subValue.length == 40) {
-                                                                      subValue = decodeCurrencyCode(subValue);
+                                                                      // subValue = decodeCurrencyCode(subValue);
+                                                                      let subValueTemp = decodeCurrencyCode(subValue);
+                                                                      if (subValueTemp.length > 10) {
+                                                                           subValue = labelCurrencyCode(subValue);
+                                                                      } else {
+                                                                           subValue = subValueTemp;
+                                                                      }
                                                                  }
                                                                  output.push(`                        ${subKey}: ${subValue}`);
                                                             }
@@ -927,7 +947,13 @@ export function parseXRPLTransaction(response) {
                                                   Object.entries(value).forEach(([subKey, subValue]) => {
                                                        if (subValue !== null && subValue !== undefined) {
                                                             if (subValue.length == 40) {
-                                                                 subValue = decodeCurrencyCode(subValue);
+                                                                 // subValue = decodeCurrencyCode(subValue);
+                                                                 let subValueTemp = decodeCurrencyCode(subValue);
+                                                                 if (subValueTemp.length > 10) {
+                                                                      subValue = labelCurrencyCode(subValue);
+                                                                 } else {
+                                                                      subValue = subValueTemp;
+                                                                 }
                                                             }
                                                             output.push(`                    ${subKey}: ${subValue}`);
                                                        }
@@ -953,7 +979,13 @@ export function parseXRPLTransaction(response) {
                                                             Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                                  if (subValue !== null && subValue !== undefined) {
                                                                       if (subValue.length == 40) {
-                                                                           subValue = decodeCurrencyCode(subValue);
+                                                                           // subValue = decodeCurrencyCode(subValue);
+                                                                           let subValueTemp = decodeCurrencyCode(subValue);
+                                                                           if (subValueTemp.length > 10) {
+                                                                                subValue = labelCurrencyCode(subValue);
+                                                                           } else {
+                                                                                subValue = subValueTemp;
+                                                                           }
                                                                       }
                                                                       output.push(`                        ${subKey}: ${subValue}`);
                                                                  }
@@ -964,7 +996,13 @@ export function parseXRPLTransaction(response) {
                                                        Object.entries(value).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
                                                                  if (subValue.length == 40) {
-                                                                      subValue = decodeCurrencyCode(subValue);
+                                                                      // subValue = decodeCurrencyCode(subValue);
+                                                                      let subValueTemp = decodeCurrencyCode(subValue);
+                                                                      if (subValueTemp.length > 10) {
+                                                                           subValue = labelCurrencyCode(subValue);
+                                                                      } else {
+                                                                           subValue = subValueTemp;
+                                                                      }
                                                                  }
                                                                  output.push(`                    ${subKey}: ${subValue}`);
                                                             }
@@ -1139,8 +1177,8 @@ const ledgerEntryTypeFields = {
      },
      AMM: {
           fields: [
-               { key: 'Asset1', format: v => `${v.currency} (Issuer: ${v.issuer || null})` },
-               { key: 'Asset2', format: v => `${v.currency} (Issuer: ${v.issuer || null})` },
+               // { key: 'Asset1', format: v => `${v.currency} (Issuer: ${v.issuer || null})` },
+               // { key: 'Asset2', format: v => `${v.currency} (Issuer: ${v.issuer || null})` },
                { key: 'LPTokenBalance', format: v => `${v.value} ${v.currency}` },
                { key: 'TradingFee', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },
@@ -1260,7 +1298,13 @@ export function parseXRPLAccountObjects(response) {
                                              Object.entries(value).forEach(([subKey, subValue]) => {
                                                   if (subValue !== null && subValue !== undefined) {
                                                        if (subValue.length == 40) {
-                                                            subValue = decodeCurrencyCode(subValue);
+                                                            // subValue = decodeCurrencyCode(subValue);
+                                                            let subValueTemp = decodeCurrencyCode(subValue);
+                                                            if (subValueTemp.length > 10) {
+                                                                 subValue = labelCurrencyCode(subValue);
+                                                            } else {
+                                                                 subValue = subValueTemp;
+                                                            }
                                                        }
                                                        output.push(`                ${subKey}: ${subValue}`);
                                                   }
@@ -1286,7 +1330,13 @@ export function parseXRPLAccountObjects(response) {
                                                   Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                        if (subValue !== null && subValue !== undefined) {
                                                             if (subValue.length == 40) {
-                                                                 subValue = decodeCurrencyCode(subValue);
+                                                                 // subValue = decodeCurrencyCode(subValue);
+                                                                 let subValueTemp = decodeCurrencyCode(subValue);
+                                                                 if (subValueTemp.length > 10) {
+                                                                      subValue = labelCurrencyCode(subValue);
+                                                                 } else {
+                                                                      subValue = subValueTemp;
+                                                                 }
                                                             }
                                                             output.push(`            ${subKey}: ${subValue}`);
                                                        }
@@ -1297,7 +1347,13 @@ export function parseXRPLAccountObjects(response) {
                                              Object.entries(value).forEach(([subKey, subValue]) => {
                                                   if (subValue !== null && subValue !== undefined) {
                                                        if (subValue.length == 40) {
-                                                            subValue = decodeCurrencyCode(subValue);
+                                                            // subValue = decodeCurrencyCode(subValue);
+                                                            let subValueTemp = decodeCurrencyCode(subValue);
+                                                            if (subValueTemp.length > 10) {
+                                                                 subValue = labelCurrencyCode(subValue);
+                                                            } else {
+                                                                 subValue = subValueTemp;
+                                                            }
                                                        }
                                                        output.push(`        ${subKey}: ${subValue}`);
                                                   }
