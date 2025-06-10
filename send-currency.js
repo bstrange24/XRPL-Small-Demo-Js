@@ -53,7 +53,7 @@ async function createTrustLine() {
           let results = `Connected to ${environment} ${net}\nCreating trust line\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
 
           // let wallet;
           // if (environment === 'Mainnet') {
@@ -377,13 +377,13 @@ async function sendCurrency() {
           let results = `Connected to ${environment} ${net}\nSending Currency.\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
 
           // let wallet;
           // if (environment === 'Mainnet') {
           //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(v.value, { algorithm: 'secp256k1' });
           // }
 
           // Step 1: Check sender's trust line and balance
@@ -530,7 +530,7 @@ async function issueCurrency() {
           let results = `Connected to ${environment} ${net}\nSetting up issuer and issuing ${currency.value}\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
 
           // let wallet;
           // if (environment === 'Mainnet') {
@@ -704,7 +704,7 @@ export async function getTokenBalance() {
           let results = `Connected to ${environment} ${net}\nGetting Token Balance\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
 
           // let wallet;
           // if (environment === 'Mainnet') {
