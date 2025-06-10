@@ -26,8 +26,13 @@ async function getAMMPoolInfo() {
           weSpendAmount: document.getElementById('weSpendAmountField'),
      };
 
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
@@ -155,8 +160,13 @@ async function createAMMPool() {
           weSpendAmount: document.getElementById('weSpendAmountField'),
      };
 
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
@@ -368,10 +378,14 @@ async function withdrawFromAMM() {
           weSpendAmount: document.getElementById('weSpendAmountField'),
      };
 
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
-
      const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
 
      const validations = [
@@ -577,8 +591,13 @@ async function deleteAMMPool() {
           weSpendAmount: document.getElementById('weSpendAmountField'),
      };
 
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountName: accountNameField, accountAddress: accountAddressField, accountSeed: accountSeedField, xrpBalance: xrpBalanceField, weWantCurrency: weWantCurrencyField, weWantIssuer: weWantIssuerField, weWantAmount: weWantAmountField, weSpendCurrency: weSpendCurrencyField, weSpendIssuer: weSpendIssuerField, weSpendAmount: weSpendAmountField } = fields;
