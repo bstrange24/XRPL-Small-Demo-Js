@@ -689,7 +689,6 @@ function dateFormatter() {
 export function convertToEstTime(UtcDataTime) {
      const utcDate = new Date(UtcDataTime);
      const formatter = dateFormatter();
-     console.log(utcDate);
      return formatter.format(utcDate);
 }
 
@@ -1067,10 +1066,12 @@ const ledgerEntryTypeFields = {
                { key: 'Account', format: v => v || null },
                { key: 'Amount', format: v => formatXRPLAmount(v || '0') },
                { key: 'Destination', format: v => v || null },
+               { key: 'DestinationTag', format: v => v || null },
                { key: 'Sequence', format: v => v || null },
                { key: 'CancelAfter', format: v => (v ? convertXRPLTime(v) : null) },
                { key: 'FinishAfter', format: v => (v ? convertXRPLTime(v) : null) },
                { key: 'Condition', format: v => v || null },
+               { key: 'memo', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },
                { key: 'PreviousTxnLgrSeq', format: v => v || null },
                { key: 'index', format: v => v || null },

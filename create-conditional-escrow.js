@@ -18,6 +18,7 @@ async function createConditionalEscrow() {
           destinationAddress: document.getElementById('destinationField'),
           escrowCancelTime: document.getElementById('escrowCancelDateField'),
           escrowCondition: document.getElementById('escrowConditionField'),
+          escrowFulfillment: document.getElementById('escrowFulfillmentField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
           amountField: document.getElementById('amountField'),
           ownerCountField: document.getElementById('ownerCountField'),
@@ -30,19 +31,20 @@ async function createConditionalEscrow() {
           if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
      }
 
-     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
 
      // Validate input values
      const validations = [
-          [!validatInput(amountField.value), 'Amount cannot be empty'],
-          [isNaN(amountField.value), 'Amount must be a valid number'],
-          [parseFloat(amountField.value) <= 0, 'Amount must be greater than zero'],
+          [!validatInput(amountField.value), 'XRP Amount cannot be empty'],
+          [isNaN(amountField.value), 'XRP Amount must be a valid number'],
+          [parseFloat(amountField.value) <= 0, 'XRP Amount must be greater than zero'],
+          [!validatInput(escrowCondition.value), 'Condition cannot be empty'],
+          [!validatInput(escrowFulfillment.value), 'Escrow Fulfillment cannot be empty'],
           [!validatInput(escrowCancelTime.value), 'Escrow Cancel time cannot be empty'],
-          [isNaN(escrowCancelTime.value), 'Amount must be a valid number'],
-          [parseFloat(escrowCancelTime.value) <= 0, 'Amount must be greater than zero'],
+          [isNaN(escrowCancelTime.value), 'Escrow Cancel time must be a valid number'],
+          [parseFloat(escrowCancelTime.value) <= 0, 'Escrow Cancel time must be greater than zero'],
           [!validatInput(accountSeed.value), 'Seed cannot be empty'],
           [!validatInput(destinationAddress.value), 'Destination cannot be empty'],
-          [!validatInput(escrowCondition.value), 'Condition cannot be empty'],
      ];
 
      for (const [condition, message] of validations) {
@@ -61,17 +63,7 @@ async function createConditionalEscrow() {
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
 
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
-
           console.log('Wallet', wallet);
-
-          // const escrowCancelDate = addSeconds(parseInt(escrowCancelTime.value));
-          // console.log(`escrowCancelDate: ${escrowCancelDate}`);
 
           const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit);
           console.log(`cancelUnit: ${cancelUnit}`);
@@ -82,7 +74,6 @@ async function createConditionalEscrow() {
                Account: wallet.address,
                Amount: xrpl.xrpToDrops(amountField.value),
                Destination: destinationAddress.value,
-               // CancelAfter: escrowCancelDate,
                CancelAfter: cancelAfterTime,
                Condition: escrowCondition.value,
           });
@@ -165,13 +156,6 @@ async function finishConditionalEscrow() {
           resultField.value = results;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          // wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
