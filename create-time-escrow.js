@@ -28,7 +28,11 @@ async function createTimeBasedEscrow() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, memo, destinationTag, finishUnit, cancelUnit, currentTimeField } = fields;
@@ -38,7 +42,11 @@ async function createTimeBasedEscrow() {
           [!validatInput(accountSeed.value), 'Seed cannot be empty'],
           [!validatInput(destinationAddress.value), 'Destination cannot be empty'],
           [!validatInput(escrowFinishTime.value), 'Escrow Finish Time cannot be empty'],
+          [isNaN(escrowFinishTime.value), 'Escrow Finish Time must be a valid number'],
+          [parseFloat(escrowFinishTime.value) <= 0, 'Escrow Finish Time must be greater than zero'],
           [!validatInput(escrowCancelTime.value), 'Escrow Cancel Time cannot be empty'],
+          [isNaN(escrowCancelTime.value), 'Escrow Cancel Time must be a valid number'],
+          [parseFloat(escrowCancelTime.value) <= 0, 'Escrow Cancel Time must be greater than zero'],
           [!validatInput(amountField.value), 'XRP amount cannot be empty'],
           [isNaN(amountField.value), 'Amount must be a valid number'],
           [parseFloat(amountField.value) <= 0, 'XRP amount must be greater than zero'],
@@ -226,9 +234,13 @@ async function getEscrows() {
           currentTimeField: document.getElementById('currentTimeField'),
      };
 
-     // DOM element check
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountAddress, ownerCountField, totalXrpReservesField, currentTimeField } = fields;
@@ -319,9 +331,13 @@ async function cancelEscrow() {
           currentTimeField: document.getElementById('currentTimeField'),
      };
 
-     // DOM element check
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountSeed, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField, currentTimeField } = fields;

@@ -26,7 +26,11 @@ async function createTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { address, seed, destinationAddress, currency, amount, xrpBalanceField } = fields;
@@ -133,7 +137,11 @@ async function removeTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { address, seed, destinationAddress, currency, xrpBalanceField } = fields;
@@ -254,7 +262,11 @@ async function getTrustLine() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { seed, xrpBalanceField } = fields;
@@ -350,7 +362,11 @@ async function sendCurrency() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountAddress, seed, currency, destinationAddress, amountField, xrpBalanceField } = fields;
@@ -503,7 +519,11 @@ async function issueCurrency() {
 
      // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountAddressField, accountSeed, currency, destinationAddress, amountField, xrpBalanceField } = fields;

@@ -26,9 +26,13 @@ async function createConditionalEscrow() {
           escrowCancelTimeUnitField: document.getElementById('escrowCancelTimeUnit'),
      };
 
-     // Check if any required DOM elements are missing
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
@@ -128,9 +132,13 @@ async function finishConditionalEscrow() {
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
-     // Check for missing DOM elements
+     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
-          if (!field) return setError(`ERROR: DOM element ${name} not found`, spinner);
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
      const { accountAddress, escrowOwner, accountSeed, escrowCondition, escrowFulfillment, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField } = fields;

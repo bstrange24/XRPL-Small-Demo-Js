@@ -66,6 +66,30 @@
                                         <input type="text" id="xrpBalanceField" size="40" />
                                    </td>
                               </tr>
+                              <tr style="vertical-align: top" id="issuerRow" style="display: none">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Issuer address for non-XRP currencies.">
+                                             <label for="issuerField">Issuer</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <!-- Replace the input with a select dropdown -->
+                                        <select class="timeUnit" id="issuerField" style="width: 305px; height: 25px">
+                                             <!-- Options will be added dynamically -->
+                                        </select>
+                                        <p></p>
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top" id="issuerRow" style="display: none">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Amounts of currencies held by the account">
+                                             <label for="tokenBalance">Currency Balance</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <input type="text" id="tokenBalance" size="40" readonly />
+                                   </td>
+                              </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve.">
@@ -115,12 +139,11 @@
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Currency code for the check.">
-                                             <lable for="currencyField">Currency Code</lable>
+                                             <label for="currencyField">Currency Code</label>
                                         </span>
                                    </td>
                                    <td>
-                                        <!-- <input type="text" id="currencyField" size="40" /> -->
-                                        <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
+                                        <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px" onchange="toggleIssuerField()">
                                              <option value="XRP">XRP</option>
                                              <option value="RLUSD">RLUSD</option>
                                              <option value="USD">USD</option>
@@ -128,7 +151,6 @@
                                              <option value="DOG">DOG</option>
                                         </select>
                                         <p></p>
-                                        <!-- <br /> -->
                                    </td>
                               </tr>
                               <tr style="vertical-align: top">
@@ -138,29 +160,18 @@
                                         </span>
                                    </td>
                                    <td>
-                                        <input type="text" id="amountField" size="40" />
+                                        <input type="text" id="amountField" size="40" placeholder="Amount in XRP (not drops)" />
                                         <br />
                                    </td>
                               </tr>
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
-                                             <lable for="destinationField">Destination</lable>
+                                             <label for="destinationField">Destination</label>
                                         </span>
                                    </td>
                                    <td>
                                         <input type="text" id="destinationField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination tag to be used when sending to an exchange (i.e. Coinbase).">
-                                             <label for="destinationTagField">Destination Tag</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="destinationTagField" size="40" />
                                         <br />
                                    </td>
                               </tr>
@@ -183,11 +194,22 @@
                               <tr style="vertical-align: top">
                                    <td style="text-align: right">
                                         <span class="tooltip" tooltip-data="Check ID.">
-                                             <lable for="checkIdField">Check ID / Ledger Index</lable>
+                                             <label for="checkIdField">Check ID / Ledger Index</label>
                                         </span>
                                    </td>
                                    <td>
                                         <input type="text" id="checkIdField" size="85" />
+                                        <br />
+                                   </td>
+                              </tr>
+                              <tr style="vertical-align: top">
+                                   <td style="text-align: right">
+                                        <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
+                                             <label for="destinationField">Memo</label>
+                                        </span>
+                                   </td>
+                                   <td>
+                                        <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
                                         <br />
                                    </td>
                               </tr>
@@ -203,21 +225,6 @@
                                    </td>
                               </tr>
                          </th>
-                    </table>
-
-                    <table style="float: left">
-                         <th></th>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
-                                        <label for="destinationField">Memo</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
-                                   <br />
-                              </td>
-                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>
@@ -244,6 +251,43 @@
      </body>
 
      <script>
+          document.addEventListener('DOMContentLoaded', () => {
+               toggleIssuerField();
+               const accountSeedField = document.getElementById('accountSeedField');
+               const currencyField = document.getElementById('currencyField');
+               if (accountSeedField && accountSeedField.value != '' && currencyField.value !== 'XRP') {
+                    getTokenBalance();
+               }
+          });
+
+          function toggleIssuerField() {
+               const currencyField = document.getElementById('currencyField');
+               const issuerLabel = document.querySelector('label[for="issuerField"]').parentNode.parentNode;
+               const tokenBalance = document.querySelector('label[for="tokenBalance"]').parentNode.parentNode;
+               const issuerInput = document.getElementById('issuerField').parentNode;
+               const tokenBalanceInput = document.getElementById('tokenBalance').parentNode;
+               const amountField = document.getElementById('amountField');
+
+               if (currencyField.value !== 'XRP') {
+                    amountField.placeholder = 'Currency amount';
+                    issuerLabel.style.display = '';
+                    issuerInput.style.display = '';
+                    tokenBalance.style.display = '';
+                    tokenBalanceInput.style.display = '';
+               } else {
+                    amountField.placeholder = 'Amount in XRP (not drops)';
+                    issuerLabel.style.display = 'none';
+                    issuerInput.style.display = 'none';
+                    tokenBalance.style.display = 'none';
+                    tokenBalanceInput.style.display = 'none';
+               }
+
+               const accountSeedField = document.getElementById('accountSeedField');
+               if (accountSeedField && accountSeedField.value != '' && currencyField.value !== 'XRP') {
+                    getTokenBalance();
+               }
+          }
+
           const radioButtons = document.querySelectorAll('input[type="radio"]');
           radioButtons.forEach(radio => {
                radio.addEventListener('change', function () {

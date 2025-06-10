@@ -733,7 +733,7 @@ export function decodeCurrencyCode(hexCode) {
 }
 
 // Decode hex string to ASCII
-const decodeHex = hex => {
+export const decodeHex = hex => {
      try {
           return Buffer.from(hex, 'hex').toString('ascii');
      } catch (error) {
@@ -1371,7 +1371,7 @@ export function parseXRPLAccountObjects(response) {
           });
 
           // Append general metadata
-          if (ledgerHash !== 'N/A') output.push(`ledger_hash: ${ledgerHash}`);
+          if (ledgerHash !== 'N/A') output.push(`\nledger_hash: ${ledgerHash}`);
           output.push(`ledger_${response.ledger_index ? 'index' : 'current_index'}: ${ledgerIndex}`);
           output.push(`validated: ${validated}`);
 
