@@ -115,17 +115,6 @@
                          <th></th>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Currency blance.">
-                                        <label for="currencyBalanceField">Currency Balance</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="currencyBalanceField" size="40" />
-                                   <br />
-                              </td>
-                         </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Currency code for the trust line.">
                                         <label for="currencyField">Currency Code</label>
                                    </span>
@@ -133,7 +122,7 @@
                               <td>
                                    <!-- <input type="text" id="currencyField" size="40" /> -->
                                    <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
-                                        <option value="XRP">XRP</option>
+                                        <!-- <option value="XRP">XRP</option> -->
                                         <option value="RLUSD">RLUSD</option>
                                         <option value="USD">USD</option>
                                         <option value="USDC">USDC</option>
@@ -141,6 +130,17 @@
                                    </select>
                                    <p></p>
                                    <!-- <br /> -->
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Currency blance.">
+                                        <label for="currencyBalanceField">Currency Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="currencyBalanceField" size="40" readonly />
+                                   <br />
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
