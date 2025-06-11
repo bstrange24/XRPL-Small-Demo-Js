@@ -251,6 +251,8 @@ async function cashCheck() {
           balance: document.getElementById('xrpBalanceField'),
           ownerCount: document.getElementById('ownerCountField'),
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
+          tokenBalance: document.getElementById('tokenBalance'),
+          issuerField: document.getElementById('issuerField'),
      };
 
      // DOM existence check
@@ -262,7 +264,7 @@ async function cashCheck() {
           }
      }
 
-     const { address, seed, currency, amount, destination, issuer, checkId, balance, ownerCount, totalXrpReserves } = fields;
+     const { address, seed, currency, amount, destination, issuer, checkId, balance, ownerCount, totalXrpReserves, tokenBalance, issuerField } = fields;
 
      // Validate input values
      const validations = [
@@ -278,6 +280,23 @@ async function cashCheck() {
 
      for (const [condition, message] of validations) {
           if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+      // Check for positive number (greater than 0)
+     if (tokenBalance && tokenBalance.value !== '') {
+          const balance = Number(tokenBalance.value);
+
+          if (isNaN(balance)) {
+               return setError('ERROR: Token balance must be a number', spinner);
+          }
+
+          if (balance <= 0) {
+               return setError('ERROR: Token balance must be greater than 0', spinner);
+          }
+     }
+
+     if (issuerField && tokenBalance.value != '' && Number(tokenBalance.value) > 0 && issuerField.value === '') {
+          return setError('ERROR: Issuer can not be empty when sending a token for a check', spinner);
      }
 
      try {

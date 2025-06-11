@@ -20,6 +20,7 @@ async function createConditionalEscrow() {
           escrowCondition: document.getElementById('escrowConditionField'),
           escrowFulfillment: document.getElementById('escrowFulfillmentField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          memo: document.getElementById('memoField'),
           amountField: document.getElementById('amountField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
@@ -35,7 +36,7 @@ async function createConditionalEscrow() {
           }
      }
 
-     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, memo, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
 
      // Validate input values
      const validations = [
@@ -82,6 +83,18 @@ async function createConditionalEscrow() {
                Condition: escrowCondition.value,
           });
 
+          const memoText = memo.value;
+          if (memoText) {
+               escrowTx.Memos = [
+                    {
+                         Memo: {
+                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                         },
+                    },
+               ];
+          }
+          
           const signed = wallet.sign(escrowTx);
           const tx = await client.submitAndWait(signed.tx_blob);
 

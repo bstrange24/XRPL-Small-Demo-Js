@@ -729,7 +729,7 @@ async function deleteAMMPool() {
           };
 
           const prepared = await client.autofill(ammDelete, 20); // Increase buffer to 20 ledgers
-          const signed = wallet.sign(prepared);
+          let signed = wallet.sign(prepared);
           let deleteTx;
           let retries = 3;
           while (retries > 0) {

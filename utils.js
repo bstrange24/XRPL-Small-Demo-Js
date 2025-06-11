@@ -1371,9 +1371,9 @@ export function parseXRPLAccountObjects(response) {
           });
 
           // Append general metadata
-          if (ledgerHash !== 'N/A') output.push(`\nledger_hash: ${ledgerHash}`);
-          output.push(`ledger_${response.ledger_index ? 'index' : 'current_index'}: ${ledgerIndex}`);
-          output.push(`validated: ${validated}`);
+          if (ledgerHash !== 'N/A') output.push(`\nLedger Hash: ${ledgerHash}`);
+          output.push(`Ledger ${response.ledger_index ? 'index' : 'current_index'}: ${ledgerIndex}`);
+          output.push(`Validated: ${validated}`);
 
           return output.join('\n');
      } catch (error) {

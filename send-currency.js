@@ -759,9 +759,10 @@ export async function getTokenBalance() {
           if (balance.result.assets && Object.keys(balance.result.assets).length > 0) {
                for (const [issuer, currencies] of Object.entries(balance.result.assets)) {
                     for (let { currency, value } of currencies) {
-                         if (currency.length > 3) {
-                              currency = decodeCurrencyCode(currency);
-                         }
+                         console.log(`Currency ${currency} issuer ${issuer} Amount: ${value}`);
+                         // if (currency.length > 3) {
+                              // currency = decodeCurrencyCode(currency);
+                         // }
                          output += `- ${currency} from ${issuer} Amount: ${value}\n`;
                     }
                }
