@@ -176,6 +176,16 @@
                                    <input type="text" id="weWantTokenBalanceField" size="40" />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Set the fee for trading this token in the AMM">
+                                        <label for="tradingFeeField">Trading Fee %</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="tradingFeeField" size="40" />
+                              </td>
+                         </tr>
                     </table>
 
                     <table style="float: left">
@@ -247,11 +257,14 @@
                               <td colspan="2">
                                    <button type="button" onClick="getAMMPoolInfo()">Get AMM Pool Info</button>
                                    <button type="button" onClick="createAMMPool()">Create AMM Pool</button>
+                                   <button type="button" onClick="deleteAMMPool()">Delete AMM Pool</button>
+                              </td>
+                         </tr>
+                         <tr>
+                              <td colspan="2">
                                    <button type="button" onClick="depositToAMM()">Deposit to AMM Pool</button>
                                    <button type="button" onClick="withdrawFromAMM()">Withdrawl From AMM</button>
                                    <button type="button" onClick="swapViaAMM()">Swap via AMM</button>
-
-                                   <button type="button" onClick="deleteAMMPool()">Delete AMM Pool</button>
                                    <button type="button" onClick="invertOrder()">Invert AMM Pool</button>
                               </td>
                          </tr>
