@@ -230,67 +230,39 @@ async function createAMMPool() {
           if (weWantCurrency.value === XRP_CURRENCY) {
                asset = { currency: XRP_CURRENCY };
           } else {
-               if (!weWantIssuer.value) {
-                    return setError(`Issuer required for ${weWantCurrency.value}.`, spinner);
-               }
+               if (!weWantIssuer.value) throw new Error(`Issuer required for ${weWantCurrency.value}.`);
                asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
           }
           if (weSpendCurrency.value === XRP_CURRENCY) {
                asset2 = { currency: XRP_CURRENCY };
           } else {
-               if (!weSpendIssuer.value) {
-                    return setError(`Issuer required for ${weSpendCurrency.value}.`, spinner);
-               }
+               if (!weSpendIssuer.value) throw new Error(`Issuer required for ${weSpendCurrency.value}.`);
                asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
           }
 
-          // let asse, asst2 = await prepareAssetForAmmInfo(weWantCurrency.value, weWantIssuer.value, weSpendCurrency.value, weSpendIssuer.value);
-          // console.log(`asse: ${JSON.stringify(asse, null, 2)}`);
-          // console.log(`asst2: ${JSON.stringify(asst2, null, 2)}`);
-
-          console.log(`asset: ${JSON.stringify(asset, null, 2)}`);
-          console.log(`asset2: ${JSON.stringify(asset2, null, 2)}`);
-
-          // Fetch AMM info
-          const ammInfo = await client.request({ command: 'amm_info', asset, asset2 });
-          const poolData = ammInfo.result;
-
-          if (poolData) {
-               return setError(`ERROR: AMM pool already exists for ${weWantCurrency.value}/${weSpendCurrency.value}`);
+          // Check if AMM pool already exists
+          console.log(`Checking AMM pool existence at ${Date.now() - startTime}ms`);
+          try {
+               const ammInfo = await client.request({
+                    command: 'amm_info',
+                    asset,
+                    asset2,
+               });
+               // If the request succeeds, the pool exists
+               return setError(`AMM pool already exists for ${weWantCurrency.value}/${weSpendCurrency.value} pair.`, spinner);
+          } catch (error) {
+               if (error.message.includes('Account not found') || error.message.includes('AMM does not exist')) {
+                    // Pool does not exist, proceed with creation
+                    console.log('No existing AMM pool found, proceeding with creation.');
+               } else if (error.message.includes('already exists')) {
+                    // Re-throw the custom error for existing pool
+                    let errorMessage = `ERROR: ${error || 'Unknown error'}`;
+                    return setError(errorMessage, spinner);
+               } else {
+                    // Other errors (e.g., network issues)
+                    return setError(`Failed to check AMM pool: ${error.message}`, spinner);
+               }
           }
-
-          // const { asset, asset2 } = await prepareAssetForAmmInfo(weWantCurrency.value, weWantIssuer.value, weSpendCurrency.value, weSpendIssuer.value);
-          // let asset, asset2;
-          // if (weWantCurrency.value === XRP_CURRENCY) {
-          //      asset = { currency: XRP_CURRENCY };
-          // } else {
-          //      if (weWantCurrency.value.length > 3) {
-          //           const endcodedCurrency = encodeCurrencyCode(weWantCurrency.value);
-          //           asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
-          //      } else {
-          //           asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
-          //      }
-          // }
-          // if (weSpendCurrency.value === XRP_CURRENCY) {
-          //      asset2 = { currency: XRP_CURRENCY };
-          // } else {
-          //      if (weSpendCurrency.value.length > 3) {
-          //           const endcodedCurrency = encodeCurrencyCode(weSpendCurrency.value);
-          //           asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
-          //      }
-          //      asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
-          // }
-
-          // const ammInfo = await client.request({
-          //      command: 'amm_info',
-          //      asset: asset,
-          //      asset2: asset2,
-          // });
-          // const poolData = ammInfo.result;
-
-          // if (poolData) {
-          //      return setError(`ERROR: AMM pool already exists for ${weWantCurrency.value}/${weSpendCurrency.value}`);
-          // }
 
           let amount;
           if (weWantCurrency.value === XRP_CURRENCY) {
@@ -443,6 +415,16 @@ async function depositToAMM() {
           resultField.value = `Connected to ${environment} ${net}\nDeposit token into AMM Pool.\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          // const ammDepositTwoSided = {
+          //      TransactionType: 'AMMDeposit',
+          //      Account: wallet.address,
+          //      Asset: { currency: 'DOG', issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo' },
+          //      Asset2: { currency: 'XRP' },
+          //      Amount: { currency: 'DOG', issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo', value: '1' },
+          //      Amount2: xrpl.xrpToDrops('0.01'),
+          //      Flags: xrpl.AMMDepositFlags.tfTwoAsset,
+          // };
 
           const ammDeposit = {
                TransactionType: 'AMMDeposit',
@@ -738,14 +720,27 @@ async function deleteAMMPool() {
           }
 
           // Verify pool existence and LP token balance
-          const ammInfo = await client.request({
-               command: 'amm_info',
-               asset,
-               asset2,
-          });
+          let ammInfo;
+          try {
+               ammInfo = await client.request({
+                    command: 'amm_info',
+                    asset,
+                    asset2,
+               });
+          } catch (error) {
+               return setError('AMM pool does not exist for DOG/XRP.', spinner);
+          }
           const poolData = ammInfo.result;
           const lpToken = poolData.amm.lp_token;
           const ammAccount = poolData.amm.account;
+
+          // Check auction slot
+          // if (poolData.amm.auction_slot?.expiration) {
+          //      const expiration = new Date(poolData.amm.auction_slot.expiration);
+          //      if (expiration > new Date()) {
+          //           throw new Error(`Cannot delete AMM: Auction slot active until ${expiration.toISOString()}`);
+          //      }
+          // }
 
           // Check LP token balance
           const accountLines = await client.request({
@@ -753,6 +748,15 @@ async function deleteAMMPool() {
                account: wallet.address,
                ledger_index: 'current',
           });
+
+          const lpTokenCurrency = poolData.amm.lp_token.currency;
+          const lpTokenIssuer = poolData.amm.lp_token.issuer;
+          const hasTrustline = accountLines.result.lines.some(line => line.currency === lpTokenCurrency && line.account === lpTokenIssuer);
+          console.log('Trustlines:', JSON.stringify(accountLines.result.lines, null, 2));
+          if (!hasTrustline) {
+               throw new Error('Account lacks trustline for AMM LP token. Set up a trustline first.');
+          }
+
           const lpTokenLine = accountLines.result.lines.find(line => line.currency === lpToken.currency && line.account === lpToken.issuer);
 
           if (lpTokenLine && parseFloat(lpTokenLine.balance) > 0) {

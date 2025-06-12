@@ -473,13 +473,13 @@ export async function populateTakerGetsTakerPayFields() {
           document.getElementById('weWantIssuerField').value = account2addressField.value;
      }
 
-     document.getElementById('weWantCurrencyField').value = 'RLUSD'; // DOGGY
+     document.getElementById('weWantCurrencyField').value = 'DOG'; // RLUSD DOGGY
      document.getElementById('weWantAmountField').value = '1';
      document.getElementById('weSpendCurrencyField').value = 'XRP';
      document.getElementById('weSpendAmountField').value = '1';
 
      const client = await getClient();
-     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'RLUSD'); // DOGGY
+     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG'); // RLUSD DOGGY
      await getXrpBalance();
      await getAccountInfo();
      document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
