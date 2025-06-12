@@ -2,6 +2,7 @@ import * as xrpl from 'xrpl';
 import { generate, derive } from 'xrpl-accountlib';
 import { saveInputValues } from './local-storage';
 import { getAccountInfo } from './account';
+import { getAMMPoolInfo } from './create-amm.js';
 
 let clientInstance = null;
 let isConnecting = false;
@@ -480,8 +481,17 @@ export async function populateTakerGetsTakerPayFields() {
 
      const client = await getClient();
      document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG'); // RLUSD DOGGY
+
      await getXrpBalance();
-     await getAccountInfo();
+
+     const withdrawlLpTokenFromPool = document.getElementById('withdrawlLpTokenFromPoolField');
+     if (withdrawlLpTokenFromPool) {
+          await getAccountInfo();
+          await getAMMPoolInfo();
+     } else {
+          await getAccountInfo();
+     }
+
      document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
 }
 

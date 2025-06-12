@@ -183,6 +183,48 @@
                                    <input type="text" id="tradingFeeField" size="40" />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Select deposit option for the AMM pool">
+                                        <label>Deposit Option</label>
+                                   </span>
+                              </td>
+                              <td style="display: flex; gap: 10px; flex-wrap: wrap">
+                                   <span class="tooltip" tooltip-data="Deposit currency into both pools.">
+                                        <input type="radio" id="isDepositIntoBothPools" name="depositOption" checked />
+                                        <label for="isDepositIntoBothPools">Both Pools</label>
+                                   </span>
+                                   <span class="tooltip" tooltip-data="Deposit currency into the first pool only.">
+                                        <input type="radio" id="isDepositIntoFirstPoolOnly" name="depositOption" />
+                                        <label for="isDepositIntoFirstPoolOnly">First Pool Only</label>
+                                   </span>
+                                   <span class="tooltip" tooltip-data="Deposit currency into the second pool only.">
+                                        <input type="radio" id="isDepositIntoSecondPoolOnly" name="depositOption" />
+                                        <label for="isDepositIntoSecondPoolOnly">Second Pool Only</label>
+                                   </span>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Select withdrawal option for the AMM pool">
+                                        <label>Withdrawal Option</label>
+                                   </span>
+                              </td>
+                              <td style="display: flex; gap: 10px; flex-wrap: wrap">
+                                   <span class="tooltip" tooltip-data="Withdraw currency from both pools.">
+                                        <input type="radio" id="isWithdrawFromBothPools" name="withdrawOption" checked />
+                                        <label for="isWithdrawFromBothPools">Both Pools</label>
+                                   </span>
+                                   <span class="tooltip" tooltip-data="Withdraw currency from the first pool only.">
+                                        <input type="radio" id="isWithdrawFromFirstPoolOnly" name="withdrawOption" />
+                                        <label for="isWithdrawFromFirstPoolOnly">First Pool Only</label>
+                                   </span>
+                                   <span class="tooltip" tooltip-data="Withdraw currency from the second pool only.">
+                                        <input type="radio" id="isWithdrawFromSecondPoolOnly" name="withdrawOption" />
+                                        <label for="isWithdrawFromSecondPoolOnly">Second Pool Only</label>
+                                   </span>
+                              </td>
+                         </tr>
                     </table>
 
                     <table style="float: left">
@@ -301,6 +343,25 @@
                document.getElementById('weSpendAmountField').value = weWantAmountFieldTemp;
                document.getElementById('weSpendTokenBalanceField').value = weWantTokenBalanceTemp;
           }
+
+          document.getElementById('isDepositIntoBothPools').addEventListener('change', function () {
+               if (this.checked) {
+                    document.getElementById('isDepositIntoFirstPoolOnly').checked = false;
+                    document.getElementById('isDepositIntoSecondPoolOnly').checked = false;
+               }
+          });
+          document.getElementById('isDepositIntoFirstPoolOnly').addEventListener('change', function () {
+               if (this.checked) {
+                    document.getElementById('isDepositIntoBothPools').checked = false;
+                    document.getElementById('isDepositIntoSecondPoolOnly').checked = false;
+               }
+          });
+          document.getElementById('isDepositIntoSecondPoolOnly').addEventListener('change', function () {
+               if (this.checked) {
+                    document.getElementById('isDepositIntoBothPools').checked = false;
+                    document.getElementById('isDepositIntoFirstPoolOnly').checked = false;
+               }
+          });
 
           const accountRadioButtons = document.querySelectorAll('input[name="accounts"]');
           accountRadioButtons.forEach(radio => {

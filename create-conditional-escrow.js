@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
 import { generateCondition } from './five-bells.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createConditionalEscrow() {
      console.log('Entering createConditionalEscrow');
@@ -66,9 +67,7 @@ async function createConditionalEscrow() {
           let results = `Connected to ${environment} ${net}\nCreating conditional escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          console.log('Wallet', wallet);
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit);
           console.log(`cancelUnit: ${cancelUnit}`);
@@ -94,14 +93,14 @@ async function createConditionalEscrow() {
                     },
                ];
           }
-          
+
           const signed = wallet.sign(escrowTx);
           const tx = await client.submitAndWait(signed.tx_blob);
 
           console.log('Create Escrow tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -176,7 +175,7 @@ async function finishConditionalEscrow() {
           let results = `Connected to ${environment} ${net}\nFulfilling conditional escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
@@ -193,7 +192,7 @@ async function finishConditionalEscrow() {
           console.log('Create Escrow tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 

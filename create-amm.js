@@ -1,10 +1,10 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode, getXrplReserve } from './utils.js';
 import { fetchAccountObjects } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
-async function getAMMPoolInfo() {
+export async function getAMMPoolInfo() {
      console.log('Entering getAMMPoolInfo');
      const startTime = Date.now();
 
@@ -182,6 +182,7 @@ async function createAMMPool() {
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
           weWantTokenBalance: document.getElementById('weWantTokenBalanceField'),
           weSpendTokenBalance: document.getElementById('weSpendTokenBalanceField'),
+          lpTokenBalance: document.getElementById('lpTokenBalanceField'),
      };
 
      for (const [name, field] of Object.entries(fields)) {
@@ -192,7 +193,7 @@ async function createAMMPool() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, tradingFee, ownerCount, totalXrpReserves, weWantTokenBalance, weSpendTokenBalance } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, tradingFee, ownerCount, totalXrpReserves, weWantTokenBalance, weSpendTokenBalance, lpTokenBalance } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -324,7 +325,7 @@ async function createAMMPool() {
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCount, totalXrpReserves);
-          xrpBalance.value = (await client.getXrpBalance(wallet.address)) - totalXrpReserves.value;
+          xrpBalance.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReserves.value;
 
           if (weWantCurrency.value === XRP_CURRENCY) {
                weSpendTokenBalance.value = await getOnlyTokenBalance(client, wallet.classicAddress, weSpendCurrency.value);
@@ -333,6 +334,23 @@ async function createAMMPool() {
                weWantTokenBalance.value = await getOnlyTokenBalance(client, wallet.classicAddress, weWantCurrency.value);
                weSpendTokenBalance.value = xrpBalance.value;
           }
+
+          const ammInfo = await client.request({
+               command: 'amm_info',
+               asset: asset,
+               asset2: asset2,
+          });
+
+          // Format pool details
+          const poolData = ammInfo.result;
+
+          const accountLines = await client.request({
+               command: 'account_lines',
+               account: wallet.classicAddress,
+               ledger_index: 'current',
+          });
+          const lpTokenLine = accountLines.result.lines.find(line => line.currency === poolData.amm.lp_token.currency && line.account === poolData.amm.lp_token.issuer);
+          lpTokenBalance.value = lpTokenLine ? lpTokenLine.balance : '0';
      } catch (error) {
           console.error('Error:', error);
           let errorMessage = `ERROR: ${error.message || 'Unknown error'}`;
@@ -374,6 +392,9 @@ async function depositToAMM() {
           weSpendTokenBalance: document.getElementById('weSpendTokenBalanceField'),
           ownerCount: document.getElementById('ownerCountField'),
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
+          isDepositIntoBothPools: document.getElementById('isDepositIntoBothPools'),
+          isDepositIntoFirstPoolOnly: document.getElementById('isDepositIntoFirstPoolOnly'),
+          isDepositIntoSecondPoolOnly: document.getElementById('isDepositIntoSecondPoolOnly'),
      };
 
      // DOM existence check
@@ -385,7 +406,7 @@ async function depositToAMM() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, weWantTokenBalance, weSpendTokenBalance, ownerCount, totalXrpReserves } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, weWantTokenBalance, weSpendTokenBalance, ownerCount, totalXrpReserves, isDepositIntoBothPools, isDepositIntoFirstPoolOnly, isDepositIntoSecondPoolOnly } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -416,31 +437,62 @@ async function depositToAMM() {
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          // const ammDepositTwoSided = {
-          //      TransactionType: 'AMMDeposit',
-          //      Account: wallet.address,
-          //      Asset: { currency: 'DOG', issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo' },
-          //      Asset2: { currency: 'XRP' },
-          //      Amount: { currency: 'DOG', issuer: 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo', value: '1' },
-          //      Amount2: xrpl.xrpToDrops('0.01'),
-          //      Flags: xrpl.AMMDepositFlags.tfTwoAsset,
-          // };
+          console.log(`Deposit Option: isDepositIntoBothPools ${isDepositIntoBothPools.checked} isDepositIntoFirstPoolOnly ${isDepositIntoFirstPoolOnly.checked} isDepositIntoSecondPoolOnly ${isDepositIntoSecondPoolOnly.checked}`);
 
-          const ammDeposit = {
-               TransactionType: 'AMMDeposit',
-               Account: wallet.address,
-               Asset: {
-                    currency: weWantCurrency.value,
-                    issuer: weWantIssuer.value,
-               },
-               Asset2: { currency: XRP_CURRENCY },
-               Amount: {
-                    currency: weWantCurrency.value,
-                    issuer: weWantIssuer.value,
-                    value: weWantAmount.value,
-               },
-               Flags: xrpl.AMMDepositFlags.tfSingleAsset,
-          };
+          let ammDeposit;
+          if (isDepositIntoBothPools.checked) {
+               ammDeposit = {
+                    TransactionType: 'AMMDeposit',
+                    Account: wallet.classicAddress,
+                    Asset: {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                    },
+                    Asset2: { currency: XRP_CURRENCY },
+                    Amount: {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                         value: weWantAmount.value,
+                    },
+                    Amount2: xrpl.xrpToDrops(weSpendAmount.value),
+                    Flags: xrpl.AMMDepositFlags.tfTwoAsset,
+               };
+          } else if (isDepositIntoFirstPoolOnly.checked) {
+               ammDeposit = {
+                    TransactionType: 'AMMDeposit',
+                    Account: wallet.classicAddress,
+                    Asset: {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                    },
+                    Asset2: { currency: XRP_CURRENCY },
+                    Amount: {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                         value: weWantAmount.value,
+                    },
+                    Flags: xrpl.AMMDepositFlags.tfSingleAsset,
+               };
+          } else if (isDepositIntoSecondPoolOnly.checked) {
+               // Swap asset and amount if depositing into second pool
+               ammDeposit = {
+                    TransactionType: 'AMMDeposit',
+                    Account: wallet.classicAddress,
+                    Asset: {
+                         currency: XRP_CURRENCY,
+                    },
+                    Asset2: {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                    },
+                    Amount: xrpl.xrpToDrops(weSpendAmount.value),
+                    Flags: xrpl.AMMDepositFlags.tfSingleAsset,
+               };
+          } else {
+               throw new Error('No deposit option selected.');
+          }
+
+          console.log('ammDeposit:', JSON.stringify(ammDeposit, null, 2));
 
           const ledgerResponse = await client.request({ command: 'ledger' });
           const currentLedger = parseInt(ledgerResponse.result.closed.ledger.ledger_index);
@@ -455,13 +507,14 @@ async function depositToAMM() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
+          resultField.value += `Deposited: ${isDepositIntoBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${XRP_CURRENCY}` : isDepositIntoFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isDepositIntoSecondPoolOnly.checked ? `${weSpendAmount.value} ${XRP_CURRENCY}` : 'No deposit option selected'}\n`;
           resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(tx.result);
 
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCount, totalXrpReserves);
-          xrpBalance.value = (await client.getXrpBalance(wallet.address)) - totalXrpReserves.value;
+          xrpBalance.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReserves.value;
 
           if (weWantCurrency.value === XRP_CURRENCY) {
                weSpendTokenBalance.value = await getOnlyTokenBalance(client, wallet.classicAddress, weSpendCurrency.value);
@@ -508,6 +561,9 @@ async function withdrawFromAMM() {
           weSpendIssuer: document.getElementById('weSpendIssuerField'),
           weSpendAmount: document.getElementById('weSpendAmountField'),
           withdrawlLpTokenFromPool: document.getElementById('withdrawlLpTokenFromPoolField'),
+          isWithdrawFromBothPools: document.getElementById('isWithdrawFromBothPools'),
+          isWithdrawFromFirstPoolOnly: document.getElementById('isWithdrawFromFirstPoolOnly'),
+          isWithdrawFromSecondPoolOnly: document.getElementById('isWithdrawFromSecondPoolOnly'),
      };
 
      for (const [name, field] of Object.entries(fields)) {
@@ -517,7 +573,7 @@ async function withdrawFromAMM() {
                field.value = field.value.trim();
           }
      }
-     const { accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, withdrawlLpTokenFromPool } = fields;
+     const { accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, withdrawlLpTokenFromPool, isWithdrawFromBothPools, isWithdrawFromFirstPoolOnly, isWithdrawFromSecondPoolOnly } = fields;
 
      const validations = [
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
@@ -542,6 +598,12 @@ async function withdrawFromAMM() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
+     const selectedOptions = [isWithdrawFromFirstPoolOnly.checked, isWithdrawFromSecondPoolOnly.checked, isWithdrawFromBothPools.checked].filter(Boolean);
+
+     if (selectedOptions.length !== 1) {
+          return setError('Please select exactly one withdrawal option.', spinner);
+     }
+
      try {
           const { net, environment } = getNet();
           const client = await getClient();
@@ -551,23 +613,8 @@ async function withdrawFromAMM() {
           resultField.value = `Connected to ${environment} ${net}\nWithdrawing from AMM Pool\n\n`;
 
           // Prepare asset and asset2
-          let asset, asset2;
-          if (weWantCurrency.value === XRP_CURRENCY) {
-               asset = { currency: XRP_CURRENCY };
-          } else {
-               if (!weWantIssuer.value) {
-                    return setError(`Issuer required for ${weWantCurrency.value}.`, spinner);
-               }
-               asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
-          }
-          if (weSpendCurrency.value === XRP_CURRENCY) {
-               asset2 = { currency: XRP_CURRENCY };
-          } else {
-               if (!weSpendIssuer.value) {
-                    return setError(`Issuer required for ${weSpendCurrency.value}.`, spinner);
-               }
-               asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
-          }
+          let asset = weWantCurrency.value === XRP_CURRENCY ? { currency: XRP_CURRENCY } : { currency: weWantCurrency.value, issuer: weWantIssuer.value };
+          let asset2 = weSpendCurrency.value === XRP_CURRENCY ? { currency: XRP_CURRENCY } : { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
 
           // Fetch AMM info
           const ammResponse = await client.request({ command: 'amm_info', asset, asset2 });
@@ -586,7 +633,8 @@ async function withdrawFromAMM() {
           }
 
           // Prepare AMMWithdraw transaction
-          const ammWithdraw = {
+          let flags = 0;
+          let ammWithdraw = {
                TransactionType: 'AMMWithdraw',
                Account: wallet.classicAddress,
                Asset: asset,
@@ -596,8 +644,25 @@ async function withdrawFromAMM() {
                     issuer: lpToken.issuer,
                     value: withdrawlLpTokenFromPool.value,
                },
-               Flags: 0x00010000, // tfLPToken flag
           };
+
+          if (isWithdrawFromFirstPoolOnly.checked) {
+               flags = xrpl.AMMWithdrawFlags.tfLPToken;
+               ammWithdraw.Flags = flags;
+          } else if (isWithdrawFromSecondPoolOnly.checked) {
+               flags = xrpl.AMMWithdrawFlags.tfLPToken;
+               ammWithdraw.Asset2Out = {
+                    currency: asset2.currency,
+                    issuer: asset2.issuer,
+                    value: weSpendAmount.value, // or appropriate field
+               };
+               ammWithdraw.Flags = flags;
+          } else if (isWithdrawFromBothPools.checked) {
+               flags = 0x00010000; // No flag = default, withdraw both proportionally
+               ammWithdraw.Flags = flags;
+          }
+
+          console.log('ammWithdraw:', JSON.stringify(ammWithdraw, null, 2));
 
           const ledgerResponse = await client.request({ command: 'ledger' });
           const currentLedger = parseInt(ledgerResponse.result.closed.ledger.ledger_index);
@@ -616,7 +681,9 @@ async function withdrawFromAMM() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          resultField.value += `\nAssets returned: ${ammResponse.result.amm.amount.value} ${weWantCurrency.value} ${xrpl.dropsToXrp(ammResponse.result.amm.amount2)} XRP\n\n`;
+          resultField.value += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${weSpendCurrency.value}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${weSpendCurrency.value}` : 'No withdrawal option selected'}\n`;
+          // resultField.value += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${XRP_CURRENCY}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${XRP_CURRENCY}` : 'No withdrawl option selected'}\n`;
+          resultField.value += `\nAssets remaining in pool: ${ammResponse.result.amm.amount.value} ${weWantCurrency.value} ${xrpl.dropsToXrp(ammResponse.result.amm.amount2)} XRP\n\n`;
           resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(tx.result);
 
@@ -632,15 +699,14 @@ async function withdrawFromAMM() {
                errorMessage += '\nLedger sequence expired. Retry.';
           }
           setError(errorMessage);
+          await client?.disconnect?.();
      } finally {
-          const spinner = document.getElementById('spinner');
           if (spinner) spinner.style.display = 'none';
           autoResize();
           console.log(`Leaving withdrawFromAMM - Total time: ${Date.now() - startTime}ms`);
      }
 }
 
-// Delete AMM Pool Info
 async function deleteAMMPool() {
      console.log('Entering deleteAMMPool');
      const startTime = Date.now();
@@ -702,7 +768,7 @@ async function deleteAMMPool() {
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          resultField.value = `Connected to ${environment} ${net}\nDeleting AMM Pool...\n\n`;
+          resultField.value = `Connected to ${environment} ${net}\nDeleting AMM Pool\n\n`;
 
           // Prepare asset and asset2
           let asset, asset2;
@@ -734,18 +800,10 @@ async function deleteAMMPool() {
           const lpToken = poolData.amm.lp_token;
           const ammAccount = poolData.amm.account;
 
-          // Check auction slot
-          // if (poolData.amm.auction_slot?.expiration) {
-          //      const expiration = new Date(poolData.amm.auction_slot.expiration);
-          //      if (expiration > new Date()) {
-          //           throw new Error(`Cannot delete AMM: Auction slot active until ${expiration.toISOString()}`);
-          //      }
-          // }
-
           // Check LP token balance
           const accountLines = await client.request({
                command: 'account_lines',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'current',
           });
 
@@ -759,12 +817,28 @@ async function deleteAMMPool() {
 
           const lpTokenLine = accountLines.result.lines.find(line => line.currency === lpToken.currency && line.account === lpToken.issuer);
 
+          // Check XRP balance for fee
+          const accountInfo = await client.request({
+               command: 'account_info',
+               account: wallet.classicAddress,
+               ledger_index: 'current',
+          });
+          const xrpBalance = parseFloat(xrpl.dropsToXrp(accountInfo.result.account_data.Balance));
+          const { reserveBaseXRP, reserveIncrementXRP } = await getXrplReserve(client);
+          const { result: feeResponse } = await client.request({ command: 'fee' });
+          const fee = feeResponse.drops.open_ledger_fee;
+          const requiredXrp = xrpl.dropsToXrp(reserveBaseXRP) + xrpl.dropsToXrp(fee);
+          if (xrpBalance < requiredXrp) {
+               throw new Error(`Insufficient XRP balance. Have: ${xrpBalance} XRP, Need: ~${requiredXrp} XRP for fee.`);
+          }
+
+          let tx;
           if (lpTokenLine && parseFloat(lpTokenLine.balance) > 0) {
-               resultField.value += `LP tokens detected (${lpTokenLine.balance}). Withdrawing liquidity...\n`;
+               resultField.value += `LP tokens detected (${lpTokenLine.balance}). Withdrawing liquidity\n`;
                // Withdraw all LP tokens
                const ammWithdraw = {
                     TransactionType: 'AMMWithdraw',
-                    Account: wallet.address,
+                    Account: wallet.classicAddress,
                     Asset: asset,
                     Asset2: asset2,
                     LPTokenIn: {
@@ -772,7 +846,7 @@ async function deleteAMMPool() {
                          issuer: lpToken.issuer,
                          value: lpTokenLine.balance,
                     },
-                    Flags: 0x00010000, // tfLPToken flag
+                    Flags: xrpl.AMMWithdrawFlags.tfLPToken,
                };
 
                const ledgerResponse = await client.request({ command: 'ledger' });
@@ -783,7 +857,7 @@ async function deleteAMMPool() {
                withdrawPrepared.LastLedgerSequence = currentLedger + 20;
 
                let withdrawSigned = wallet.sign(withdrawPrepared);
-               const tx = await client.submitAndWait(withdrawSigned.tx_blob);
+               tx = await client.submitAndWait(withdrawSigned.tx_blob);
 
                const resultCode = tx.result.meta.TransactionResult;
                if (resultCode !== TES_SUCCESS) {
@@ -793,51 +867,66 @@ async function deleteAMMPool() {
                resultField.value += `Liquidity withdrawn: ${prepareTxHashForOutput(tx.result.hash)}\n`;
           }
 
-          // Check XRP balance for fee
-          const accountInfo = await client.request({
-               command: 'account_info',
-               account: wallet.address,
-               ledger_index: 'current',
-          });
-          const xrpBalance = parseFloat(xrpl.dropsToXrp(accountInfo.result.account_data.Balance));
-          const requiredXrp = 1 + 0.001; // Base reserve + estimated fee
-          if (xrpBalance < requiredXrp) {
-               throw new Error(`Insufficient XRP balance. Have: ${xrpBalance} XRP, Need: ~${requiredXrp} XRP for fee.`);
-          }
-
-          // Submit AMMDelete transaction
-          const ammDelete = {
-               TransactionType: 'AMMDelete',
-               Account: wallet.address,
-               Asset: asset,
-               Asset2: asset2,
-          };
-
-          const prepared = await client.autofill(ammDelete, 20); // Increase buffer to 20 ledgers
-          let signed = wallet.sign(prepared);
-          let deleteTx;
-          let retries = 3;
-          while (retries > 0) {
-               try {
-                    deleteTx = await client.submitAndWait(signed.tx_blob);
-                    break;
-               } catch (error) {
-                    if (error.message.includes('temMALFORMED') && error.message.includes('LastLedgerSequence')) {
-                         retries--;
-                         if (retries === 0) throw new Error('Failed to delete AMM pool after retries due to ledger sequence issue.');
-                         // Re-prepare with fresh ledger sequence
-                         const newPrepared = await client.autofill(ammDelete, 20);
-                         signed = wallet.sign(newPrepared);
-                    } else {
-                         throw error;
-                    }
+          // Double check if the AMM still exists after withdrawal
+          let ammStillExists = true;
+          try {
+               await client.request({
+                    command: 'amm_info',
+                    asset,
+                    asset2,
+               });
+          } catch (e) {
+               if (e.data?.error === 'no_amm' || e.data?.error === 'actNotFound') {
+                    ammStillExists = false;
+                    resultField.value += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
+               } else {
+                    throw e; // Rethrow other errors
                }
           }
 
-          resultField.value += `AMM Pool Deleted:\n`;
-          resultField.value += `\nAssets returned to ${wallet.address}. Reserve refunded (~0.4 XRP).\n`;
-          resultField.value += prepareTxHashForOutput(deleteTx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(deleteTx.result);
+          if (ammStillExists) {
+               // Check XRP balance for fee
+               const accountInfo = await client.request({
+                    command: 'account_info',
+                    account: wallet.classicAddress,
+                    ledger_index: 'current',
+               });
+               const xrpBalance = parseFloat(xrpl.dropsToXrp(accountInfo.result.account_data.Balance));
+               const { reserveBaseXRP, reserveIncrementXRP } = await getXrplReserve(client);
+               const { result: feeResponse } = await client.request({ command: 'fee' });
+               const fee = feeResponse.drops.open_ledger_fee;
+               const requiredXrp = xrpl.dropsToXrp(reserveBaseXRP) + xrpl.dropsToXrp(fee);
+               if (xrpBalance < requiredXrp) {
+                    throw new Error(`Insufficient XRP balance. Have: ${xrpBalance} XRP, Need: ~${requiredXrp} XRP for fee.`);
+               }
+
+               // Submit AMMDelete transaction
+               const ammDelete = {
+                    TransactionType: 'AMMDelete',
+                    Account: wallet.classicAddress,
+                    Asset: asset,
+                    Asset2: asset2,
+               };
+
+               const ledgerResponse = await client.request({ command: 'ledger' });
+               const currentLedger = parseInt(ledgerResponse.result.closed.ledger.ledger_index);
+               console.log(`current_ledger ${currentLedger}`);
+
+               const prepared = await client.autofill(ammDelete, 20);
+               prepared.LastLedgerSequence = currentLedger + 20;
+               let signed = wallet.sign(prepared);
+               tx = await client.submitAndWait(signed.tx_blob);
+
+               const resultCode = tx.result.meta.TransactionResult;
+               if (resultCode !== TES_SUCCESS) {
+                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               }
+               resultField.value += `AMM Pool Deleted:\n`;
+          }
+
+          resultField.value += `\nAssets returned to ${wallet.classicAddress}.\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
 
           resultField.classList.add('success');
      } catch (error) {
@@ -859,6 +948,7 @@ async function deleteAMMPool() {
      }
 }
 
+//
 async function swapViaAMM() {
      const startTime = Date.now();
      const client = new xrpl.Client(getNet());
@@ -866,13 +956,13 @@ async function swapViaAMM() {
      const wallet = xrpl.Wallet.fromSeed(document.getElementById('accountSeedField').value);
      const payment = {
           TransactionType: 'Payment',
-          Account: wallet.address,
+          Account: wallet.classicAddress,
           Amount: {
                currency: document.getElementById('weWantCurrencyField').value,
                issuer: document.getElementById('weWantIssuerField').value,
                value: document.getElementById('weWantAmountField').value,
           },
-          Destination: wallet.address, // Swap returns to same account
+          Destination: wallet.classicAddress, // Swap returns to same account
           SendMax: {
                currency: document.getElementById('weSpendCurrencyField').value,
                issuer: document.getElementById('weSpendIssuerField').value,
@@ -886,7 +976,6 @@ async function swapViaAMM() {
      await client.disconnect();
 }
 
-// Check rippling for non-XRP assets
 async function checkRippling(client, issuer, currency) {
      if (!issuer || currency === XRP_CURRENCY) {
           return true;
@@ -904,7 +993,6 @@ async function checkRippling(client, issuer, currency) {
      return true;
 }
 
-// Check trust lines and balances for non-XRP assets
 async function checkCurrency(client, address, currency, issuer, amount) {
      if (currency === XRP_CURRENCY) {
           return;
@@ -927,7 +1015,6 @@ async function checkCurrency(client, address, currency, issuer, amount) {
      }
 }
 
-// Check balances and trust lines
 async function checkBalancesAndTrustLines(client, address, weWantCurrency, weWantIssuer, weWantAmount, weSpendIssuer, weSpendAmount, weSpendCurrency) {
      const accountInfo = await client.request({
           command: 'account_info',
