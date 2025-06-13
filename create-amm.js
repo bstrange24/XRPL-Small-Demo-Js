@@ -85,9 +85,10 @@ export async function getAMMPoolInfo() {
           } else {
                if (weSpendCurrency.value.length > 3) {
                     const endcodedCurrency = encodeCurrencyCode(weSpendCurrency.value);
-                    asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
+                    asset2 = { currency: endcodedCurrency, issuer: weWantIssuer.value };
+               } else {
+                    asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
                }
-               asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
           }
 
           const ammInfo = await client.request({
@@ -152,7 +153,7 @@ export async function getAMMPoolInfo() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getAMMPoolInfo');
+          console.log(`Leaving getAMMPoolInfo in ${Date.now() - startTime}ms`);
      }
 }
 
@@ -231,18 +232,31 @@ async function createAMMPool() {
           if (weWantCurrency.value === XRP_CURRENCY) {
                asset = { currency: XRP_CURRENCY };
           } else {
-               if (!weWantIssuer.value) throw new Error(`Issuer required for ${weWantCurrency.value}.`);
-               asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
+               if (!weWantIssuer.value) {
+                    throw new Error(`Issuer required for ${weWantCurrency.value}.`);
+               }
+               if (weWantCurrency.value.length > 3) {
+                    const endcodedCurrency = encodeCurrencyCode(weWantCurrency.value);
+                    asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
+               } else {
+                    asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
+               }
           }
           if (weSpendCurrency.value === XRP_CURRENCY) {
                asset2 = { currency: XRP_CURRENCY };
           } else {
-               if (!weSpendIssuer.value) throw new Error(`Issuer required for ${weSpendCurrency.value}.`);
-               asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
+               if (!weSpendIssuer.value) {
+                    throw new Error(`Issuer required for ${weSpendCurrency.value}.`);
+               }
+               if (weSpendCurrency.value.length > 3) {
+                    const endcodedCurrency = encodeCurrencyCode(weSpendCurrency.value);
+                    asset2 = { currency: endcodedCurrency, issuer: weSpendIssuer.value };
+               } else {
+                    asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
+               }
           }
 
           // Check if AMM pool already exists
-          console.log(`Checking AMM pool existence at ${Date.now() - startTime}ms`);
           try {
                const ammInfo = await client.request({
                     command: 'amm_info',
@@ -269,11 +283,20 @@ async function createAMMPool() {
           if (weWantCurrency.value === XRP_CURRENCY) {
                amount = xrpl.xrpToDrops(weWantAmount.value); // Convert XRP to drops (string)
           } else {
-               amount = {
-                    currency: weWantCurrency.value,
-                    issuer: weWantIssuer.value,
-                    value: weWantAmount.value.toString(),
-               };
+               if (weWantCurrency.value.length > 3) {
+                    const endcodedCurrency = encodeCurrencyCode(weWantCurrency.value);
+                    amount = {
+                         currency: endcodedCurrency,
+                         issuer: weWantIssuer.value,
+                         value: weWantAmount.value.toString(),
+                    };
+               } else {
+                    amount = {
+                         currency: weWantCurrency.value,
+                         issuer: weWantIssuer.value,
+                         value: weWantAmount.value.toString(),
+                    };
+               }
           }
 
           // Prepare Amount2
@@ -281,11 +304,20 @@ async function createAMMPool() {
           if (weSpendCurrency.value === XRP_CURRENCY) {
                amount2 = xrpl.xrpToDrops(weSpendAmount.value); // Convert XRP to drops (string)
           } else {
-               amount2 = {
-                    currency: weSpendCurrency.value,
-                    issuer: weSpendIssuer.value,
-                    value: weSpendAmount.value.toString(),
-               };
+               if (weSpendCurrency.value.length > 3) {
+                    const endcodedCurrency = encodeCurrencyCode(weSpendCurrency.value);
+                    amount2 = {
+                         currency: endcodedCurrency,
+                         issuer: weSpendIssuer.value,
+                         value: weSpendAmount.value.toString(),
+                    };
+               } else {
+                    amount2 = {
+                         currency: weSpendCurrency.value,
+                         issuer: weSpendIssuer.value,
+                         value: weSpendAmount.value.toString(),
+                    };
+               }
           }
 
           await checkRippling(client, weWantIssuer.value, weWantCurrency.value);
@@ -362,7 +394,7 @@ async function createAMMPool() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving createAMMPool');
+          console.log(`Leaving createAMMPool in ${Date.now() - startTime}ms`);
      }
 }
 
@@ -536,7 +568,7 @@ async function depositToAMM() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getAMMPoolInfo');
+          console.log(`Leaving getAMMPoolInfo in ${Date.now() - startTime}ms`);
      }
 }
 
@@ -944,36 +976,154 @@ async function deleteAMMPool() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving deleteAMMPool');
+          console.log(`Leaving deleteAMMPool in ${Date.now() - startTime}ms`);
      }
 }
 
-//
 async function swapViaAMM() {
+     console.log('Entering swapViaAMM');
      const startTime = Date.now();
-     const client = new xrpl.Client(getNet());
-     await client.connect();
-     const wallet = xrpl.Wallet.fromSeed(document.getElementById('accountSeedField').value);
-     const payment = {
-          TransactionType: 'Payment',
-          Account: wallet.classicAddress,
-          Amount: {
-               currency: document.getElementById('weWantCurrencyField').value,
-               issuer: document.getElementById('weWantIssuerField').value,
-               value: document.getElementById('weWantAmountField').value,
-          },
-          Destination: wallet.classicAddress, // Swap returns to same account
-          SendMax: {
-               currency: document.getElementById('weSpendCurrencyField').value,
-               issuer: document.getElementById('weSpendIssuerField').value,
-               value: document.getElementById('weSpendAmountField').value,
-          },
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          accountName: document.getElementById('accountNameField'),
+          accountAddress: document.getElementById('accountAddressField'),
+          accountSeed: document.getElementById('accountSeedField'),
+          xrpBalance: document.getElementById('xrpBalanceField'),
+          weWantCurrency: document.getElementById('weWantCurrencyField'),
+          weWantIssuer: document.getElementById('weWantIssuerField'),
+          weWantAmount: document.getElementById('weWantAmountField'),
+          weSpendCurrency: document.getElementById('weSpendCurrencyField'),
+          weSpendIssuer: document.getElementById('weSpendIssuerField'),
+          weSpendAmount: document.getElementById('weSpendAmountField'),
      };
-     const prepared = await client.autofill(payment);
-     const signed = wallet.sign(prepared);
-     const result = await client.submitAndWait(signed.tx_blob);
-     document.getElementById('resultField').value += `\nSwap via AMM: ${JSON.stringify(result, null, 2)}`;
-     await client.disconnect();
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount } = fields;
+
+     const validations = [
+          [!validatInput(accountName.value), 'Account Name can not be empty'],
+          [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
+          [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
+          [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
+          [!validatInput(weSpendCurrency.value), 'Taker Pays currency can not be empty'],
+          [weSpendCurrency.value.length < 3, 'Invalid Taker Pays currency. Length must be greater than 3'],
+          [!validatInput(weWantAmount.value), 'Taker Gets amount cannot be empty'],
+          [isNaN(weWantAmount.value), 'Taker Gets amount must be a valid number'],
+          [parseFloat(weWantAmount.value) <= 0, 'Taker Gets amount must be greater than zero'],
+          [!validatInput(weSpendAmount.value), 'Taker Pays amount cannot be empty'],
+          [isNaN(weSpendAmount.value), 'Taker Pays amount must be a valid number'],
+          [parseFloat(weSpendAmount.value) <= 0, 'Taker Pays amount must be greater than zero'],
+          [!xrpl.isValidAddress(weSpendIssuer.value), 'Invalid Taker Pays issuer address'],
+          [!xrpl.isValidAddress(weWantIssuer.value), 'Invalid Taker Gets issuer address'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          const weWantCur = weWantCurrency.value.length > 3 ? encodeCurrencyCode(weWantCurrency.value) : weWantCurrency.value;
+          const weSpendCur = weSpendCurrency.value.length > 3 ? encodeCurrencyCode(weSpendCurrency.value) : weSpendCurrency.value;
+          console.log('Encoded currencies:', weWantCur, weSpendCur);
+
+          try {
+               const ammInfo = await client.request({
+                    command: 'amm_info',
+                    asset: {
+                         currency: weWantCur,
+                         issuer: weWantIssuer.value,
+                    },
+                    asset2: {
+                         currency: weSpendCur,
+                         issuer: weSpendIssuer.value,
+                    },
+               });
+               if (!ammInfo.result.amm) {
+                    return setError('ERROR: No AMM pool exists for this asset pair.', spinner);
+               }
+          } catch (e) {
+               if (e.data?.error === 'no_amm' || e.data?.error === 'actNotFound') {
+                    resultField.value += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
+               } else {
+                    throw e;
+               }
+          }
+
+          const payment = {
+               TransactionType: 'Payment',
+               Account: wallet.classicAddress,
+               SendMax: {
+                    currency: weWantCur,
+                    issuer: weWantIssuer.value,
+                    value: weWantAmount.value,
+               },
+               Destination: wallet.classicAddress, // Swap returns to same account
+               Amount: {
+                    currency: weSpendCur,
+                    issuer: weSpendIssuer.value,
+                    value: weSpendAmount.value,
+               },
+          };
+
+          console.log('payment:', JSON.stringify(payment, null, 2));
+
+          const ledgerResponse = await client.request({ command: 'ledger' });
+          const currentLedger = parseInt(ledgerResponse.result.closed.ledger.ledger_index);
+          console.log(`current_ledger ${currentLedger}`);
+
+          const prepared = await client.autofill(payment, 20);
+          prepared.LastLedgerSequence = currentLedger + 20;
+          let signed = wallet.sign(prepared);
+          const tx = await client.submitAndWait(signed.tx_blob);
+
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== TES_SUCCESS) {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+          }
+
+          resultField.value += `\nSwap was successful.\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
+
+          resultField.classList.add('success');
+     } catch (error) {
+          console.error('Error:', error);
+          let errorMessage = `ERROR: ${error.message || 'Unknown error'}`;
+          if (error.message.includes('Account not found')) {
+               errorMessage += '\nNo AMM pool exists for this asset pair.';
+          } else if (error.message.includes('tecAMM_NOT_EMPTY')) {
+               errorMessage += '\nPool contains outstanding LP tokens. Ensure all liquidity is withdrawn by all holders. Click "Withdraw from AMM Pool" to redeem your liquidity.';
+          } else if (error.message.includes('ledger sequence')) {
+               errorMessage += '\nLedger sequence expired. Please try again.';
+          }
+          setError(errorMessage);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          console.log(`Leaving swapViaAMM in ${Date.now() - startTime}ms`);
+     }
 }
 
 async function checkRippling(client, issuer, currency) {

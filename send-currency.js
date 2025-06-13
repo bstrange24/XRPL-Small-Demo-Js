@@ -68,15 +68,18 @@ async function createTrustLine() {
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
+          let cur;
           if (currency.value.length > 3) {
-               currency.value = encodeCurrencyCode(currency.value);
+               cur = encodeCurrencyCode(currency.value);
+          } else {
+               cur = currency.value;
           }
 
           const trustSetTx = {
                TransactionType: 'TrustSet',
                Account: address.value,
                LimitAmount: {
-                    currency: currency.value,
+                    currency: cur,
                     issuer: destinationAddress.value,
                     value: amount.value,
                },
@@ -761,7 +764,7 @@ export async function getTokenBalance() {
                     for (let { currency, value } of currencies) {
                          console.log(`Currency ${currency} issuer ${issuer} Amount: ${value}`);
                          // if (currency.length > 3) {
-                              // currency = decodeCurrencyCode(currency);
+                         // currency = decodeCurrencyCode(currency);
                          // }
                          output += `- ${currency} from ${issuer} Amount: ${value}\n`;
                     }
