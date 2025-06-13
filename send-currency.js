@@ -2,6 +2,7 @@ import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { getCurrencyBalance } from './create-offer.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createTrustLine() {
      console.log('Entering createTrustLine');
@@ -790,42 +791,40 @@ export async function getTokenBalance() {
      }
 }
 
-async function populateFieldIssueCurrency1() {
-     currencyField.value = '';
-     amountField.value = '';
+async function displayCurrencyDataForAccount1() {
+     console.log('displayCurrencyDataForAccount1');
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
      accountSeedField.value = account1seed.value;
-     destinationField.value = '';
-     // destinationField.value = account2address.value;
-     // issuerField.value = issuerAddress.value;
-     await getXrpBalance();
-     await getAccountInfo();
-}
-
-async function populateFieldIssueCurrency2() {
      currencyField.value = '';
      amountField.value = '';
+     destinationField.value = '';
+     await getXrpBalance();
+     await getTokenBalance();
+}
+
+async function displayCurrencyDataForAccount2() {
+     console.log('displayCurrencyDataForAccount2');
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
-     destinationField.value = '';
-     // destinationField.value = account1address.value;
-     // issuerField.value = issuerAddress.value;
-     await getXrpBalance();
-     await getAccountInfo();
-}
-
-async function populateFieldIssueCurrency3() {
      currencyField.value = '';
      amountField.value = '';
+     destinationField.value = '';
+     await getXrpBalance();
+     await getTokenBalance();
+}
+
+async function displayCurrencyDataForAccount3() {
+     console.log('displayCurrencyDataForAccount3');
      accountNameField.value = issuerName.value;
      accountAddressField.value = issuerAddress.value;
      accountSeedField.value = issuerSeed.value;
+     currencyField.value = '';
+     amountField.value = '';
      destinationField.value = '';
-     // issuerField.value = '';
      await getXrpBalance();
-     await getAccountInfo();
+     await getTokenBalance();
 }
 
 window.createTrustLine = createTrustLine;
@@ -837,9 +836,9 @@ window.getTokenBalance = getTokenBalance;
 window.getTransaction = getTransaction;
 window.getCurrencyBalance = getCurrencyBalance;
 
-window.populateFieldIssueCurrency1 = populateFieldIssueCurrency1;
-window.populateFieldIssueCurrency2 = populateFieldIssueCurrency2;
-window.populateFieldIssueCurrency3 = populateFieldIssueCurrency3;
+window.displayCurrencyDataForAccount1 = displayCurrencyDataForAccount1;
+window.displayCurrencyDataForAccount2 = displayCurrencyDataForAccount2;
+window.displayCurrencyDataForAccount3 = displayCurrencyDataForAccount3;
 
 window.generateNewWallet = generateNewWallet;
 window.generateNewWalletFromSecretNumbers = generateNewWalletFromSecretNumbers;

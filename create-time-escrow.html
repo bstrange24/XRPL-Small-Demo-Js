@@ -212,21 +212,6 @@
                          </th>
                     </table>
 
-                    <!-- <table style="float: left">
-                         <th></th>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
-                                        <label for="destinationField">Memo</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
-                                   <br />
-                              </td>
-                         </tr>
-                    </table> -->
-
                     <div id="spinner" style="display: none" class="spinner"></div>
 
                     <table style="text-align: left; width: 100%">
@@ -252,7 +237,6 @@
                <details>
                     <summary style="color: white; font-size: 14px; padding-top: 20px; cursor: pointer">Escrow Info</summary>
                     <fieldset style="padding: 20px">
-                         <!-- <legend style="color: white">Escrow Info</legend> -->
                          <table style="float: left; color: white">
                               <th></th>
                               <tr style="vertical-align: top">
@@ -293,11 +277,9 @@ After `Escrow Cancel Time`                             | No          | Yes
           radioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         populate1();
+                         displayDataForAccount1();
                     } else if (this.value === 'account2') {
-                         populate2();
-                    } else if (this.value === 'accountIssuer') {
-                         populate3();
+                         displayDataForAccount2();
                     }
                });
           });

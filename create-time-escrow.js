@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, convertToEstTime } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, convertToEstTime } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -218,7 +219,7 @@ async function finishTimeBasedEscrow() {
      }
 }
 
-async function getEscrows() {
+export async function getEscrows() {
      console.log('Entering getEscrows');
 
      const resultField = document.getElementById('resultField');
@@ -404,11 +405,27 @@ async function cancelEscrow() {
      }
 }
 
+export async function displayDataForAccount1() {
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+     await getEscrows();
+}
+
+export async function displayDataForAccount2() {
+     accountNameField.value = account2name.value;
+     accountAddressField.value = account2address.value;
+     accountSeedField.value = account2seed.value;
+     await getEscrows();
+}
+
 window.createTimeBasedEscrow = createTimeBasedEscrow;
 window.getEscrows = getEscrows;
 window.finishTimeBasedEscrow = finishTimeBasedEscrow;
 window.cancelEscrow = cancelEscrow;
 window.getTransaction = getTransaction;
+window.displayDataForAccount1 = displayDataForAccount1;
+window.displayDataForAccount2 = displayDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

@@ -6,7 +6,6 @@
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
-          <!-- Suppress favicon 404 -->
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
           <script type="module" src="./send-currency.js"></script>
           <script type="module" src="./local-storage.js"></script>
@@ -90,25 +89,6 @@
                                    <br />
                               </td>
                          </tr>
-                         <!-- <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve">
-                                        <label for="ownerCountField">Owner Count</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <div style="display: inline-block; margin-right: 10px">
-                                        <input type="text" id="ownerCountField" size="5" />
-                                   </div>
-
-                                   <div style="display: inline-block">
-                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
-                                             <label for="totalXrpReservesField" style="display: inline-block; width: 150px; text-align: right; margin-right: 5px">Total XRP Reserves</label>
-                                        </span>
-                                        <input type="text" id="totalXrpReservesField" size="5" />
-                                   </div>
-                              </td>
-                         </tr> -->
                     </table>
 
                     <table style="float: left">
@@ -120,7 +100,6 @@
                                    </span>
                               </td>
                               <td>
-                                   <!-- <input type="text" id="currencyField" size="40" /> -->
                                    <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
                                         <!-- <option value="XRP">XRP</option> -->
                                         <option value="RLUSD">RLUSD</option>
@@ -129,7 +108,6 @@
                                         <option value="DOG">DOG</option>
                                    </select>
                                    <p></p>
-                                   <!-- <br /> -->
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -212,11 +190,11 @@
           radioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         populateFieldIssueCurrency1();
+                         displayCurrencyDataForAccount1();
                     } else if (this.value === 'account2') {
-                         populateFieldIssueCurrency2();
+                         displayCurrencyDataForAccount2();
                     } else if (this.value === 'accountIssuer') {
-                         populateFieldIssueCurrency3();
+                         displayCurrencyDataForAccount3();
                     }
                });
           });

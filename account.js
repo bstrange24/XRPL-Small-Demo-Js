@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, populateAccount1Only, populateAccount2Only, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
@@ -423,22 +424,6 @@ async function submitFlagTransaction(client, wallet, flagPayload) {
      }
 }
 
-function getFlagName(value) {
-     return flagList.find(f => f.value === value)?.name || `Flag ${value}`;
-}
-
-function resolveAccountSeedField() {
-     const selected = getSelectedAccount();
-     return document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
-}
-
-export function resolveAccountFields() {
-     const selected = getSelectedAccount();
-     const seedField = document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
-     const balanceField = document.getElementById(selected === 'account1' ? 'xrpBalance1Field' : 'xrpBalance2Field') || document.getElementById('xrpBalanceField');
-     return { seedField, balanceField };
-}
-
 export async function getTrustLines(account, client) {
      try {
           const response = await client.request({
@@ -465,16 +450,43 @@ export async function getTrustLines(account, client) {
      }
 }
 
+function getFlagName(value) {
+     return flagList.find(f => f.value === value)?.name || `Flag ${value}`;
+}
+
+function resolveAccountSeedField() {
+     const selected = getSelectedAccount();
+     return document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
+}
+
+export function resolveAccountFields() {
+     const selected = getSelectedAccount();
+     const seedField = document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
+     const balanceField = document.getElementById(selected === 'account1' ? 'xrpBalance1Field' : 'xrpBalance2Field') || document.getElementById('xrpBalanceField');
+     return { seedField, balanceField };
+}
+
+export async function displayDataForAccount1() {
+     accountName1Field.value = account1name.value;
+     accountAddress1Field.value = account1address.value;
+     accountSeed1Field.value = account1seed.value;
+     await getAccountInfo();
+}
+
+export async function displayDataForAccount2() {
+     accountName2Field.value = account2name.value;
+     accountAddress2Field.value = account2address.value;
+     accountSeed2Field.value = account2seed.value;
+     await getAccountInfo();
+}
+
 window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
 window.getTransaction = getTransaction;
 window.convertToEstTime = convertToEstTime;
-window.populate1 = populate1;
-window.populate2 = populate2;
-window.populate3 = populate3;
-window.populateAccount1Only = populateAccount1Only;
-window.populateAccount2Only = populateAccount2Only;
+window.displayDataForAccount1 = displayDataForAccount1;
+window.displayDataForAccount2 = displayDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

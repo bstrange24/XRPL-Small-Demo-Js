@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, addSeconds, getEnvironment, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
 import { generateCondition } from './five-bells.js';
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
@@ -12,8 +12,6 @@ async function createConditionalEscrow() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const cancelUnit = document.getElementById('escrowCancelTimeUnit').value;
-
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
           destinationAddress: document.getElementById('destinationField'),
@@ -25,7 +23,7 @@ async function createConditionalEscrow() {
           amountField: document.getElementById('amountField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          escrowCancelTimeUnitField: document.getElementById('escrowCancelTimeUnit'),
+          cancelUnit: document.getElementById('escrowCancelTimeUnit'),
      };
 
      // DOM existence check
@@ -37,7 +35,7 @@ async function createConditionalEscrow() {
           }
      }
 
-     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, memo, totalXrpReservesField, escrowCancelTimeUnitField } = fields;
+     const { accountSeed, destinationAddress, escrowCancelTime, escrowCondition, escrowFulfillment, amountField, xrpBalanceField, ownerCountField, memo, totalXrpReservesField, cancelUnit } = fields;
 
      // Validate input values
      const validations = [
@@ -57,7 +55,7 @@ async function createConditionalEscrow() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-     const newEscrowCancelTime = addTime(escrowCancelTime.value, cancelUnit);
+     const newEscrowCancelTime = addTime(escrowCancelTime.value, cancelUnit.value);
      console.log(`newEscrowCancelTime: ${newEscrowCancelTime}`);
 
      try {
@@ -221,9 +219,25 @@ async function getCondition() {
      escrowFulfillmentField.value = fulfillmentHex;
 }
 
+export async function displayDataForAccount1() {
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+     await getEscrows();
+}
+
+export async function displayDataForAccount2() {
+     accountNameField.value = account2name.value;
+     accountAddressField.value = account2address.value;
+     accountSeedField.value = account2seed.value;
+     await getEscrows();
+}
+
 window.createConditionalEscrow = createConditionalEscrow;
 window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
+window.displayDataForAccount1 = displayDataForAccount1;
+window.displayDataForAccount2 = displayDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

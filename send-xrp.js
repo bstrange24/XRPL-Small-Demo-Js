@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -104,10 +105,23 @@ async function sendXRP() {
      }
 }
 
+export async function displayDataForAccount1() {
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+     await getAccountInfo();
+}
+
+export async function displayDataForAccount2() {
+     accountNameField.value = account2name.value;
+     accountAddressField.value = account2address.value;
+     accountSeedField.value = account2seed.value;
+     await getAccountInfo();
+}
+
 window.sendXRP = sendXRP;
-window.populate1 = populate1;
-window.populate2 = populate2;
-window.populate3 = populate3;
+window.displayDataForAccount1 = displayDataForAccount1;
+window.displayDataForAccount2 = displayDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

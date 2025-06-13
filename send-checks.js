@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addSeconds, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode, decodeHex } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -42,9 +43,9 @@ async function sendCheck() {
           [!validatInput(address.value), 'Address cannot be empty'],
           [!validatInput(seed.value), 'Seed cannot be empty'],
           [!validatInput(currency.value), 'Currency cannot be empty'],
-          [!validatInput(amount.value), currencyField.value === 'XRP' ? 'XRP Amount cannot be empty' : 'Token Amount cannot be empty'],
-          [isNaN(amount.value), currencyField.value === 'XRP' ? 'XRP Amount must be a valid number' : 'Token Amount must be a valid number'],
-          [parseFloat(amount.value) <= 0, currencyField.value === 'XRP' ? 'XRP Amount must be greater than zero' : 'Token Amount must be greater than zero'],
+          [!validatInput(amount.value), currencyField.value === XRP_CURRENCY ? 'XRP Amount cannot be empty' : 'Token Amount cannot be empty'],
+          [isNaN(amount.value), currencyField.value === XRP_CURRENCY ? 'XRP Amount must be a valid number' : 'Token Amount must be a valid number'],
+          [parseFloat(amount.value) <= 0, currencyField.value === XRP_CURRENCY ? 'XRP Amount must be greater than zero' : 'Token Amount must be greater than zero'],
           [!validatInput(destination.value), 'Destination cannot be empty'],
      ];
 
@@ -86,11 +87,11 @@ async function sendCheck() {
           let results = `Connected to ${environment} ${net}\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Build SendMax amount
           let sendMax;
-          if (currency.value === 'XRP') {
+          if (currency.value === XRP_CURRENCY) {
                sendMax = xrpl.xrpToDrops(amount.value);
           } else {
                sendMax = {
@@ -131,7 +132,7 @@ async function sendCheck() {
           console.log('Response', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
@@ -141,7 +142,7 @@ async function sendCheck() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          if (currency.value !== 'XRP') {
+          if (currency.value !== XRP_CURRENCY) {
                getTokenBalance();
           }
 
@@ -282,7 +283,7 @@ async function cashCheck() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-      // Check for positive number (greater than 0)
+     // Check for positive number (greater than 0)
      if (tokenBalance && tokenBalance.value !== '') {
           const balance = Number(tokenBalance.value);
 
@@ -306,11 +307,11 @@ async function cashCheck() {
           let results = `Connected to ${environment} ${net}\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Build amount object depending on currency
           const amountToCash =
-               currency.value === 'XRP'
+               currency.value === XRP_CURRENCY
                     ? xrpl.xrpToDrops(amount.value)
                     : {
                            value: amount.value,
@@ -333,7 +334,7 @@ async function cashCheck() {
           console.log('Response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
@@ -401,7 +402,7 @@ async function cancelCheck() {
           let results = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const tx = await client.autofill({
                TransactionType: 'CheckCancel',
@@ -414,7 +415,7 @@ async function cancelCheck() {
           console.log('Response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
@@ -435,20 +436,6 @@ async function cancelCheck() {
           autoResize();
           console.log('Leaving cancelCheck');
      }
-}
-
-async function populateFieldSendCurrency1() {
-     accountNameField.value = account1name.value;
-     accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
-     destinationField.value = account2address.value;
-     amountField.value = '';
-     memoField.value = '';
-     expirationTimeField.value = '';
-     checkIdField.value = '';
-     currencyField.value = 'XRP';
-     await getXrpBalance();
-     await getAccountInfo();
 }
 
 export async function getTokenBalance() {
@@ -489,7 +476,7 @@ export async function getTokenBalance() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const gatewayBalances = await client.request({
                command: 'gateway_balances',
@@ -539,22 +526,21 @@ export async function getTokenBalance() {
      }
 }
 
-function populateIssuerDropdown(issuerField, gatewayBalances) {
-     const issuerDropdown = issuerField;
-
-     // Clear existing options (if any)
-     issuerDropdown.innerHTML = '';
-
-     // Loop through each issuer and add it as an option
-     Object.keys(gatewayBalances.result.assets).forEach(issuer => {
-          const option = document.createElement('option');
-          option.value = issuer;
-          option.textContent = issuer;
-          issuerDropdown.appendChild(option);
-     });
+async function displayCheckDataForAccount1() {
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+     destinationField.value = account2address.value;
+     amountField.value = '';
+     memoField.value = '';
+     expirationTimeField.value = '';
+     checkIdField.value = '';
+     currencyField.value = XRP_CURRENCY;
+     await getXrpBalance();
+     await getChecks();
 }
 
-async function populateFieldSendCurrency2() {
+async function displayCheckDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
@@ -563,20 +549,9 @@ async function populateFieldSendCurrency2() {
      memoField.value = '';
      expirationTimeField.value = '';
      checkIdField.value = '';
-     currencyField.value = 'XRP';
+     currencyField.value = XRP_CURRENCY;
      await getXrpBalance();
-     await getAccountInfo();
-}
-
-async function populateFieldSendCurrency3() {
-     accountNameField.value = issuerName.value;
-     accountSeedField.value = issuerSeed.value;
-     amountField.value = '';
-     destinationField.value = '';
-     issuerField.value = '';
-     currencyField.value = '';
-     await getXrpBalance();
-     await getAccountInfo();
+     await getChecks();
 }
 
 window.sendCheck = sendCheck;
@@ -585,9 +560,8 @@ window.cashCheck = cashCheck;
 window.cancelCheck = cancelCheck;
 window.getTransaction = getTransaction;
 window.getTokenBalance = getTokenBalance;
-window.populateFieldSendCurrency1 = populateFieldSendCurrency1;
-window.populateFieldSendCurrency2 = populateFieldSendCurrency2;
-window.populateFieldSendCurrency3 = populateFieldSendCurrency3;
+window.displayCheckDataForAccount1 = displayCheckDataForAccount1;
+window.displayCheckDataForAccount2 = displayCheckDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

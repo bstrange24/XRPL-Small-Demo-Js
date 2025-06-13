@@ -3,6 +3,7 @@ import { generate, derive } from 'xrpl-accountlib';
 import { saveInputValues } from './local-storage';
 import { getAccountInfo } from './account';
 import { getAMMPoolInfo } from './create-amm.js';
+import { getEscrows } from './create-time-escrow.js';
 
 let clientInstance = null;
 let isConnecting = false;
@@ -448,21 +449,21 @@ export async function getAccountFromSecretNumbers(walletNumber) {
      }
 }
 
-export async function populateAccount1Only() {
-     accountName1Field.value = account1name.value;
-     accountAddress1Field.value = account1address.value;
-     accountSeed1Field.value = account1seed.value;
-     getXrpBalance('accountAddress1Field', 'xrpBalance1Field');
-     await getAccountInfo();
-}
+// export async function populateAccount1Only() {
+//      accountName1Field.value = account1name.value;
+//      accountAddress1Field.value = account1address.value;
+//      accountSeed1Field.value = account1seed.value;
+//      getXrpBalance('accountAddress1Field', 'xrpBalance1Field');
+//      await getAccountInfo();
+// }
 
-export async function populateAccount2Only() {
-     accountName2Field.value = account2name.value;
-     accountAddress2Field.value = account2address.value;
-     accountSeed2Field.value = account2seed.value;
-     getXrpBalance('accountAddress2Field', 'xrpBalance2Field');
-     await getAccountInfo();
-}
+// export async function populateAccount2Only() {
+//      accountName2Field.value = account2name.value;
+//      accountAddress2Field.value = account2address.value;
+//      accountSeed2Field.value = account2seed.value;
+//      getXrpBalance('accountAddress2Field', 'xrpBalance2Field');
+//      await getAccountInfo();
+// }
 
 export async function populateTakerGetsTakerPayFields() {
      accountNameField.value = account1name.value;
@@ -505,11 +506,6 @@ export async function populate1() {
           destinationField.value = account2address.value;
      }
 
-     const escrowOwnerField = document.getElementById('escrowOwnerField');
-     if (validatInput(escrowOwnerField)) {
-          escrowOwnerField.value = account1address.value;
-     }
-
      const issuerField = document.getElementById('issuerField');
      if (validatInput(issuerField)) {
           issuerField.value = account2address.value;
@@ -526,8 +522,18 @@ export async function populate1() {
           memoField.value = '';
      }
 
-     getXrpBalance();
-     await getAccountInfo();
+     const escrowOwnerField = document.getElementById('escrowOwnerField');
+     if (validatInput(escrowOwnerField)) {
+          escrowOwnerField.value = account1address.value;
+          await getEscrows();
+          getXrpBalance();
+     } else {
+          getXrpBalance();
+          await getAccountInfo();
+     }
+
+     // getXrpBalance();
+     // await getAccountInfo();
 }
 
 export async function populate2() {

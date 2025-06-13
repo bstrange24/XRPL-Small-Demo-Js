@@ -1,8 +1,9 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createOffer() {
      console.log('Entering createOffer');
@@ -19,10 +20,10 @@ async function createOffer() {
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
-     let we_want;
-     let takerGetsString;
-     let we_spend;
-     let takerPaysString;
+     // let we_want;
+     // let takerGetsString;
+     // let we_spend;
+     // let takerPaysString;
 
      const fields = {
           accountName: document.getElementById('accountNameField'),
@@ -1180,6 +1181,29 @@ async function getXrpBalance() {
      }
 }
 
+export async function displayOfferDataForAccount1() {
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+
+     const account2addressField = document.getElementById('account2address');
+     if (validatInput(account2addressField)) {
+          document.getElementById('weWantIssuerField').value = account2addressField.value;
+     }
+
+     document.getElementById('weWantCurrencyField').value = 'DOG'; // RLUSD DOGGY
+     document.getElementById('weWantAmountField').value = '1';
+     document.getElementById('weSpendCurrencyField').value = 'XRP';
+     document.getElementById('weSpendAmountField').value = '1';
+
+     const client = await getClient();
+     document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG'); // RLUSD DOGGY
+     document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
+
+     await getXrpBalance();
+     await getOffers();
+}
+
 window.createOffer = createOffer;
 window.getOffers = getOffers;
 window.cancelOffer = cancelOffer;
@@ -1192,7 +1216,7 @@ window.getTokenBalance = getTokenBalance;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
-window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;
+window.displayOfferDataForAccount1 = displayOfferDataForAccount1;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;

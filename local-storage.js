@@ -1,3 +1,5 @@
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+
 // Input IDs and config
 const inputIds = ['account1name', 'account2name', 'issuerName', 'account1address', 'account2address', 'issuerAddress', 'account1seed', 'account2seed', 'issuerSeed', 'account1mnemonic', 'account2mnemonic', 'issuerMnemonic', 'account1secretNumbers', 'account2secretNumbers', 'issuerSecretNumbers', 'accountNameField', 'accountAddressField', 'accountSeedField', 'xrpBalanceField', 'amountField', 'destinationField'];
 

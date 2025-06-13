@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function getNFT() {
      console.log('Entering getNFT');
@@ -32,13 +33,13 @@ async function getNFT() {
           let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const nftInfo = await client.request({
@@ -142,13 +143,13 @@ async function mintNFT() {
           let results = `Connected to ${environment} ${net}\nMinting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -168,7 +169,7 @@ async function mintNFT() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -232,13 +233,13 @@ async function mintBatchNFT() {
           let results = `Connected to ${environment} ${net}\nMinting ${nftCount} NFTs\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           // Use Batch Transactions if supported (rippled 2.5.0+)
@@ -269,7 +270,7 @@ async function mintBatchNFT() {
                     const preparedTx = await client.autofill(transaction);
                     const signed = wallet.sign(preparedTx);
                     const singleTx = await client.submitAndWait(signed.tx_blob);
-                    if (singleTx.result.meta.TransactionResult !== 'tesSUCCESS') {
+                    if (singleTx.result.meta.TransactionResult !== TES_SUCCESS) {
                          return setError(`ERROR: Minting NFT ${i + 1} failed: ${singleTx.result.meta.TransactionResult}\n${parseXRPLTransaction(singleTx.result)}`, spinner);
                     }
                }
@@ -277,7 +278,7 @@ async function mintBatchNFT() {
           }
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -337,13 +338,13 @@ async function setAuthorizedMinter() {
           let results = `Connected to ${environment} ${net}\nSetting Authorized Minter\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -357,7 +358,7 @@ async function setAuthorizedMinter() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -426,13 +427,13 @@ async function sellNFT() {
           let results = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -455,7 +456,7 @@ async function sellNFT() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -512,13 +513,13 @@ async function cancelBuyOffer() {
           let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -532,7 +533,7 @@ async function cancelBuyOffer() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -589,13 +590,13 @@ async function cancelSellOffer() {
           let results = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -609,7 +610,7 @@ async function cancelSellOffer() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -673,13 +674,13 @@ async function buyNFT() {
           let results = `Connected to ${environment} ${net}\nBuying NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           // Fetch sell offers
@@ -737,7 +738,7 @@ async function buyNFT() {
           const tx = await client.submitAndWait(transaction, { wallet });
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -796,13 +797,13 @@ async function burnNFT() {
           let results = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -813,7 +814,7 @@ async function burnNFT() {
 
           const tx = await client.submitAndWait(transaction, { wallet });
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -875,13 +876,13 @@ async function updateNFTMetadata() {
           let results = `Connected to ${environment} ${net}\nUpdating NFT Metadata\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
+          // if (environment === MAINNET) {
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: ed25519_ENCRYPTION });
           // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
+          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: secp256k1_ENCRYPTION });
           // }
 
           const transaction = {
@@ -896,7 +897,7 @@ async function updateNFTMetadata() {
           const tx = await client.submitAndWait(signed.tx_blob);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -1059,6 +1060,58 @@ async function getNFTOffers() {
      }
 }
 
+export async function displayNftDataForAccount1() {
+     console.log('displayNftDataForAccount1');
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+
+     const issuerField = document.getElementById('issuerField');
+     if (validatInput(issuerField)) {
+          issuerField.value = account2address.value;
+          destinationField.value = '';
+     }
+
+     const amountField = document.getElementById('amountField');
+     if (validatInput(amountField)) {
+          amountField.value = '';
+     }
+
+     const memoField = document.getElementById('memoField');
+     if (validatInput(memoField)) {
+          memoField.value = '';
+     }
+
+     getXrpBalance();
+     getNFT();
+}
+
+export async function displayNftDataForAccount2() {
+     console.log('displayNftDataForAccount1');
+     accountNameField.value = account1name.value;
+     accountAddressField.value = account1address.value;
+     accountSeedField.value = account1seed.value;
+
+     const issuerField = document.getElementById('issuerField');
+     if (validatInput(issuerField)) {
+          issuerField.value = account2address.value;
+          destinationField.value = '';
+     }
+
+     const amountField = document.getElementById('amountField');
+     if (validatInput(amountField)) {
+          amountField.value = '';
+     }
+
+     const memoField = document.getElementById('memoField');
+     if (validatInput(memoField)) {
+          memoField.value = '';
+     }
+
+     getXrpBalance();
+     getNFT();
+}
+
 window.mintNFT = mintNFT;
 window.mintBatchNFT = mintBatchNFT;
 window.setAuthorizedMinter = setAuthorizedMinter;
@@ -1074,9 +1127,8 @@ window.updateNFTMetadata = updateNFTMetadata;
 window.getNFTOffers = getNFTOffers;
 window.getTransaction = getTransaction;
 
-window.populate1 = populate1;
-window.populate2 = populate2;
-window.populate3 = populate3;
+window.displayNftDataForAccount1 = displayNftDataForAccount1;
+window.displayNftDataForAccount2 = displayNftDataForAccount2;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
