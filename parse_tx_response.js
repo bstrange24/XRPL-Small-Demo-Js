@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 const formatXRPLAmount = value => {
      if (typeof value === 'object' && value.currency && value.value) {
@@ -1229,7 +1230,7 @@ const tx = {
                     },
                ],
                TransactionIndex: 0,
-               TransactionResult: 'tesSUCCESS',
+               TransactionResult: TES_SUCCESS,
                nftoken_id: '00080000EA75EB92F92645017A74ABFBB9232F5E7422C4C2682197810030C7E6',
           },
           tx_json: {
@@ -1301,7 +1302,7 @@ const tx1 = {
                     },
                ],
                TransactionIndex: 0,
-               TransactionResult: 'tesSUCCESS',
+               TransactionResult: TES_SUCCESS,
                delivered_amount: '360000',
           },
           tx_json: {
@@ -1446,7 +1447,7 @@ const escrow = {
                     },
                ],
                TransactionIndex: 0,
-               TransactionResult: 'tesSUCCESS',
+               TransactionResult: TES_SUCCESS,
           },
           tx_json: {
                Account: 'r445P3SQcDEp9tsBEofCF6s9FG9nb99UxX',

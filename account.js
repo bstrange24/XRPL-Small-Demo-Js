@@ -1,45 +1,10 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime } from './utils.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
-
-const flagList = [
-     { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
-     { name: 'asfRequireAuth', label: 'Require Trust Line Auth', value: 2, xrplName: 'requireAuthorization', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireAuth },
-     { name: 'asfDisallowXRP', label: 'Disallow XRP Payments', value: 3, xrplName: 'disallowIncomingXRP', xrplEnum: xrpl.AccountSetAsfFlags.asfDisallowXRP },
-     { name: 'asfDisableMaster', label: 'Disable Master Key', value: 4, xrplName: 'disableMasterKey', xrplEnum: xrpl.AccountSetAsfFlags.asfDisableMaster },
-     // { name: 'asfAccountTxnID', label: 'Account Txn ID', value: 5, xrplName: 'accountTxnID', xrplEnum: xrpl.AccountSetAsfFlags.asfAccountTxnID },
-     { name: 'asfNoFreeze', label: 'Prevent Freezing Trust Lines', value: 6, xrplName: 'noFreeze', xrplEnum: xrpl.AccountSetAsfFlags.asfNoFreeze },
-     { name: 'asfGlobalFreeze', label: 'Freeze All Trust Lines', value: 7, xrplName: 'globalFreeze', xrplEnum: xrpl.AccountSetAsfFlags.asfGlobalFreeze },
-     { name: 'asfDefaultRipple', label: 'Enable Rippling', value: 8, xrplName: 'defaultRipple', xrplEnum: xrpl.AccountSetAsfFlags.asfDefaultRipple },
-     { name: 'asfDepositAuth', label: 'Require Deposit Auth', value: 9, xrplName: 'depositAuth', xrplEnum: xrpl.AccountSetAsfFlags.asfDepositAuth },
-     // { name: 'asfAuthorizedNFTokenMinter', label: 'Require Deposit Auth', value: 10, xrplName: 'authorizedNFTokenMinter', xrplEnum: xrpl.AccountSetAsfFlags.asfAuthorizedNFTokenMinter },
-     { name: 'asfDisallowIncomingNFTokenOffer', label: 'Block NFT Offers', value: 12, xrplName: 'disallowIncomingNFTokenOffer', xrplEnum: xrpl.AccountSetAsfFlags.asfDisallowIncomingNFTokenOffer },
-     { name: 'asfDisallowIncomingCheck', label: 'Block Checks', value: 13, xrplName: 'disallowIncomingCheck', xrplEnum: xrpl.AccountSetAsfFlags.asfDisallowIncomingCheck },
-     { name: 'asfDisallowIncomingPayChan', label: 'Block Payment Channels', value: 14, xrplName: 'disallowIncomingPayChan', xrplEnum: xrpl.AccountSetAsfFlags.asfDisallowIncomingPayChan },
-     { name: 'asfDisallowIncomingTrustline', label: 'Block Trust Lines', value: 15, xrplName: 'disallowIncomingTrustline', xrplEnum: xrpl.AccountSetAsfFlags.asfDisallowIncomingTrustline },
-     { name: 'asfAllowTrustLineClawback', label: 'Allow Trust Line Clawback', value: 16, xrplName: 'allowTrustLineClawback', xrplEnum: xrpl.AccountSetAsfFlags.asfAllowTrustLineClawback },
-];
-
-const flagMap = {
-     asfRequireDest: 'requireDestinationTag',
-     asfRequireAuth: 'requireAuthorization',
-     asfDisallowXRP: 'disallowIncomingXRP',
-     asfDisableMaster: 'disableMasterKey',
-     // asfAccountTxnID: 'accountTxnID',
-     asfNoFreeze: 'noFreeze',
-     asfGlobalFreeze: 'globalFreeze',
-     asfDefaultRipple: 'defaultRipple',
-     asfDepositAuth: 'depositAuth',
-     // asfAuthorizedNFTokenMinter: 'authorizedNFTokenMinter',
-     asfDisallowIncomingNFTokenOffer: 'disallowIncomingNFTokenOffer',
-     asfDisallowIncomingCheck: 'disallowIncomingCheck',
-     asfDisallowIncomingPayChan: 'disallowIncomingPayChan',
-     asfDisallowIncomingTrustline: 'disallowIncomingTrustline',
-     asfAllowTrustLineClawback: 'allowTrustLineClawback',
-};
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, flagList, flagMap } from './constants.js';
 
 export async function getAccountInfo() {
      console.log('Entering getAccountInfo');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -47,38 +12,40 @@ export async function getAccountInfo() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
-     const currencyBalanceField = document.getElementById('currencyBalanceField');
-     const currencyField = document.getElementById('currencyField');
-     const currentTimeField = document.getElementById('currentTimeField');
+     const fields = {
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
 
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim();
+          }
+     }
+
+     const { ownerCountField, totalXrpReservesField, currencyField, totalExecutionTime } = fields;
      const { seedField, balanceField } = resolveAccountFields();
+     const validations = [[!validatInput(seedField.value), 'ERROR: Account seed amount can not be empty']];
 
-     if (!seedField || !balanceField) return setError('ERROR: DOM elements not found', spinner);
-     if (!validatInput(seedField.value)) return setError('ERROR: Seed cannot be empty', spinner);
-     if (seedField.value === 'None') return setError('ERROR: Seed is set to None', spinner);
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
 
      try {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: 'secp256k1' });
-          // }
-
-          let results = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
 
           // Fetch account info
           const { result: accountInfo } = await client.request({
                method: 'account_info',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'validated',
           });
 
@@ -96,36 +63,37 @@ export async function getAccountInfo() {
           // Fetch account objects
           const { result: accountObjects } = await client.request({
                method: 'account_objects',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'validated',
           });
 
           console.log('accountObjects', accountObjects);
 
           const flagsDetails = parseAccountFlagsDetails(accountInfo.account_flags);
-          results += `Address: ${wallet.address}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
+          resultField.value += `Address: ${wallet.classicAddress}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
 
           if (accountObjects.account_objects.length <= 0) {
-               results += `No account objects found for ${wallet.address}`;
+               resultField.value += `No account objects found for ${wallet.classicAddress}`;
           } else {
-               results += parseXRPLAccountObjects(accountObjects);
+               resultField.value += parseXRPLAccountObjects(accountObjects);
           }
 
-          resultField.value = results;
           resultField.classList.add('success');
 
+          const currencyBalanceField = document.getElementById('currencyBalanceField');
           if (currencyBalanceField) {
                if (currencyField) {
-                    currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.address, currencyField.value);
+                    currencyBalanceField.value = await getOnlyTokenBalance(client, wallet.classicAddress, currencyField.value);
                }
           }
 
+          const currentTimeField = document.getElementById('currentTimeField');
           if (currentTimeField) {
                document.getElementById('currentTimeField').value = convertToEstTime(new Date().toISOString());
           }
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -133,12 +101,15 @@ export async function getAccountInfo() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getAccountInfo');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getAccountInfo in ${now}ms`);
      }
 }
 
 async function updateFlags() {
      console.log('Entering updateFlags');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -148,6 +119,7 @@ async function updateFlags() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      const accountSeedField = resolveAccountSeedField();
      if (!accountSeedField) return setError('ERROR: Account seed field not found', spinner);
@@ -163,20 +135,13 @@ async function updateFlags() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nGetting Account Data\n`;
 
           const { result: accountInfo } = await client.request({
                method: 'account_info',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'validated',
           });
 
@@ -204,10 +169,11 @@ async function updateFlags() {
                resultField.value += `\n\nClear Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
+          resultField.value += `\nTotal execution time ${Date.now() - startTime}ms`;
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -215,12 +181,15 @@ async function updateFlags() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving updateFlags');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving updateFlags in ${now}ms`);
      }
 }
 
 async function setDepositAuthAccounts(authorizeFlag) {
      console.log('Entering setDepositAuthAccounts');
+     const startTime = Date.now();
      console.log('Authorize Flag:', authorizeFlag);
 
      const resultField = document.getElementById('resultField');
@@ -231,6 +200,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      const selected = getSelectedAccount();
      if (!selected) return setError(`Please select an account.`, spinner);
@@ -255,12 +225,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(seed, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nSetting Deposit Authorization\n\n`;
 
@@ -281,7 +246,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           // Ensure DepositAuth is enabled
           const { result: accountInfo } = await client.request({
                method: 'account_info',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'validated',
           });
 
@@ -292,7 +257,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           // Prevent duplicate preauthorization
           const { result: accountObjects } = await client.request({
                method: 'account_objects',
-               account: wallet.address,
+               account: wallet.classicAddress,
                type: 'deposit_preauth',
                ledger_index: 'validated',
           });
@@ -307,7 +272,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
 
           const tx = await client.autofill({
                TransactionType: 'DepositPreauth',
-               Account: wallet.address,
+               Account: wallet.classicAddress,
                [authorizeFlag === 'Y' ? 'Authorize' : 'Unauthorize']: authorizedAddress,
                Fee: feeResponse.drops.open_ledger_fee,
           });
@@ -317,17 +282,18 @@ async function setDepositAuthAccounts(authorizeFlag) {
           const response = await client.submitAndWait(tx, { wallet });
 
           const resultCode = response.result.meta?.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
           resultField.value += `Deposit Auth finished successfully.\n\n`;
           resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(response.result);
+          resultField.value += `\nTotal execution time ${Date.now() - startTime}ms`;
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          balanceField.value = (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value;
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -335,7 +301,9 @@ async function setDepositAuthAccounts(authorizeFlag) {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving setDepositAuthAccounts');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving setDepositAuthAccounts in ${now}ms`);
      }
 }
 
@@ -346,6 +314,7 @@ export async function getLedgerAccountInfo(client, accountAddress, validated) {
                account: accountAddress,
                ledger_index: validated,
           });
+          console.debug(`accountInfo: ${accountInfo}`);
           return accountInfo;
      } catch (error) {
           return null;
@@ -360,7 +329,7 @@ export async function fetchAccountObjects(walletAddress) {
                account: walletAddress.value,
                ledger_index: 'validated',
           });
-          console.log('accountObjects', accountObjects);
+          console.debug(`account_objects: ${accountObjects}`);
           return accountObjects;
      } catch (error) {
           console.error('Error fetching account objects:', error);
@@ -373,11 +342,12 @@ function getSelectedAccount() {
      const account2 = document.getElementById('account2');
 
      if (account1.checked) {
-          return account1.value; // 'account1'
+          return account1.value;
      } else if (account2.checked) {
-          return account2.value; // 'account2'
+          return account2.value;
      } else {
-          return null; // No radio button checked
+          // No radio button checked
+          return null;
      }
 }
 
@@ -400,31 +370,38 @@ function getFlagUpdates(currentFlags) {
 }
 
 async function submitFlagTransaction(client, wallet, flagPayload) {
+     console.log('Entering submitFlagTransaction');
+     const startTime = Date.now();
+
      const tx = {
           TransactionType: 'AccountSet',
-          Account: wallet.address,
+          Account: wallet.classicAddress,
           ...flagPayload,
      };
 
      try {
           const response = await client.submitAndWait(tx, { wallet });
           const txResult = response.result.meta?.TransactionResult;
-          if (txResult !== 'tesSUCCESS') {
+          if (txResult !== TES_SUCCESS) {
                return {
                     success: false,
                     message: `ERROR: ${txResult}\n${parseXRPLTransaction(response.result)}`,
                };
           }
+          console.log(`Leaving submitFlagTransaction in ${Date.now() - startTime}ms`);
           return {
                success: true,
                message: parseXRPLTransaction(response.result),
           };
      } catch (err) {
+          console.log(`Leaving submitFlagTransaction in ${Date.now() - startTime}ms`);
           return { success: false, message: `ERROR submitting flag: ${err.message}` };
      }
 }
 
 export async function getTrustLines(account, client) {
+     console.log('Entering getTrustLines');
+     const startTime = Date.now();
      try {
           const response = await client.request({
                command: 'account_lines',
@@ -435,17 +412,20 @@ export async function getTrustLines(account, client) {
 
           // Filter out trust lines with Limit: 0
           const activeTrustLines = trustLines.filter(line => parseFloat(line.limit) > 0);
-          console.log(`Active trust lines for ${account}:`, activeTrustLines);
+          console.debug(`Active trust lines for ${account}:`, activeTrustLines);
 
           if (activeTrustLines.length === 0) {
                console.log(`No active trust lines found for ${account}`);
+               console.log(`Leaving getTrustLines in ${Date.now() - startTime}ms`);
                return [];
           }
 
-          console.log(`Trust lines for ${account}:`, activeTrustLines);
+          console.debug(`Trust lines for ${account}:`, activeTrustLines);
+          console.log(`Leaving getTrustLines in ${Date.now() - startTime}ms`);
           return trustLines;
      } catch (error) {
           console.error('Error fetching trust lines:', error);
+          console.log(`Leaving getTrustLines in ${Date.now() - startTime}ms`);
           return [];
      }
 }

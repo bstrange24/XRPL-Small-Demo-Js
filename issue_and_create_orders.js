@@ -1,4 +1,5 @@
 import * as xrpl from 'xrpl';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 // Sleep helper
 function sleep(ms) {
@@ -33,11 +34,11 @@ async function main() {
      console.log('Connected to XRPL Testnet');
 
      // Issuer wallet (cold)
-     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: 'secp256k1' });
+     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
      console.log('Cold wallet address:', cold_wallet.address);
 
      // Static hot wallet (buyer)
-     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: 'secp256k1' });
+     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
      console.log('Hot wallet address:', hot_wallet.address);
 
      console.log('process.argv' + process.argv);
@@ -167,7 +168,7 @@ async function main() {
 
           console.log('createSellOffer: ' + createSellOffer);
           if (createSellOffer) {
-               // const wallet = xrpl.Wallet.fromSeed('shNTx357ynZ5qHoJ4opfdjLeX3fDY', { algorithm: 'secp256k1' });
+               // const wallet = xrpl.Wallet.fromSeed('shNTx357ynZ5qHoJ4opfdjLeX3fDY', { algorithm: secp256k1_ENCRYPTION });
                // console.log('wallet address:', wallet.address);
                // const offer = {
                //      TransactionType: 'OfferCreate',

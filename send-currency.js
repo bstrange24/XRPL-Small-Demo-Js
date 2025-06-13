@@ -2,19 +2,17 @@ import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { getCurrencyBalance } from './create-offer.js';
 import { getLedgerAccountInfo, getTrustLines } from './account.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createTrustLine() {
      console.log('Entering createTrustLine');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
-
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           address: document.getElementById('accountAddressField'),
@@ -23,6 +21,9 @@ async function createTrustLine() {
           amount: document.getElementById('amountField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
           destinationAddress: document.getElementById('destinationField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -34,7 +35,7 @@ async function createTrustLine() {
           }
      }
 
-     const { address, seed, destinationAddress, currency, amount, xrpBalanceField } = fields;
+     const { address, seed, destinationAddress, currency, amount, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      // Validation checks
      const validations = [
@@ -55,17 +56,9 @@ async function createTrustLine() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nCreating trust line\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nCreating trust line\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
@@ -78,7 +71,7 @@ async function createTrustLine() {
 
           const trustSetTx = {
                TransactionType: 'TrustSet',
-               Account: address.value,
+               Account: wallet.classicAddress,
                LimitAmount: {
                     currency: cur,
                     issuer: destinationAddress.value,
@@ -96,18 +89,17 @@ async function createTrustLine() {
           console.log('Create Trustline tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          results += `Trustline created successfully.\n\n`;
-          results += prepareTxHashForOutput(tx.result.hash) + '\n';
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
+          resultField.value += `Trustline created successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -115,12 +107,15 @@ async function createTrustLine() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving createTrustLine');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving createTrustLine in ${now}ms`);
      }
 }
 
 async function removeTrustLine() {
      console.log('Entering removeTrustLine');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -128,15 +123,15 @@ async function removeTrustLine() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
-
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
           destinationAddress: document.getElementById('destinationField'),
           currency: document.getElementById('currencyField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -148,7 +143,7 @@ async function removeTrustLine() {
           }
      }
 
-     const { address, seed, destinationAddress, currency, xrpBalanceField } = fields;
+     const { address, seed, destinationAddress, currency, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      // Validation checks
      const validations = [
@@ -166,16 +161,19 @@ async function removeTrustLine() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nRemoving trust line\n\n`;
-          resultField.value = results;
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          const trustLines = await getTrustLines(address.value, client);
+          resultField.value = `Connected to ${environment} ${net}\nRemoving trust line\n\n`;
+
+          const trustLines = await getTrustLines(wallet.classicAddress, client);
 
           // If no trust lines, return early
           if (trustLines.length === 0) {
-               console.log(`No trust lines found for ${address.value}`);
-               resultField.value += `No trust lines found for ${address.value}`;
+               console.log(`No trust lines found for ${wallet.classicAddress}`);
+               resultField.value += `No trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
@@ -189,15 +187,6 @@ async function removeTrustLine() {
                return setError(`ERROR: Cannot remove trust line: Balance is ${targetLine.balance}. Balance must be 0.`, spinner);
           }
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
-
           const { result: feeResponse } = await client.request({ command: 'fee' });
 
           if (currency.value.length > 3) {
@@ -206,7 +195,7 @@ async function removeTrustLine() {
 
           const trustSetTx = {
                TransactionType: 'TrustSet',
-               Account: address.value,
+               Account: wallet.classicAddress,
                LimitAmount: {
                     currency: currency.value,
                     issuer: destinationAddress.value,
@@ -224,18 +213,17 @@ async function removeTrustLine() {
           console.log('Remove Trustline tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          results += `Trustline removed successfully.\n\n`;
-          results += prepareTxHashForOutput(tx.result.hash) + '\n';
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
+          resultField.value += `Trustline removed successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -243,12 +231,15 @@ async function removeTrustLine() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving removeTrustLine');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving removeTrustLine in ${now}ms`);
      }
 }
 
 async function getTrustLine() {
      console.log('Entering getTrustLine');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -256,12 +247,12 @@ async function getTrustLine() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
-
      const fields = {
           seed: document.getElementById('accountSeedField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // DOM existence check
@@ -273,7 +264,7 @@ async function getTrustLine() {
           }
      }
 
-     const { seed, xrpBalanceField } = fields;
+     const { seed, xrpBalanceField, totalExecutionTime, ownerCountField, totalXrpReservesField } = fields;
 
      // Validation checks
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
@@ -288,39 +279,36 @@ async function getTrustLine() {
 
           let results = (resultField.value = `Connected to ${environment} ${net}\nGetting Trust Lines.\n\n`);
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
-
-          const trustLines = await getTrustLines(wallet.address, client);
+          const trustLines = await getTrustLines(wallet.classicAddress, client);
 
           // If no trust lines, return early
           if (trustLines.length === 0) {
-               console.log(`No trust lines found for ${wallet.address}`);
-               resultField.value += `No trust lines found for ${wallet.address}`;
+               console.log(`No trust lines found for ${wallet.classicAddress}`);
+               resultField.value += `No trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
           // Filter out trust lines with Limit: 0
           const activeTrustLines = trustLines.filter(line => parseFloat(line.limit) > 0);
-          console.log(`Active trust lines for ${wallet.address}:`, activeTrustLines);
+          console.log(`Active trust lines for ${wallet.classicAddress}:`, activeTrustLines);
 
           if (activeTrustLines.length === 0) {
-               console.log(`No active trust lines found for ${wallet.address}`);
-               resultField.value += `No active trust lines found for ${wallet.address}`;
+               console.log(`No active trust lines found for ${wallet.classicAddress}`);
+               resultField.value += `No active trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
-          console.log(`Trust lines for ${wallet.address}:`, trustLines);
+          console.log(`Trust lines for ${wallet.classicAddress}:`, trustLines);
 
-          results += `Active Trust Lines for ${wallet.address}:\n`;
+          results += `Active Trust Lines for ${wallet.classicAddress}:\n`;
           for (const line of activeTrustLines) {
                if (line.currency.length > 3) {
                     line.currency = decodeCurrencyCode(line.currency);
@@ -330,8 +318,8 @@ async function getTrustLine() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -339,21 +327,21 @@ async function getTrustLine() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getTrustLine');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getTrustLine in ${now}ms`);
      }
 }
 
 async function sendCurrency() {
      console.log('Entering sendCurrency');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField.classList.remove('error', 'success');
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
-
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountAddress: document.getElementById('accountAddressField'),
@@ -362,6 +350,9 @@ async function sendCurrency() {
           destinationAddress: document.getElementById('destinationField'),
           amountField: document.getElementById('amountField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // DOM existence check
@@ -373,7 +364,7 @@ async function sendCurrency() {
           }
      }
 
-     const { accountAddress, seed, currency, destinationAddress, amountField, xrpBalanceField } = fields;
+     const { accountAddress, seed, currency, destinationAddress, amountField, xrpBalanceField, totalExecutionTime, ownerCountField, totalXrpReservesField } = fields;
 
      // Validation checks
      const validations = [
@@ -397,23 +388,18 @@ async function sendCurrency() {
           let results = `Connected to ${environment} ${net}\nSending Currency.\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(v.value, { algorithm: 'secp256k1' });
-          // }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Step 1: Check sender's trust line and balance
           const senderTrustLines = await getTrustLines(accountAddress.value, client);
 
           // If no trust lines, return early
           if (senderTrustLines.length === 0) {
-               console.log(`No trust lines found for ${wallet.address}`);
-               resultField.value += `No trust lines found for ${wallet.address}`;
+               console.log(`No trust lines found for ${wallet.classicAddress}`);
+               resultField.value += `No trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
@@ -431,9 +417,11 @@ async function sendCurrency() {
 
           // If no trust lines, return early
           if (destTrustLines.length === 0) {
-               console.log(`No trust lines found for ${wallet.address}`);
-               resultField.value += `No trust lines found for ${wallet.address}`;
+               console.log(`No trust lines found for ${wallet.classicAddress}`);
+               resultField.value += `No trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
@@ -477,7 +465,7 @@ async function sendCurrency() {
           const pay_result = await client.submitAndWait(pay_signed.tx_blob);
 
           const resultCode = pay_result.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(pay_result.result)}`, spinner);
           }
 
@@ -487,8 +475,8 @@ async function sendCurrency() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -496,21 +484,21 @@ async function sendCurrency() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving sendCurrency');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving removeTrustLine in ${now}ms`);
      }
 }
 
 async function issueCurrency() {
      console.log('Entering issueCurrency');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField.classList.remove('error', 'success');
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
-
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
 
      const fields = {
           accountAddressField: document.getElementById('accountAddressField'),
@@ -519,6 +507,9 @@ async function issueCurrency() {
           destinationAddress: document.getElementById('destinationField'),
           amountField: document.getElementById('amountField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
      // DOM existence check
@@ -530,7 +521,7 @@ async function issueCurrency() {
           }
      }
 
-     const { accountAddressField, accountSeed, currency, destinationAddress, amountField, xrpBalanceField } = fields;
+     const { accountAddressField, accountSeed, currency, destinationAddress, amountField, xrpBalanceField, totalExecutionTime, ownerCountField, totalXrpReservesField } = fields;
 
      // Validation checks
      const validations = [
@@ -551,17 +542,9 @@ async function issueCurrency() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nSetting up issuer and issuing ${currency.value}\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nSetting up issuer and issuing ${currency.value}\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Step 1: Verify issuer account
           const accountInfo = await getLedgerAccountInfo(client, accountAddressField.value, 'validated');
@@ -570,18 +553,19 @@ async function issueCurrency() {
           }
 
           console.log('accountInfo', accountInfo);
-          results += `Issuer account ${accountAddressField.value} is funded.\n`;
-          resultField.value = results;
+          resultField.value += `Issuer account ${accountAddressField.value} is funded.\n`;
 
           // Step 2: Check destination's trust line
           const destTrustLines = await getTrustLines(destinationAddress.value, client);
 
           // If no trust lines, return early
           if (destTrustLines.length === 0) {
-               console.log(`No trust lines found for ${wallet.address}`);
+               console.log(`No trust lines found for ${wallet.classicAddress}`);
                if (spinner) spinner.style.display = 'none';
-               resultField.value += `No trust lines found for ${wallet.address}`;
+               resultField.value += `No trust lines found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
                return;
           }
 
@@ -613,19 +597,17 @@ async function issueCurrency() {
 
                const preparedAccountSet = await client.autofill(accountSetTx);
                const signedAccountSet = wallet.sign(preparedAccountSet);
-               results += `Submitting AccountSet to enable DefaultRipple\n`;
-               resultField.value = results;
+               resultField.value += `Submitting AccountSet to enable DefaultRipple\n`;
                const accountSetResult = await client.submitAndWait(signedAccountSet.tx_blob);
 
                const resultCode = accountSetResult.result.meta.TransactionResult;
-               if (resultCode !== 'tesSUCCESS') {
+               if (resultCode !== TES_SUCCESS) {
                     return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(accountSetResult.result)}`, spinner);
                }
 
-               results += prepareTxHashForOutput(accountSetResult.result.hash) + '\n';
-               results += parseXRPLTransaction(accountSetResult.result);
-               results += `DefaultRipple enabled.\n`;
-               resultField.value = results;
+               resultField.value += prepareTxHashForOutput(accountSetResult.result.hash) + '\n';
+               resultField.value += parseXRPLTransaction(accountSetResult.result);
+               resultField.value += `DefaultRipple enabled.\n`;
           }
 
           // Step 4: Issue TST
@@ -652,23 +634,22 @@ async function issueCurrency() {
           const pay_prepared = await client.autofill(paymentTx);
           const pay_signed = wallet.sign(pay_prepared);
 
-          results += `\nIssuing ${amountField.value} ${currency.value} to ${destinationAddress.value}\n`;
-          resultField.value = results;
+          resultField.value += `\nIssuing ${amountField.value} ${currency.value} to ${destinationAddress.value}\n`;
           const pay_result = await client.submitAndWait(pay_signed.tx_blob);
 
           // Step 5: Check transaction result
           const resultCode = pay_result.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(pay_result.result)}`, spinner);
           }
 
-          results += `Currency ${currency.value} successfully issued.\n\n`;
-          results += prepareTxHashForOutput(pay_result.result.hash) + '\n';
-          results += parseXRPLTransaction(pay_result.result);
+          resultField.value += `Currency ${currency.value} successfully issued.\n\n`;
+          resultField.value += prepareTxHashForOutput(pay_result.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(pay_result.result);
 
           const updatedTrustLines = await getTrustLines(destinationAddress.value, client);
           const newTrustLine = updatedTrustLines.find(line => line.account === accountAddressField.value && line.currency === currency.value);
-          results += `New Balance: ${newTrustLine ? newTrustLine.balance : 'Unknown'} ${currency.value}\n`;
+          resultField.value += `New Balance: ${newTrustLine ? newTrustLine.balance : 'Unknown'} ${currency.value}\n`;
 
           // Step 6: Update issuer's XRP balance
           await updateOwnerCountAndReserves(client, accountAddressField.value, ownerCountField, totalXrpReservesField);
@@ -680,8 +661,7 @@ async function issueCurrency() {
                account: accountAddressField.value,
                ledger_index: 'validated',
           });
-          results += `\nIssuer Obligations:\n${JSON.stringify(gatewayBalances.result.obligations, null, 2)}`;
-          resultField.value = results;
+          resultField.value += `\nIssuer Obligations:\n${JSON.stringify(gatewayBalances.result.obligations, null, 2)}`;
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error setting up issuer or issuing TST:', error);
@@ -690,12 +670,15 @@ async function issueCurrency() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving setupAndIssueTST');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving issueCurrency in ${now}ms`);
      }
 }
 
 export async function getTokenBalance() {
      console.log('Entering getTokenBalance');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -703,23 +686,30 @@ export async function getTokenBalance() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     const ownerCountField = document.getElementById('ownerCountField');
-     const totalXrpReservesField = document.getElementById('totalXrpReservesField');
-
      const fields = {
           seed: document.getElementById('accountSeedField'),
-          balance: document.getElementById('xrpBalanceField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
      };
 
-     // Validate DOM elements
-     if (!fields.seed || !fields.balance) {
-          return setError('ERROR: DOM elements not found', spinner);
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
+     const { seed, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
-     const seed = fields.seed.value.trim();
+     // Validation checks
+     const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
 
-     // Validate inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
 
      try {
           const { net, environment } = getNet();
@@ -728,21 +718,14 @@ export async function getTokenBalance() {
           let results = `Connected to ${environment} ${net}\nGetting Token Balance\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
-
-          // let wallet;
-          // if (environment === 'Mainnet') {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          // } else {
-          //      wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          // }
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           results += 'Getting account balance\n';
           resultField.value = results;
 
           const balance = await client.request({
                command: 'gateway_balances',
-               account: wallet.address,
+               account: wallet.classicAddress,
                ledger_index: 'validated',
           });
 
@@ -778,8 +761,8 @@ export async function getTokenBalance() {
           resultField.value = results;
           resultField.classList.add('success');
 
-          await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.address);
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -787,7 +770,9 @@ export async function getTokenBalance() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getTokenBalance');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getTokenBalance in ${now}ms`);
      }
 }
 

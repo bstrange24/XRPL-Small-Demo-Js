@@ -1,3 +1,5 @@
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+
 // Stand-alone code sample for "trade in the decentralized exchange" tutorial:
 // https://xrpl.org/trade-in-the-decentralized-exchange.html
 
@@ -162,7 +164,7 @@ async function main() {
      const signed = wallet.sign(prepared);
      console.log('Sending OfferCreate transaction');
      const result = await client.submitAndWait(signed.tx_blob);
-     if (result.result.meta.TransactionResult == 'tesSUCCESS') {
+     if (result.result.meta.TransactionResult == TES_SUCCESS) {
           console.log(`Transaction succeeded:
           https://testnet.xrpl.org/transactions/${signed.hash}`);
      } else {

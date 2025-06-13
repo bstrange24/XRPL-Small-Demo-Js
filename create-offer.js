@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
+import { getClient, disconnectClient, validatInput, parseXRPLTransaction, getNet, amt_str, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
@@ -7,6 +7,7 @@ import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SU
 
 async function createOffer() {
      console.log('Entering createOffer');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -15,10 +16,9 @@ async function createOffer() {
      if (spinner) spinner.style.display = 'block';
 
      const isMarketOrder = document.getElementById('isMarketOrder')?.checked;
-     // const unit = document.getElementById('unitSelect').value;
-
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      // let we_want;
      // let takerGetsString;
@@ -74,12 +74,9 @@ async function createOffer() {
           const client = await getClient();
 
           let results = `Connected to ${environment} ${net}\nCreating Offer.\n\n`;
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
           results += accountNameField.value + ' account address: ' + wallet.address + '\n';
           resultField.value = results;
 
@@ -122,7 +119,7 @@ async function createOffer() {
                     const tx = await client.submitAndWait(ts_signed.tx_blob);
                     console.debug(`tx ${tx}`);
 
-                    if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
+                    if (tx.result.meta.TransactionResult == TES_SUCCESS) {
                          results += 'Trustline established between account ' + wallet.address + ' and issuer ' + issuerAddr + ' for ' + issuerCur + ' with amount ' + amountValue.value;
                          results += prepareTxHashForOutput(tx.result.hash) + '\n';
                     } else {
@@ -408,7 +405,7 @@ async function createOffer() {
           const tx = await client.submitAndWait(signed.tx_blob);
           console.debug(`create offer tx ${tx}`);
 
-          if (tx.result.meta.TransactionResult == 'tesSUCCESS') {
+          if (tx.result.meta.TransactionResult == TES_SUCCESS) {
                resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
                resultField.value += parseXRPLTransaction(tx.result);
                resultField.classList.add('success');
@@ -493,12 +490,15 @@ async function createOffer() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving createOffer');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving createOffer in ${now}ms`);
      }
 }
 
 async function getOffers() {
      console.log('Entering getOffers');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -508,6 +508,7 @@ async function getOffers() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      const accountSeedField = document.getElementById('accountSeedField');
      const xrpBalanceField = document.getElementById('xrpBalanceField');
@@ -524,12 +525,7 @@ async function getOffers() {
           let results = `Connected to ${environment} ${net}\nGetting Offers\n\n`;
           resultField.value = results;
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const offers = await client.request({
                method: 'account_offers',
@@ -540,15 +536,14 @@ async function getOffers() {
           console.log('offers:', offers);
 
           if (offers.result.offers.length <= 0) {
-               results += `No offers found for ${wallet.address}`;
-               resultField.value = results;
+               resultField.value += `No offers found for ${wallet.address}`;
+               await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = await client.getXrpBalance(wallet.address);
                resultField.classList.add('success');
                return;
           }
 
-          results += parseXRPLAccountObjects(offers.result);
-          // results += parseXRPLTransaction(offers.result);
-          resultField.value = results;
+          resultField.value += parseXRPLAccountObjects(offers.result);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
@@ -560,12 +555,15 @@ async function getOffers() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getOffers');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getOffers in ${now}ms`);
      }
 }
 
 async function cancelOffer() {
      console.log('Entering cancelOffer');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -575,6 +573,7 @@ async function cancelOffer() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      const fields = {
           accountSeed: document.getElementById('accountSeedField'),
@@ -615,12 +614,7 @@ async function cancelOffer() {
 
           const offerSequenceArray = offerSequenceField.value.split(',').map(item => item.trim());
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           let tx;
 
@@ -640,7 +634,7 @@ async function cancelOffer() {
                }
 
                const resultCode = tx.result.meta?.TransactionResult;
-               if (resultCode !== 'tesSUCCESS') {
+               if (resultCode !== TES_SUCCESS) {
                     return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
                }
 
@@ -659,12 +653,15 @@ async function cancelOffer() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving cancelOffer');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cancelOffer in ${now}ms`);
      }
 }
 
 async function getOrderBook() {
      console.log('Entering getOrderBook');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -674,6 +671,7 @@ async function getOrderBook() {
 
      const ownerCountField = document.getElementById('ownerCountField');
      const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+     const totalExecutionTime = document.getElementById('totalExecutionTime');
 
      const fields = {
           accountName: document.getElementById('accountNameField'),
@@ -728,12 +726,7 @@ async function getOrderBook() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let wallet;
-          if (environment === 'Mainnet') {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'ed25519' });
-          } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: 'secp256k1' });
-          }
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           let results = `Connected to ${environment} ${net}\nGet Order Book.\n\n`;
           results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
@@ -856,7 +849,9 @@ async function getOrderBook() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getOrderBook');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getOrderBook in ${now}ms`);
      }
 }
 
@@ -1191,12 +1186,14 @@ export async function displayOfferDataForAccount1() {
           document.getElementById('weWantIssuerField').value = account2addressField.value;
      }
 
+     // Default to DOG
      document.getElementById('weWantCurrencyField').value = 'DOG'; // RLUSD DOGGY
      document.getElementById('weWantAmountField').value = '1';
      document.getElementById('weSpendCurrencyField').value = 'XRP';
      document.getElementById('weSpendAmountField').value = '1';
 
      const client = await getClient();
+     // Default to DOG
      document.getElementById('weWantTokenBalanceField').value = await getOnlyTokenBalance(client, accountAddressField.value, 'DOG'); // RLUSD DOGGY
      document.getElementById('weSpendTokenBalanceField').value = (await client.getXrpBalance(accountAddressField.value.trim())) - totalXrpReservesField.value;
 
@@ -1213,9 +1210,6 @@ window.encodeCurrencyCode = encodeCurrencyCode;
 window.getXrpBalance = getXrpBalance;
 window.getTransaction = getTransaction;
 window.getTokenBalance = getTokenBalance;
-window.populate1 = populate1;
-window.populate2 = populate2;
-window.populate3 = populate3;
 window.displayOfferDataForAccount1 = displayOfferDataForAccount1;
 window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;

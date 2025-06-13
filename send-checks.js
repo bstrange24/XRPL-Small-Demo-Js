@@ -4,6 +4,7 @@ import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SU
 
 async function sendCheck() {
      console.log('Entering sendCheck');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -25,6 +26,7 @@ async function sendCheck() {
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
           tokenBalance: document.getElementById('tokenBalance'),
           issuerField: document.getElementById('issuerField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -36,7 +38,7 @@ async function sendCheck() {
           }
      }
 
-     const { address, seed, currency, amount, destination, balance, memo, expirationTime, finishUnit, ownerCount, totalXrpReserves, tokenBalance, issuerField } = fields;
+     const { address, seed, currency, amount, destination, balance, memo, expirationTime, finishUnit, ownerCount, totalXrpReserves, tokenBalance, issuerField, totalExecutionTime } = fields;
 
      // Validate input values
      const validations = [
@@ -155,12 +157,15 @@ async function sendCheck() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving sendCheck');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving sendCheck in ${now}ms`);
      }
 }
 
 async function getChecks() {
      console.log('Entering getChecks');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -172,6 +177,7 @@ async function getChecks() {
           address: document.getElementById('accountAddressField'),
           ownerCount: document.getElementById('ownerCountField'),
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -196,8 +202,7 @@ async function getChecks() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nGetting Checks\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nGetting Checks\n\n`;
 
           const check_objects = await client.request({
                id: 5,
@@ -210,17 +215,18 @@ async function getChecks() {
           console.log('Response', check_objects);
 
           if (check_objects.result.account_objects.length <= 0) {
-               results += `No checks found for ${address.value}`;
-               resultField.value = results;
+               resultField.value += `No checks found for ${address.value}`;
+               await updateOwnerCountAndReserves(client, address.value, ownerCount, totalXrpReserves);
+               xrpBalanceField.value = (await client.getXrpBalance(address.value)) - totalXrpReserves.value;
                resultField.classList.add('success');
                return;
           }
 
-          results += parseXRPLAccountObjects(check_objects.result);
-          resultField.value = results;
+          resultField.value += parseXRPLAccountObjects(check_objects.result);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, address.value, ownerCount, totalXrpReserves);
+          xrpBalanceField.value = (await client.getXrpBalance(address.value)) - totalXrpReserves.value;
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
@@ -228,12 +234,15 @@ async function getChecks() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getChecks');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getCheck in ${now}ms`);
      }
 }
 
 async function cashCheck() {
      console.log('Entering cashCheck');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -254,6 +263,7 @@ async function cashCheck() {
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
           tokenBalance: document.getElementById('tokenBalance'),
           issuerField: document.getElementById('issuerField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -265,7 +275,7 @@ async function cashCheck() {
           }
      }
 
-     const { address, seed, currency, amount, destination, issuer, checkId, balance, ownerCount, totalXrpReserves, tokenBalance, issuerField } = fields;
+     const { address, seed, currency, amount, destination, issuer, checkId, balance, ownerCount, totalXrpReserves, tokenBalance, issuerField, totalExecutionTime } = fields;
 
      // Validate input values
      const validations = [
@@ -353,12 +363,15 @@ async function cashCheck() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving cashCheck');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cashCheck in ${now}ms`);
      }
 }
 
 async function cancelCheck() {
      console.log('Entering cancelCheck');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -372,6 +385,7 @@ async function cancelCheck() {
           balance: document.getElementById('xrpBalanceField'),
           ownerCount: document.getElementById('ownerCountField'),
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -383,7 +397,7 @@ async function cancelCheck() {
           }
      }
 
-     const { seed, checkId, balance, ownerCount, totalXrpReserves } = fields;
+     const { seed, checkId, balance, ownerCount, totalXrpReserves, totalExecutionTime } = fields;
 
      // Validate input values
      const validations = [
@@ -434,12 +448,15 @@ async function cancelCheck() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving cancelCheck');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cancelCheck in ${now}ms`);
      }
 }
 
 export async function getTokenBalance() {
      console.log('Entering getTokenBalance');
+     const startTime = Date.now();
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -452,6 +469,7 @@ export async function getTokenBalance() {
           totalXrpReserves: document.getElementById('totalXrpReservesField'),
           ownerCount: document.getElementById('ownerCountField'),
           issuerField: document.getElementById('issuerField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -463,7 +481,7 @@ export async function getTokenBalance() {
           }
      }
 
-     const { seed, currency, balance, tokenBalance, totalXrpReserves, ownerCount, issuerField } = fields;
+     const { seed, currency, balance, tokenBalance, totalXrpReserves, ownerCount, issuerField, totalExecutionTime } = fields;
 
      // Validate input values
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
@@ -522,7 +540,9 @@ export async function getTokenBalance() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getTokenBalance');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getTokenBalance in ${now}ms`);
      }
 }
 

@@ -4,6 +4,7 @@ import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SU
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -25,6 +26,7 @@ async function createTimeBasedEscrow() {
           finishUnit: document.getElementById('escrowFinishTimeUnit'),
           cancelUnit: document.getElementById('escrowCancelTimeUnit'),
           currentTimeField: document.getElementById('currentTimeField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -36,7 +38,7 @@ async function createTimeBasedEscrow() {
           }
      }
 
-     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, memo, destinationTag, finishUnit, cancelUnit, currentTimeField } = fields;
+     const { accountSeed, destinationAddress, escrowFinishTime, escrowCancelTime, amountField, xrpBalanceField, ownerCountField, totalXrpReservesField, memo, destinationTag, finishUnit, cancelUnit, currentTimeField, totalExecutionTime } = fields;
 
      // Validation checks
      const validations = [
@@ -63,7 +65,7 @@ async function createTimeBasedEscrow() {
 
           let results = `Connected to ${environment} ${net}\nCreating time-based escrow.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const finishAfterTime = addTime(escrowFinishTime.value, finishUnit.value);
           const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit.value);
@@ -102,7 +104,7 @@ async function createTimeBasedEscrow() {
           console.log('Create Escrow tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -125,12 +127,15 @@ async function createTimeBasedEscrow() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving createTimeBasedEscrow');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving createTimeBasedEscrow in ${now}ms`);
      }
 }
 
 async function finishTimeBasedEscrow() {
      console.log('Entering finishTimeBasedEscrow');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -147,6 +152,7 @@ async function finishTimeBasedEscrow() {
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           currentTimeField: document.getElementById('currentTimeField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM element check
@@ -154,7 +160,7 @@ async function finishTimeBasedEscrow() {
           if (!el) return setError(`ERROR: DOM element "${key}" not found`, spinner);
      }
 
-     const { accountSeed, accountAddress, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField, currentTimeField } = fields;
+     const { accountSeed, accountAddress, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField, currentTimeField, totalExecutionTime } = fields;
 
      // Input validation
      const validations = [
@@ -177,7 +183,7 @@ async function finishTimeBasedEscrow() {
           let results = `Connected to ${environment} ${net}\nFinishing escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
@@ -192,7 +198,7 @@ async function finishTimeBasedEscrow() {
           console.log('Finish Escrow tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -215,12 +221,15 @@ async function finishTimeBasedEscrow() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving finishTimeBasedEscrow');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving finishTimeBasedEscrow in ${now}ms`);
      }
 }
 
 export async function getEscrows() {
      console.log('Entering getEscrows');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -233,6 +242,8 @@ export async function getEscrows() {
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           currentTimeField: document.getElementById('currentTimeField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
      };
 
      // DOM existence check
@@ -244,7 +255,7 @@ export async function getEscrows() {
           }
      }
 
-     const { accountAddress, ownerCountField, totalXrpReservesField, currentTimeField } = fields;
+     const { accountAddress, ownerCountField, totalXrpReservesField, currentTimeField, totalExecutionTime, xrpBalanceField } = fields;
 
      // Input validation
      const validations = [[!validatInput(accountAddress.value), 'Account Address cannot be empty']];
@@ -273,6 +284,8 @@ export async function getEscrows() {
           if (tx.result.account_objects.length <= 0) {
                resultField.value += `No escrow found for ${accountAddress.value}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, accountAddress.value, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = (await client.getXrpBalance(accountAddress.value)) - totalXrpReservesField.value;
                return;
           }
 
@@ -309,12 +322,15 @@ export async function getEscrows() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving getEscrows');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getEscrows in ${now}ms`);
      }
 }
 
 async function cancelEscrow() {
      console.log('Entering cancelEscrow');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -330,6 +346,7 @@ async function cancelEscrow() {
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           currentTimeField: document.getElementById('currentTimeField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -341,7 +358,7 @@ async function cancelEscrow() {
           }
      }
 
-     const { accountSeed, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField, currentTimeField } = fields;
+     const { accountSeed, escrowOwnerAddress, escrowSequenceNumber, xrpBalanceField, ownerCountField, totalXrpReservesField, currentTimeField, totalExecutionTime } = fields;
 
      // Validation checks
      const validations = [
@@ -363,7 +380,7 @@ async function cancelEscrow() {
           let results = `Connected to ${environment} ${net}\nCancelling escrow.\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowCancel',
@@ -378,7 +395,7 @@ async function cancelEscrow() {
           console.log('Cancel Escrow tx', tx);
 
           const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
@@ -401,7 +418,9 @@ async function cancelEscrow() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving cancelEscrow');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cancelEscrow in ${now}ms`);
      }
 }
 
@@ -409,6 +428,8 @@ export async function displayDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
      accountSeedField.value = account1seed.value;
+     destinationField.value = account2address.value;
+     escrowOwnerField.value = account1address.value;
      await getEscrows();
 }
 
@@ -416,6 +437,8 @@ export async function displayDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
+     destinationField.value = account1address.value;
+     escrowOwnerField.value = account2address.value;
      await getEscrows();
 }
 

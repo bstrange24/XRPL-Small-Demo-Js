@@ -32,7 +32,7 @@ async function getMPTs() {
           let results = `Connected to ${environment} ${net}\nGetting MPT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = results;
           const mpts = await client.request({
@@ -112,7 +112,7 @@ async function sendMPT() {
           let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const mpt_issuance_id = mptIssuanceIdField;
           const mpt_quantity = amountField;
@@ -133,7 +133,7 @@ async function sendMPT() {
           const pay_result = await client.submitAndWait(pay_signed.tx_blob);
 
           const resultCode = pay_result.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(pay_result.result)}`, spinner);
           }
 
@@ -172,7 +172,7 @@ async function authorizeMPT() {
      results += `\n\nSending authorization`;
      resultField.value = results;
      const auth_result = await client.submitAndWait(auth_signed.tx_blob);
-     if (auth_result.result.meta.TransactionResult == 'tesSUCCESS') {
+     if (auth_result.result.meta.TransactionResult == TES_SUCCESS) {
           results += `\nTransaction succeeded`;
           resultField.value = results;
      } else {

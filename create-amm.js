@@ -28,6 +28,7 @@ export async function getAMMPoolInfo() {
           lpTokenBalance: document.getElementById('lpTokenBalanceField'),
           tradingFee: document.getElementById('tradingFeeField'),
           withdrawlLpTokenFromPool: document.getElementById('withdrawlLpTokenFromPoolField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      for (const [name, field] of Object.entries(fields)) {
@@ -38,7 +39,7 @@ export async function getAMMPoolInfo() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, tradingFee, withdrawlLpTokenFromPool } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, tradingFee, withdrawlLpTokenFromPool, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'ERROR: Account Name can not be empty'],
@@ -153,7 +154,9 @@ export async function getAMMPoolInfo() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving getAMMPoolInfo in ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getAMMPoolInfo in ${now}ms`);
      }
 }
 
@@ -184,6 +187,7 @@ async function createAMMPool() {
           weWantTokenBalance: document.getElementById('weWantTokenBalanceField'),
           weSpendTokenBalance: document.getElementById('weSpendTokenBalanceField'),
           lpTokenBalance: document.getElementById('lpTokenBalanceField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      for (const [name, field] of Object.entries(fields)) {
@@ -194,7 +198,7 @@ async function createAMMPool() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, tradingFee, ownerCount, totalXrpReserves, weWantTokenBalance, weSpendTokenBalance, lpTokenBalance } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, tradingFee, ownerCount, totalXrpReserves, weWantTokenBalance, weSpendTokenBalance, lpTokenBalance, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -394,7 +398,9 @@ async function createAMMPool() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving createAMMPool in ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving createAMMPool in ${now}ms`);
      }
 }
 
@@ -427,6 +433,7 @@ async function depositToAMM() {
           isDepositIntoBothPools: document.getElementById('isDepositIntoBothPools'),
           isDepositIntoFirstPoolOnly: document.getElementById('isDepositIntoFirstPoolOnly'),
           isDepositIntoSecondPoolOnly: document.getElementById('isDepositIntoSecondPoolOnly'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -438,7 +445,7 @@ async function depositToAMM() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, weWantTokenBalance, weSpendTokenBalance, ownerCount, totalXrpReserves, isDepositIntoBothPools, isDepositIntoFirstPoolOnly, isDepositIntoSecondPoolOnly } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, weWantTokenBalance, weSpendTokenBalance, ownerCount, totalXrpReserves, isDepositIntoBothPools, isDepositIntoFirstPoolOnly, isDepositIntoSecondPoolOnly, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -568,7 +575,9 @@ async function depositToAMM() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving getAMMPoolInfo in ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getAMMPoolInfo in ${now}ms`);
      }
 }
 
@@ -596,6 +605,7 @@ async function withdrawFromAMM() {
           isWithdrawFromBothPools: document.getElementById('isWithdrawFromBothPools'),
           isWithdrawFromFirstPoolOnly: document.getElementById('isWithdrawFromFirstPoolOnly'),
           isWithdrawFromSecondPoolOnly: document.getElementById('isWithdrawFromSecondPoolOnly'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      for (const [name, field] of Object.entries(fields)) {
@@ -605,7 +615,7 @@ async function withdrawFromAMM() {
                field.value = field.value.trim();
           }
      }
-     const { accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, withdrawlLpTokenFromPool, isWithdrawFromBothPools, isWithdrawFromFirstPoolOnly, isWithdrawFromSecondPoolOnly } = fields;
+     const { accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, withdrawlLpTokenFromPool, isWithdrawFromBothPools, isWithdrawFromFirstPoolOnly, isWithdrawFromSecondPoolOnly, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
@@ -735,7 +745,9 @@ async function withdrawFromAMM() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving withdrawFromAMM - Total time: ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving withdrawFromAMM in ${now}ms`);
      }
 }
 
@@ -760,6 +772,7 @@ async function deleteAMMPool() {
           weSpendCurrency: document.getElementById('weSpendCurrencyField'),
           weSpendIssuer: document.getElementById('weSpendIssuerField'),
           weSpendAmount: document.getElementById('weSpendAmountField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -771,7 +784,7 @@ async function deleteAMMPool() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount: weSpendAmountField } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -785,9 +798,9 @@ async function deleteAMMPool() {
           [!validatInput(weWantAmount.value), 'Taker Gets amount cannot be empty'],
           [isNaN(weWantAmount.value), 'Taker Gets amount must be a valid number'],
           [parseFloat(weWantAmount.value) <= 0, 'Taker Gets amount must be greater than zero'],
-          [!validatInput(weSpendAmountField.value), 'Taker Pays amount cannot be empty'],
-          [isNaN(weSpendAmountField.value), 'Taker Pays amount must be a valid number'],
-          [parseFloat(weSpendAmountField.value) <= 0, 'Taker Pays amount must be greater than zero'],
+          [!validatInput(weSpendAmount.value), 'Taker Pays amount cannot be empty'],
+          [isNaN(weSpendAmount.value), 'Taker Pays amount must be a valid number'],
+          [parseFloat(weSpendAmount.value) <= 0, 'Taker Pays amount must be greater than zero'],
      ];
 
      for (const [condition, message] of validations) {
@@ -976,7 +989,9 @@ async function deleteAMMPool() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving deleteAMMPool in ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving deleteAMMPool in ${now}ms`);
      }
 }
 
@@ -1001,6 +1016,7 @@ async function swapViaAMM() {
           weSpendCurrency: document.getElementById('weSpendCurrencyField'),
           weSpendIssuer: document.getElementById('weSpendIssuerField'),
           weSpendAmount: document.getElementById('weSpendAmountField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // DOM existence check
@@ -1012,7 +1028,7 @@ async function swapViaAMM() {
           }
      }
 
-     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount } = fields;
+     const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
@@ -1122,7 +1138,9 @@ async function swapViaAMM() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log(`Leaving swapViaAMM in ${Date.now() - startTime}ms`);
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving swapViaAMM in ${now}ms`);
      }
 }
 

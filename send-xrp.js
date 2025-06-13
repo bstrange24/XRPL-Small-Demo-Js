@@ -4,6 +4,7 @@ import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SU
 
 async function sendXRP() {
      console.log('Entering sendXRP');
+     const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
@@ -21,6 +22,7 @@ async function sendXRP() {
           destinationTag: document.getElementById('destinationTagField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
      // Validate DOM elements
@@ -50,7 +52,7 @@ async function sendXRP() {
           let results = `Connected to ${environment} ${net}\nSending XRP\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? 'ed25519' : 'secp256k1' });
+          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const preparedTx = await client.autofill({
                TransactionType: 'Payment',
@@ -81,7 +83,7 @@ async function sendXRP() {
           console.log('Transaction response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
-          if (resultCode !== 'tesSUCCESS') {
+          if (resultCode !== TES_SUCCESS) {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
@@ -101,7 +103,9 @@ async function sendXRP() {
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
-          console.log('Leaving sendXRP');
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving sendXRP in ${now}ms`);
      }
 }
 
