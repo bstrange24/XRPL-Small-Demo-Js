@@ -75,13 +75,6 @@ export async function getClient() {
      try {
           isConnecting = true;
 
-          let localStorageNet = localStorage.getItem('xrpl_connection_net');
-
-          if (!localStorageNet) {
-               // fallback or use getNet() to determine default
-               localStorage.setItem('xrpl_connection_net', net);
-          }
-
           clientInstance = new xrpl.Client(net);
           console.log('Connecting to XRP Ledger ' + environment);
           await clientInstance.connect();
