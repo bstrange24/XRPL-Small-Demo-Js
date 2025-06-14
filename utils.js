@@ -1240,7 +1240,8 @@ const ledgerEntryTypeFields = {
      },
      NFT: {
           fields: [
-               { key: 'Flags', format: v => v || '0' },
+               // { key: 'Flags', format: v => v || '0' },
+               { key: 'Flags', format: v => decodeNFTFlags(Number(v)) },
                { key: 'Issuer', format: v => v || null },
                { key: 'NFTokenID', format: v => v || null },
                { key: 'NFTokenTaxon', format: v => (v === 0 ? null : v || null) },
@@ -1587,6 +1588,24 @@ export async function updateOwnerCountAndReserves(client, address, ownerCountFie
      console.log(`Owner Count: ${ownerCount} Total XRP Reserves: ${xrpl.dropsToXrp(totalReserveXRP)}`);
      ownerCountField.value = ownerCount;
      totalXrpReservesField.value = xrpl.dropsToXrp(totalReserveXRP);
+}
+
+function decodeNFTFlags(flags) {
+     if (typeof flags !== 'number') return '';
+
+     const flagMap = {
+          1: 'Burnable',
+          2: 'Only XRP',
+          8: 'Transferable',
+          16: 'Mutable',
+     };
+
+     const result = [];
+     for (const [bit, name] of Object.entries(flagMap)) {
+          if (flags & bit) result.push(name);
+     }
+
+     return result.length ? result.join(', ') : 'None';
 }
 
 const textarea = document.getElementById('resultField');

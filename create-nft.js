@@ -126,36 +126,38 @@ async function mintNFT() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-     let flags = 0;
-     if (burnableNft.checked) {
-          flags = xrpl.NFTokenMintFlags.tfBurnable;
-     }
+     const flags = setNftFlags();
 
-     if (onlyXrpNft.checked) {
-          if (flags === undefined) {
-               flags = xrpl.NFTokenMintFlags.tfOnlyXRP;
-          } else {
-               flags |= xrpl.NFTokenMintFlags.tfOnlyXRP;
-          }
-     }
+     // let flags = 0;
+     // if (burnableNft.checked) {
+     //      flags = xrpl.NFTokenMintFlags.tfBurnable;
+     // }
 
-     if (transferableNft.checked) {
-          if (flags === undefined) {
-               flags = xrpl.NFTokenMintFlags.tfTransferable;
-          } else {
-               flags |= xrpl.NFTokenMintFlags.tfTransferable;
-          }
-     }
+     // if (onlyXrpNft.checked) {
+     //      if (flags === undefined) {
+     //           flags = xrpl.NFTokenMintFlags.tfOnlyXRP;
+     //      } else {
+     //           flags |= xrpl.NFTokenMintFlags.tfOnlyXRP;
+     //      }
+     // }
 
-     if (mutableNft.checked) {
-          if (flags === undefined) {
-               flags = xrpl.NFTokenMintFlags.tfMutable;
-          } else {
-               flags |= xrpl.NFTokenMintFlags.tfMutable;
-          }
-     }
+     // if (transferableNft.checked) {
+     //      if (flags === undefined) {
+     //           flags = xrpl.NFTokenMintFlags.tfTransferable;
+     //      } else {
+     //           flags |= xrpl.NFTokenMintFlags.tfTransferable;
+     //      }
+     // }
 
-     console.log('flags ' + flags);
+     // if (mutableNft.checked) {
+     //      if (flags === undefined) {
+     //           flags = xrpl.NFTokenMintFlags.tfMutable;
+     //      } else {
+     //           flags |= xrpl.NFTokenMintFlags.tfMutable;
+     //      }
+     // }
+
+     // console.log('flags ' + flags);
 
      try {
           const { net, environment } = getNet();
@@ -257,6 +259,8 @@ async function mintBatchNFT() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
+     const flags = setNftFlags();
+
      try {
           const { net, environment } = getNet();
           const client = await getClient();
@@ -273,7 +277,7 @@ async function mintBatchNFT() {
                     TransactionType: 'NFTokenMint',
                     Account: wallet.classicAddress,
                     URI: xrpl.convertStringToHex(uri),
-                    Flags: 8 | 16, // Transferable + Mutable
+                    Flags: flags, // 8 | 16, // Transferable + Mutable
                     NFTokenTaxon: 0,
                });
           }
@@ -327,6 +331,40 @@ async function mintBatchNFT() {
           totalExecutionTime.value = now;
           console.log(`Leaving mintBatchNFT in ${now}ms`);
      }
+}
+
+function setNftFlags() {
+     let flags = 0;
+     if (burnableNft.checked) {
+          flags = xrpl.NFTokenMintFlags.tfBurnable;
+     }
+
+     if (onlyXrpNft.checked) {
+          if (flags === undefined) {
+               flags = xrpl.NFTokenMintFlags.tfOnlyXRP;
+          } else {
+               flags |= xrpl.NFTokenMintFlags.tfOnlyXRP;
+          }
+     }
+
+     if (transferableNft.checked) {
+          if (flags === undefined) {
+               flags = xrpl.NFTokenMintFlags.tfTransferable;
+          } else {
+               flags |= xrpl.NFTokenMintFlags.tfTransferable;
+          }
+     }
+
+     if (mutableNft.checked) {
+          if (flags === undefined) {
+               flags = xrpl.NFTokenMintFlags.tfMutable;
+          } else {
+               flags |= xrpl.NFTokenMintFlags.tfMutable;
+          }
+     }
+
+     console.log('flags ' + flags);
+     return flags;
 }
 
 async function burnNFT() {
