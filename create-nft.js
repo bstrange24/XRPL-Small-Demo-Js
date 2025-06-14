@@ -180,9 +180,7 @@ async function mintNFT() {
                transaction.URI = xrpl.convertStringToHex(uri);
           }
 
-          const preparedTx = await client.autofill(transaction);
-          const signed = wallet.sign(preparedTx);
-          const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
@@ -287,15 +285,17 @@ async function mintBatchNFT() {
                     Account: wallet.classicAddress,
                     Transactions: transactions,
                };
-               const preparedTx = await client.autofill(batchTx);
-               const signed = wallet.sign(preparedTx);
-               tx = await client.submitAndWait(signed.tx_blob);
+               // const preparedTx = await client.autofill(batchTx);
+               // const signed = wallet.sign(preparedTx);
+               // tx = await client.submitAndWait(signed.tx_blob);
+               tx = await client.submitAndWait(batchTx, { wallet });
           } else {
                // Fallback to individual transactions
                for (const transaction of transactions) {
-                    const preparedTx = await client.autofill(transaction);
-                    const signed = wallet.sign(preparedTx);
-                    const singleTx = await client.submitAndWait(signed.tx_blob);
+                    // const preparedTx = await client.autofill(transaction);
+                    // const signed = wallet.sign(preparedTx);
+                    // const singleTx = await client.submitAndWait(signed.tx_blob);
+                    const singleTx = await client.submitAndWait(transaction, { wallet });
                     if (singleTx.result.meta.TransactionResult !== TES_SUCCESS) {
                          return setError(`ERROR: Minting NFT ${i + 1} failed: ${singleTx.result.meta.TransactionResult}\n${parseXRPLTransaction(singleTx.result)}`, spinner);
                     }
@@ -408,6 +408,156 @@ async function burnNFT() {
      }
 }
 
+async function getNFTOffers() {
+     console.log('Entering getNFTOffers');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          nftIdField: document.getElementById('nftIdField'),
+          accountAddress: document.getElementById('accountAddressField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { nftIdField, accountAddress, ownerCountField, totalExecutionTime, totalXrpReservesField, xrpBalanceField } = fields;
+
+     const validations = [
+          [!validatInput(accountAddress.value), 'Account address cannot be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid account address'],
+          [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
+          [!/^[0-9A-F]{64}$/.test(nftIdField.value), 'Invalid NFT ID format'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          resultField.value = `Connected to ${environment} ${net}\nFetching NFT Offers for TokenID: ${nftIdField.value}\n\n`;
+
+          // Check server version
+          const serverInfo = await client.request({ method: 'server_info' });
+          const serverVersion = serverInfo.result.info.build_version;
+          console.log('Server Version: ' + serverVersion);
+          if (!serverVersion || parseFloat(serverVersion) < 1.9) {
+               resultField.value += `WARNING: Server version (${serverVersion}) may not fully support NFT operations. Consider using a server with rippled 1.9.0 or higher.\n\n`;
+          }
+
+          // Step 1: Verify NFT exists by checking account_nfts
+          let nftExists = false;
+          try {
+               const nftInfo = await client.request({
+                    method: 'account_nfts',
+                    account: accountAddress.value,
+               });
+               const nfts = nftInfo.result.account_nfts || [];
+               nftExists = nfts.some(nft => nft.NFTokenID === nftIdField.value);
+               if (nftExists) {
+                    const nft = nfts.find(nft => nft.NFTokenID === nftIdField.value);
+                    resultField.value += `NFT found.\nIssuer: ${nft.Issuer || accountAddress.value}\nTaxon: ${nft.NFTokenTaxon}\nNFT Serial: ${nft.nft_serial}\nNFT URI: ${nft.URI}\n`;
+               } else {
+                    resultField.value += `WARNING: NFT with TokenID ${nftIdField.value} not found in account ${accountAddress.value}. It may exist in another account or be burned.\n`;
+               }
+          } catch (nftError) {
+               console.warn('Account NFTs Error:', nftError);
+               resultField.value += `WARNING: Could not verify NFT existence: ${nftError.message}\n`;
+          }
+
+          // Step 2: Fetch sell offers
+          let sellOffers = [];
+          try {
+               const sellOffersResponse = await client.request({
+                    method: 'nft_sell_offers',
+                    nft_id: nftIdField.value,
+               });
+               sellOffers = sellOffersResponse.result.offers || [];
+          } catch (sellError) {
+               if (sellError.message.includes('object was not found') || sellError.message.includes('act not found')) {
+                    console.warn('No sell offers found for NFT.');
+               } else {
+                    console.warn('Sell Offers Error:', sellError);
+                    console.warn(`WARNING: Error fetching sell offers: ${sellError.message}\n`);
+               }
+          }
+
+          // Step 3: Fetch buy offers
+          let buyOffers = [];
+          try {
+               const buyOffersResponse = await client.request({
+                    method: 'nft_buy_offers',
+                    nft_id: nftIdField.value,
+               });
+               buyOffers = buyOffersResponse.result.offers || [];
+          } catch (buyError) {
+               if (buyError.message.includes('object was not found') || buyError.message.includes('act not found')) {
+                    console.warn('No buy offers found for NFT.');
+               } else {
+                    resultField.value += `Buy Offers Error: ${buyError}`;
+                    console.warn('Buy Offers Error:', buyError);
+                    console.warn(`WARNING: Error fetching buy offers: ${buyError.message}\n`);
+               }
+          }
+
+          // Step 4: Display results
+          resultField.value += `\nSell Offers:\n`;
+          if (sellOffers.length === 0) {
+               resultField.value += `No sell offers available.\n`;
+          } else {
+               sellOffers.forEach((offer, index) => {
+                    const amount = offer.amount ? `${xrpl.dropsToXrp(offer.amount)} XRP` : 'Unknown';
+                    const expiration = offer.expiration ? `Expires: ${new Date(offer.expiration * 1000).toISOString()}` : 'No expiration';
+                    resultField.value += `Offer ${index + 1}: ${amount}, Owner: ${offer.owner}, Index: ${offer.nft_offer_index}, ${expiration}\n`;
+               });
+          }
+
+          resultField.value += `\nBuy Offers:\n`;
+          if (buyOffers.length === 0) {
+               resultField.value += `No buy offers available.\n`;
+          } else {
+               buyOffers.forEach((offer, index) => {
+                    const amount = offer.amount ? `${xrpl.dropsToXrp(offer.amount)} XRP` : 'Unknown';
+                    const expiration = offer.expiration ? `Expires: ${new Date(offer.expiration * 1000).toISOString()}` : 'No expiration';
+                    resultField.value += `Offer ${index + 1}: ${amount}, Owner: ${offer.owner}, Index: ${offer.nft_offer_index}, ${expiration}\n`;
+               });
+          }
+
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, accountAddress.value, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(accountAddress.value);
+     } catch (error) {
+          console.error('Error in getNFTOffers:', error);
+          setError(`ERROR: ${error.message || 'Failed to fetch NFT offers'}`);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving getNFTOffers in ${now}ms`);
+     }
+}
+
 async function setAuthorizedMinter() {
      console.log('Entering setAuthorizedMinter');
      const startTime = Date.now();
@@ -462,9 +612,10 @@ async function setAuthorizedMinter() {
                NFTokenMinter: minterAddress.value,
           };
 
-          const preparedTx = await client.autofill(transaction);
-          const signed = wallet.sign(preparedTx);
-          const tx = await client.submitAndWait(signed.tx_blob);
+          // const preparedTx = await client.autofill(transaction);
+          // const signed = wallet.sign(preparedTx);
+          // const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
@@ -488,268 +639,6 @@ async function setAuthorizedMinter() {
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving setAuthorizedMinter in ${now}ms`);
-     }
-}
-
-async function sellNFT() {
-     console.log('Entering sellNFT');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          seed: document.getElementById('accountSeedField'),
-          xrpBalanceField: document.getElementById('xrpBalanceField'),
-          amount: document.getElementById('amountField'),
-          nftIdField: document.getElementById('nftIdField'),
-          expirationField: document.getElementById('expirationField'), // New field for expiration (e.g., in hours)
-          ownerCountField: document.getElementById('ownerCountField'),
-          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { seed, xrpBalanceField, amount, nftIdField, expirationField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
-
-     const validations = [
-          [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!validatInput(amount.value), 'Amount cannot be empty'],
-          [isNaN(amount.value), 'Amount must be a valid number'],
-          [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
-          [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
-          [!validatInput(expirationField.value), 'Expiration cannot be empty'],
-          [isNaN(expirationField.value), 'Expiration must be a valid number'],
-          [parseFloat(expirationField.value) <= 0, 'Expiration must be greater than zero'],
-     ];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
-
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          const transaction = {
-               TransactionType: 'NFTokenCreateOffer',
-               Account: wallet.classicAddress,
-               NFTokenID: nftIdField.value,
-               Amount: xrpl.xrpToDrops(amount.value),
-               Flags: 1, // Sell offer
-          };
-
-          // Add expiration if provided
-          if (expirationHours) {
-               const expirationDate = new Date();
-               expirationDate.setHours(expirationDate.getHours() + parseFloat(expirationField.value));
-               transaction.Expiration = Math.floor(expirationDate.getTime() / 1000);
-          }
-
-          const preparedTx = await client.autofill(transaction);
-          const signed = wallet.sign(preparedTx);
-          const tx = await client.submitAndWait(signed.tx_blob);
-
-          const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
-          }
-
-          resultField.value += `NFT sell offer created successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
-     } catch (error) {
-          console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving sellNFT in ${now}ms`);
-     }
-}
-
-async function cancelBuyOffer() {
-     console.log('Entering cancelBuyOffer');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          seed: document.getElementById('accountSeedField'),
-          nftIndexField: document.getElementById('nftIndexField'),
-          xrpBalanceField: document.getElementById('xrpBalanceField'),
-          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { seed, nftIndexField, xrpBalanceField, totalXrpReservesField, totalExecutionTime } = fields;
-
-     const validations = [
-          [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
-     ];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
-
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          const transaction = {
-               TransactionType: 'NFTokenCancelOffer',
-               Account: wallet.classicAddress,
-               NFTokenOffers: [nftIndexField.value],
-          };
-
-          const prepared = await client.autofill(transaction);
-          const signed = wallet.sign(prepared);
-          const tx = await client.submitAndWait(signed.tx_blob);
-
-          const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
-          }
-
-          resultField.value += `Sell offer canceled successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
-     } catch (error) {
-          console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving cancelBuyOffer in ${now}ms`);
-     }
-}
-
-async function cancelSellOffer() {
-     console.log('Entering cancelSellOffer');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          seed: document.getElementById('accountSeedField'),
-          ownerCountField: document.getElementById('ownerCountField'),
-          nftIndexField: document.getElementById('nftIndexField'),
-          xrpBalanceField: document.getElementById('xrpBalanceField'),
-          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { seed, nftIndexField, xrpBalanceField, totalXrpReservesField, totalExecutionTime } = fields;
-
-     const validations = [
-          [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
-     ];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
-
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          const transaction = {
-               TransactionType: 'NFTokenCancelOffer',
-               Account: wallet.classicAddress,
-               NFTokenOffers: [nftIndexField.value],
-          };
-
-          const prepared = await client.autofill(transaction);
-          const signed = wallet.sign(prepared);
-          const tx = await client.submitAndWait(signed.tx_blob);
-
-          const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
-          }
-
-          resultField.value += `Sell offer canceled successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
-     } catch (error) {
-          console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving cancelSellOffer in ${now}ms`);
      }
 }
 
@@ -883,6 +772,271 @@ async function buyNFT() {
      }
 }
 
+async function cancelBuyOffer() {
+     console.log('Entering cancelBuyOffer');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          seed: document.getElementById('accountSeedField'),
+          nftIndexField: document.getElementById('nftIndexField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { seed, nftIndexField, xrpBalanceField, totalXrpReservesField, totalExecutionTime } = fields;
+
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
+
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          const transaction = {
+               TransactionType: 'NFTokenCancelOffer',
+               Account: wallet.classicAddress,
+               NFTokenOffers: [nftIndexField.value],
+          };
+
+          // const prepared = await client.autofill(transaction);
+          // const signed = wallet.sign(prepared);
+          // const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
+
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== TES_SUCCESS) {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+          }
+
+          resultField.value += `Sell offer canceled successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cancelBuyOffer in ${now}ms`);
+     }
+}
+
+async function sellNFT() {
+     console.log('Entering sellNFT');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          seed: document.getElementById('accountSeedField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          amount: document.getElementById('amountField'),
+          nftIdField: document.getElementById('nftIdField'),
+          expirationField: document.getElementById('expirationField'), // New field for expiration (e.g., in hours)
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { seed, xrpBalanceField, amount, nftIdField, expirationField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!validatInput(amount.value), 'Amount cannot be empty'],
+          [isNaN(amount.value), 'Amount must be a valid number'],
+          [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
+          [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
+          // [!validatInput(expirationField.value), 'Expiration cannot be empty'],
+          // [isNaN(expirationField.value), 'Expiration must be a valid number'],
+          // [parseFloat(expirationField.value) <= 0, 'Expiration must be greater than zero'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          resultField.value = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
+
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          const transaction = {
+               TransactionType: 'NFTokenCreateOffer',
+               Account: wallet.classicAddress,
+               NFTokenID: nftIdField.value,
+               Amount: xrpl.xrpToDrops(amount.value),
+               Flags: 1, // Sell offer
+          };
+
+          // Add expiration if provided
+          if (expirationField.value) {
+               const expirationDate = new Date();
+               expirationDate.setHours(expirationDate.getHours() + parseFloat(expirationField.value));
+               transaction.Expiration = Math.floor(expirationDate.getTime() / 1000);
+          }
+
+          // const preparedTx = await client.autofill(transaction);
+          // const signed = wallet.sign(preparedTx);
+          // const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
+
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== TES_SUCCESS) {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+          }
+
+          resultField.value += `NFT sell offer created successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving sellNFT in ${now}ms`);
+     }
+}
+
+async function cancelSellOffer() {
+     console.log('Entering cancelSellOffer');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          seed: document.getElementById('accountSeedField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          nftIndexField: document.getElementById('nftIndexField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { seed, nftIndexField, xrpBalanceField, totalXrpReservesField, totalExecutionTime } = fields;
+
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          const transaction = {
+               TransactionType: 'NFTokenCancelOffer',
+               Account: wallet.classicAddress,
+               NFTokenOffers: [nftIndexField.value],
+          };
+
+          // const prepared = await client.autofill(transaction);
+          // const signed = wallet.sign(prepared);
+          // const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
+
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== TES_SUCCESS) {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+          }
+
+          resultField.value += `Sell offer canceled successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving cancelSellOffer in ${now}ms`);
+     }
+}
+
 async function updateNFTMetadata() {
      console.log('Entering updateNFTMetadata');
      const startTime = Date.now();
@@ -940,9 +1094,10 @@ async function updateNFTMetadata() {
                URI: xrpl.convertStringToHex(uriField.value),
           };
 
-          const preparedTx = await client.autofill(transaction);
-          const signed = wallet.sign(preparedTx);
-          const tx = await client.submitAndWait(signed.tx_blob);
+          // const preparedTx = await client.autofill(transaction);
+          // const signed = wallet.sign(preparedTx);
+          // const tx = await client.submitAndWait(signed.tx_blob);
+          const tx = await client.submitAndWait(transaction, { wallet });
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
@@ -966,156 +1121,6 @@ async function updateNFTMetadata() {
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving updateNFTMetadata in ${now}ms`);
-     }
-}
-
-async function getNFTOffers() {
-     console.log('Entering getNFTOffers');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          nftIdField: document.getElementById('nftIdField'),
-          accountAddress: document.getElementById('accountAddressField'),
-          ownerCountField: document.getElementById('ownerCountField'),
-          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-          xrpBalanceField: document.getElementById('xrpBalanceField'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { nftIdField, accountAddress, ownerCountField, totalExecutionTime, totalXrpReservesField, xrpBalanceField } = fields;
-
-     const validations = [
-          [!validatInput(accountAddress.value), 'Account address cannot be empty'],
-          [!xrpl.isValidAddress(accountAddress.value), 'Invalid account address'],
-          [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
-          [!/^[0-9A-F]{64}$/.test(nftIdField.value), 'Invalid NFT ID format'],
-     ];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nFetching NFT Offers for TokenID: ${nftId}\n\n`;
-
-          // Check server version
-          const serverInfo = await client.request({ method: 'server_info' });
-          const serverVersion = serverInfo.result.info.build_version;
-          console.log('Server Version: ' + serverVersion);
-          if (!serverVersion || parseFloat(serverVersion) < 1.9) {
-               resultField.value += `WARNING: Server version (${serverVersion}) may not fully support NFT operations. Consider using a server with rippled 1.9.0 or higher.\n\n`;
-          }
-
-          // Step 1: Verify NFT exists by checking account_nfts
-          let nftExists = false;
-          try {
-               const nftInfo = await client.request({
-                    method: 'account_nfts',
-                    account: accountAddress,
-               });
-               const nfts = nftInfo.result.account_nfts || [];
-               nftExists = nfts.some(nft => nft.NFTokenID === nftId);
-               if (nftExists) {
-                    const nft = nfts.find(nft => nft.NFTokenID === nftId);
-                    resultField.value += `NFT found.\nIssuer: ${nft.Issuer || accountAddress}\nTaxon: ${nft.NFTokenTaxon}\nNFT Serial: ${nft.nft_serial}\nNFT URI: ${nft.URI}\n`;
-               } else {
-                    resultField.value += `WARNING: NFT with TokenID ${nftId} not found in account ${accountAddress}. It may exist in another account or be burned.\n`;
-               }
-          } catch (nftError) {
-               console.warn('Account NFTs Error:', nftError);
-               resultField.value += `WARNING: Could not verify NFT existence: ${nftError.message}\n`;
-          }
-
-          // Step 2: Fetch sell offers
-          let sellOffers = [];
-          try {
-               const sellOffersResponse = await client.request({
-                    method: 'nft_sell_offers',
-                    nft_id: nftId,
-               });
-               sellOffers = sellOffersResponse.result.offers || [];
-          } catch (sellError) {
-               if (sellError.message.includes('object was not found') || sellError.message.includes('act not found')) {
-                    console.warn('No sell offers found for NFT.');
-               } else {
-                    console.warn('Sell Offers Error:', sellError);
-                    console.warn(`WARNING: Error fetching sell offers: ${sellError.message}\n`);
-               }
-          }
-
-          // Step 3: Fetch buy offers
-          let buyOffers = [];
-          try {
-               const buyOffersResponse = await client.request({
-                    method: 'nft_buy_offers',
-                    nft_id: nftId,
-               });
-               buyOffers = buyOffersResponse.result.offers || [];
-          } catch (buyError) {
-               if (buyError.message.includes('object was not found') || buyError.message.includes('act not found')) {
-                    console.warn('No buy offers found for NFT.');
-               } else {
-                    resultField.value += `Buy Offers Error: ${buyError}`;
-                    console.warn('Buy Offers Error:', buyError);
-                    console.warn(`WARNING: Error fetching buy offers: ${buyError.message}\n`);
-               }
-          }
-
-          // Step 4: Display results
-          resultField.value += `\nSell Offers:\n`;
-          if (sellOffers.length === 0) {
-               resultField.value += `No sell offers available.\n`;
-          } else {
-               sellOffers.forEach((offer, index) => {
-                    const amount = offer.amount ? `${xrpl.dropsToXrp(offer.amount)} XRP` : 'Unknown';
-                    const expiration = offer.expiration ? `Expires: ${new Date(offer.expiration * 1000).toISOString()}` : 'No expiration';
-                    resultField.value += `Offer ${index + 1}: ${amount}, Owner: ${offer.owner}, Index: ${offer.nft_offer_index}, ${expiration}\n`;
-               });
-          }
-
-          resultField.value += `\nBuy Offers:\n`;
-          if (buyOffers.length === 0) {
-               resultField.value += `No buy offers available.\n`;
-          } else {
-               buyOffers.forEach((offer, index) => {
-                    const amount = offer.amount ? `${xrpl.dropsToXrp(offer.amount)} XRP` : 'Unknown';
-                    const expiration = offer.expiration ? `Expires: ${new Date(offer.expiration * 1000).toISOString()}` : 'No expiration';
-                    resultField.value += `Offer ${index + 1}: ${amount}, Owner: ${offer.owner}, Index: ${offer.nft_offer_index}, ${expiration}\n`;
-               });
-          }
-
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, accountAddress, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(accountAddress);
-     } catch (error) {
-          console.error('Error in getNFTOffers:', error);
-          setError(`ERROR: ${error.message || 'Failed to fetch NFT offers'}`);
-          await client?.disconnect?.();
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving getNFTOffers in ${now}ms`);
      }
 }
 

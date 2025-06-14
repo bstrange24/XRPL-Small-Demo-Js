@@ -60,6 +60,7 @@ export async function getClient() {
      const { net, environment } = getNet();
 
      if (clientInstance?.isConnected()) {
+          console.error('Reusing connection');
           return clientInstance;
      }
 
@@ -73,10 +74,19 @@ export async function getClient() {
 
      try {
           isConnecting = true;
+
+          let localStorageNet = localStorage.getItem('xrpl_connection_net');
+
+          if (!localStorageNet) {
+               // fallback or use getNet() to determine default
+               localStorage.setItem('xrpl_connection_net', net);
+          }
+
           clientInstance = new xrpl.Client(net);
           console.log('Connecting to XRP Ledger ' + environment);
           await clientInstance.connect();
           console.log('Connected to XRP Ledger ' + environment);
+
           return clientInstance;
      } catch (error) {
           console.error('Failed to connect to XRP Ledger:', error);
