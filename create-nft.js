@@ -261,7 +261,7 @@ async function mintBatchNFT() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nMinting ${nftCount} NFTs\n\n`;
+          resultField.value = `Connected to ${environment} ${net}\nMinting ${nftCount.value} NFTs\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
@@ -1160,6 +1160,11 @@ export async function displayNftDataForAccount1() {
           memoField.value = '';
      }
 
+     const nftCheckboxes = document.querySelectorAll('input[class="nftCheckboxes"]');
+     nftCheckboxes.forEach(radio => {
+          radio.checked = false;
+     });
+
      getXrpBalance();
      getNFT();
 }
@@ -1199,6 +1204,11 @@ export async function displayNftDataForAccount2() {
      if (validatInput(memoField)) {
           memoField.value = '';
      }
+
+     const nftCheckboxes = document.querySelectorAll('input[class="nftCheckboxes"]');
+     nftCheckboxes.forEach(radio => {
+          radio.checked = false;
+     });
 
      getXrpBalance();
      getNFT();
