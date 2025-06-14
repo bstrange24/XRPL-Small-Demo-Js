@@ -42,8 +42,7 @@ async function getNFT() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
@@ -61,8 +60,8 @@ async function getNFT() {
                return;
           }
 
-          results += parseXRPLAccountObjects(nftInfo.result);
-          resultField.value = results;
+          resultField.value += `Total NFT's ${nftInfo.result.account_nfts.length}\n\n`;
+          resultField.value += parseXRPLAccountObjects(nftInfo.result);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
@@ -120,8 +119,7 @@ async function mintNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidAddress(issuerAddress.value), 'Invalid issuer address'],
-          [!validatInput(uri), 'ERROR: URI cannot be empty'],
+          [!validatInput(uri), 'URI cannot be empty'],
      ];
 
      for (const [condition, message] of validations) {
@@ -170,13 +168,16 @@ async function mintNFT() {
           const transaction = {
                TransactionType: 'NFTokenMint',
                Account: wallet.classicAddress,
-               URI: xrpl.convertStringToHex(uri),
                Flags: flags,
                NFTokenTaxon: 0,
           };
 
-          if (issuerAddress) {
+          if (issuerAddress.value) {
                transaction.Issuer = issuerAddress.value;
+          }
+
+          if (uri) {
+               transaction.URI = xrpl.convertStringToHex(uri);
           }
 
           const preparedTx = await client.autofill(transaction);
@@ -227,6 +228,7 @@ async function mintBatchNFT() {
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           totalExecutionTime: document.getElementById('totalExecutionTime'),
+          nftCount: document.getElementById('nftCountField'),
      };
 
      // DOM existence check
@@ -238,7 +240,7 @@ async function mintBatchNFT() {
           }
      }
 
-     const { seed, xrpBalanceField, amount, uriField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { seed, xrpBalanceField, amount, uriField, ownerCountField, totalXrpReservesField, totalExecutionTime, nftCount } = fields;
 
      const uri = uriField.value.trim() || 'ipfs://bafybeidf5geku675serlvutcibc5n5fjnzqacv43mjfcrh4ur6hcn4xkw4.metadata.json';
 
@@ -247,7 +249,10 @@ async function mintBatchNFT() {
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
-          [!validatInput(uri.value), 'ERROR: URI cannot be empty'],
+          [!validatInput(uri), 'URI cannot be empty'],
+          [!validatInput(nftCount.value), 'NFT count cannot be empty'],
+          [isNaN(nftCount.value), 'NFT count must be a valid number'],
+          [parseFloat(nftCount.value) <= 0, 'NFT count must be greater than zero'],
      ];
 
      for (const [condition, message] of validations) {
@@ -264,7 +269,8 @@ async function mintBatchNFT() {
 
           // Use Batch Transactions if supported (rippled 2.5.0+)
           const transactions = [];
-          for (let i = 0; i < nftCount; i++) {
+          const transactionResults = [];
+          for (let i = 0; i < parseInt(nftCount.value); i++) {
                transactions.push({
                     TransactionType: 'NFTokenMint',
                     Account: wallet.classicAddress,
@@ -293,8 +299,9 @@ async function mintBatchNFT() {
                     if (singleTx.result.meta.TransactionResult !== TES_SUCCESS) {
                          return setError(`ERROR: Minting NFT ${i + 1} failed: ${singleTx.result.meta.TransactionResult}\n${parseXRPLTransaction(singleTx.result)}`, spinner);
                     }
+                    transactionResults.push(singleTx);
                }
-               tx = transactions[transactions.length - 1]; // Use last transaction for result display
+               tx = transactionResults[transactions.length - 1];
           }
 
           const resultCode = tx.result.meta.TransactionResult;
@@ -319,6 +326,85 @@ async function mintBatchNFT() {
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving mintBatchNFT in ${now}ms`);
+     }
+}
+
+async function burnNFT() {
+     console.log('Entering burnNFT');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          seed: document.getElementById('accountSeedField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+          nftIdField: document.getElementById('nftIdField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { seed, xrpBalanceField, nftIdField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          resultField.value = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
+
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          const transaction = {
+               TransactionType: 'NFTokenBurn',
+               Account: wallet.classicAddress,
+               NFTokenID: nftIdField.value,
+          };
+
+          const tx = await client.submitAndWait(transaction, { wallet });
+          const resultCode = tx.result.meta.TransactionResult;
+          if (resultCode !== TES_SUCCESS) {
+               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+          }
+
+          resultField.value += `NFT burned successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          await client?.disconnect?.();
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving burnNFT in ${now}ms`);
      }
 }
 
@@ -794,85 +880,6 @@ async function buyNFT() {
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving buyNFT in ${now}ms`);
-     }
-}
-
-async function burnNFT() {
-     console.log('Entering burnNFT');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          seed: document.getElementById('accountSeedField'),
-          xrpBalanceField: document.getElementById('xrpBalanceField'),
-          nftIdField: document.getElementById('nftIdField'),
-          ownerCountField: document.getElementById('ownerCountField'),
-          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { seed, xrpBalanceField, nftIdField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
-
-     const validations = [
-          [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!validatInput(nftIdField.value), 'ERROR: URI cannot be empty'],
-     ];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
-
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          const transaction = {
-               TransactionType: 'NFTokenBurn',
-               Account: wallet.classicAddress,
-               NFTokenID: nftIdField.value,
-          };
-
-          const tx = await client.submitAndWait(transaction, { wallet });
-          const resultCode = tx.result.meta.TransactionResult;
-          if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
-          }
-
-          resultField.value += `NFT burned finished successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
-          xrpBalanceField.value = await client.getXrpBalance(wallet.classicAddress);
-     } catch (error) {
-          console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving burnNFT in ${now}ms`);
      }
 }
 
