@@ -569,7 +569,14 @@ async function issueCurrency() {
                return;
           }
 
-          const destTrustLine = destTrustLines.find(line => line.account === accountAddressField.value && line.currency === currency.value);
+          // const destTrustLine = destTrustLines.find(line => line.account === accountAddressField.value && line.currency === currency.value);
+
+          // Decode only if needed (e.g., if it's 40 characters)
+          const decodedCurrency = currency.value.length > 3 ? encodeCurrencyCode(currency.value) : currency.value;
+
+          const destTrustLine = destTrustLines.find(
+               line => line.account === accountAddressField.value && line.currency === decodedCurrency
+          );
 
           if (!destTrustLine || parseFloat(destTrustLine.limit) === 0) {
                return setError(`ERROR: Destination needs a trust line for ${currency.value} from ${accountAddressField.value}`, spinner);
@@ -614,8 +621,11 @@ async function issueCurrency() {
           const currentLedger2 = await getCurrentLedger(client);
           const { result: feeResponse2 } = await client.request({ command: 'fee' });
 
+          let curr;
           if (currency.value.length > 3) {
-               currency.value = encodeCurrencyCode(currency.value);
+               curr = decodedCurrency;
+          } else {
+               curr = currency.value;
           }
 
           const paymentTx = {
@@ -623,7 +633,7 @@ async function issueCurrency() {
                Account: accountAddressField.value,
                Destination: destinationAddress.value,
                Amount: {
-                    currency: currency.value,
+                    currency: curr,
                     value: amountField.value,
                     issuer: accountAddressField.value,
                },
@@ -664,7 +674,7 @@ async function issueCurrency() {
           resultField.value += `\nIssuer Obligations:\n${JSON.stringify(gatewayBalances.result.obligations, null, 2)}`;
           resultField.classList.add('success');
      } catch (error) {
-          console.error('Error setting up issuer or issuing TST:', error);
+          console.error('Error setting up issuer or issuing', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
           await client?.disconnect?.();
      } finally {
@@ -747,9 +757,13 @@ export async function getTokenBalance() {
                for (const [issuer, currencies] of Object.entries(balance.result.assets)) {
                     for (let { currency, value } of currencies) {
                          console.log(`Currency ${currency} issuer ${issuer} Amount: ${value}`);
-                         // if (currency.length > 3) {
-                         // currency = decodeCurrencyCode(currency);
-                         // }
+                         if (currency.length > 3) {
+                              const tempCurrency = currency;
+                              currency = decodeCurrencyCode(currency);
+                              if(currency.length > 8) {
+                                   currency = tempCurrency
+                              }
+                         }
                          output += `- ${currency} from ${issuer} Amount: ${value}\n`;
                     }
                }
