@@ -48,11 +48,11 @@ export function getNet() {
 
 export function prepareTxHashForOutput(hash) {
      if (getEnvironment().environment === 'Devnet') {
-          return `https://devnet.xrpl.org/transactions/${hash}` + '\n';
+          return `https://devnet.xrpl.org/transactions/${hash}\n`;
      } else if (getEnvironment().environment === 'Testnet') {
-          return `https://testnet.xrpl.org/transactions/${hash}` + '\n';
+          return `https://testnet.xrpl.org/transactions/${hash}\n`;
      } else {
-          return `https://livenet.xrpl.org/transactions/${hash}` + '\n';
+          return `https://livenet.xrpl.org/transactions/${hash}\n`;
      }
 }
 
@@ -60,7 +60,7 @@ export async function getClient() {
      const { net, environment } = getNet();
 
      if (clientInstance?.isConnected()) {
-          console.error('Reusing connection');
+          console.debug('Reusing connection');
           return clientInstance;
      }
 
@@ -876,6 +876,8 @@ export function parseXRPLTransaction(response) {
                                              } else {
                                                   subValue = subValueTemp;
                                              }
+                                        } else if (subValue.SignerEntry != undefined) {
+                                             subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
                                         }
                                         output.push(`        ${subKey}: ${subValue}`);
                                    }
@@ -955,6 +957,8 @@ export function parseXRPLTransaction(response) {
                                                                       } else {
                                                                            subValue = subValueTemp;
                                                                       }
+                                                                 } else if (subValue.SignerEntry != undefined) {
+                                                                      subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
                                                                  }
                                                                  output.push(`                        ${subKey}: ${subValue}`);
                                                             }
@@ -972,6 +976,8 @@ export function parseXRPLTransaction(response) {
                                                                  } else {
                                                                       subValue = subValueTemp;
                                                                  }
+                                                            } else if (subValue.SignerEntry != undefined) {
+                                                                 subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
                                                             }
                                                             output.push(`                    ${subKey}: ${subValue}`);
                                                        }
@@ -1021,6 +1027,8 @@ export function parseXRPLTransaction(response) {
                                                                       } else {
                                                                            subValue = subValueTemp;
                                                                       }
+                                                                 } else if (subValue.SignerEntry != undefined) {
+                                                                      subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
                                                                  }
                                                                  output.push(`                    ${subKey}: ${subValue}`);
                                                             }
@@ -1174,6 +1182,7 @@ const ledgerEntryTypeFields = {
      Ticket: {
           fields: [
                { key: 'Account', format: v => v || null },
+               { key: 'Flags', format: v => decodeNFTFlags(Number(v)) },
                { key: 'TicketSequence', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },
                { key: 'PreviousTxnLgrSeq', format: v => v || null },
@@ -1222,8 +1231,10 @@ const ledgerEntryTypeFields = {
      },
      SignerList: {
           fields: [
+               { key: 'Flags', format: v => v || null },
                { key: 'SignerQuorum', format: v => v || null },
                { key: 'SignerEntries', format: v => (Array.isArray(v) ? v.map(e => e.SignerEntry.Account).join(', ') : null) },
+               { key: 'SignerListID', format: v => v || null },
                { key: 'PreviousTxnID', format: v => v || null },
                { key: 'PreviousTxnLgrSeq', format: v => v || null },
                { key: 'index', format: v => v || null },
@@ -1375,6 +1386,8 @@ export function parseXRPLAccountObjects(response) {
                                                             } else {
                                                                  subValue = subValueTemp;
                                                             }
+                                                       } else if (subValue.SignerEntry != undefined) {
+                                                            subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
                                                        }
                                                        output.push(`        ${subKey}: ${subValue}`);
                                                   }

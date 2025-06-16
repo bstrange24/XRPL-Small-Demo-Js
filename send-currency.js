@@ -1,7 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, getCurrentLedger, parseXRPLTransaction, getTransaction, autoResize, setError, gatherAccountInfo, clearFields, distributeAccountInfo, generateNewWallet, generateNewWalletFromSecretNumbers, generateNewWalletFromMnemonic, getAccountFromSeed, getAccountFromMnemonic, getAccountFromSecretNumbers, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode } from './utils.js';
 import { getCurrencyBalance } from './create-offer.js';
-import { getLedgerAccountInfo, getTrustLines } from './account.js';
+import { getAccountDetails, getTrustLines } from './account.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 
 async function createTrustLine() {
@@ -547,7 +547,7 @@ async function issueCurrency() {
           const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Step 1: Verify issuer account
-          const accountInfo = await getLedgerAccountInfo(client, accountAddressField.value, 'validated');
+          const accountInfo = await getAccountDetails(client, accountAddressField.value, 'validated');
           if (accountInfo == null) {
                return setError(`ERROR: Issuer account ${accountAddressField.value} is not funded.\n`, spinner);
           }
@@ -574,9 +574,7 @@ async function issueCurrency() {
           // Decode only if needed (e.g., if it's 40 characters)
           const decodedCurrency = currency.value.length > 3 ? encodeCurrencyCode(currency.value) : currency.value;
 
-          const destTrustLine = destTrustLines.find(
-               line => line.account === accountAddressField.value && line.currency === decodedCurrency
-          );
+          const destTrustLine = destTrustLines.find(line => line.account === accountAddressField.value && line.currency === decodedCurrency);
 
           if (!destTrustLine || parseFloat(destTrustLine.limit) === 0) {
                return setError(`ERROR: Destination needs a trust line for ${currency.value} from ${accountAddressField.value}`, spinner);
@@ -760,8 +758,8 @@ export async function getTokenBalance() {
                          if (currency.length > 3) {
                               const tempCurrency = currency;
                               currency = decodeCurrencyCode(currency);
-                              if(currency.length > 8) {
-                                   currency = tempCurrency
+                              if (currency.length > 8) {
+                                   currency = tempCurrency;
                               }
                          }
                          output += `- ${currency} from ${issuer} Amount: ${value}\n`;

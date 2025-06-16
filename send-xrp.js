@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { getAccountDetails, fetchAccountObjects } from './account.js';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -15,7 +16,7 @@ async function sendXRP() {
      const fields = {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
-          balance: document.getElementById('xrpBalanceField'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
           amount: document.getElementById('amountField'),
           destination: document.getElementById('destinationField'),
           memo: document.getElementById('memoField'),
@@ -23,27 +24,31 @@ async function sendXRP() {
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           totalExecutionTime: document.getElementById('totalExecutionTime'),
+          isMultiSignTransaction: document.getElementById('isMultiSignTransaction'),
      };
 
-     // Validate DOM elements
-     if (Object.values(fields).some(el => !el)) {
-          return setError(`ERROR: DOM element not found`, spinner);
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
      }
 
-     const seed = fields.seed.value.trim();
-     const amount = fields.amount.value.trim();
-     const destination = fields.destination.value.trim();
-     const memo = fields.memo.value.trim();
-     const destinationTag = fields.destinationTag.value.trim();
+     const { address, seed, xrpBalanceField, amount, destination, memo, destinationTag, ownerCountField, totalXrpReservesField, totalExecutionTime, isMultiSignTransaction } = fields;
 
      // Validate user inputs
-     if (!validatInput(seed)) return setError('ERROR: Seed cannot be empty', spinner);
-     if (!validatInput(amount)) return setError('ERROR: Amount cannot be empty', spinner);
-     if (isNaN(amount)) return setError('ERROR: Amount must be a valid number', spinner);
-     if (parseFloat(amount) <= 0) return setError('ERROR: Amount must be greater than zero', spinner);
-     if (isNaN(destinationTag)) return setError('ERROR: Destination Tag must be a valid number', spinner);
-     if (parseFloat(destinationTag) <= 0) return setError('ERROR: Destination Tag must be greater than zero', spinner);
-     if (!validatInput(destination)) return setError('ERROR: Destination cannot be empty', spinner);
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!validatInput(amount.value), 'ERROR: Amount cannot be empty'],
+          [isNaN(amount.value), 'ERROR: Amount must be a valid number'],
+          [parseFloat(amount.value) <= 0, 'ERROR: Amount must be greater than zero'],
+     ];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
 
      try {
           const { net, environment } = getNet();
@@ -52,54 +57,141 @@ async function sendXRP() {
           let results = `Connected to ${environment} ${net}\nSending XRP\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          const preparedTx = await client.autofill({
-               TransactionType: 'Payment',
-               Account: wallet.classicAddress,
-               Amount: xrpl.xrpToDrops(amount),
-               Destination: destination,
-          });
+          let preparedTx;
+          if (isMultiSignTransaction.checked) {
+               const signerWallet1 = xrpl.Wallet.fromSeed('ss17VgF7xf6qt3JSPodNZwBhL8i8N', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 1
+               const signerWallet2 = xrpl.Wallet.fromSeed('ssBUTCsCNhpknBjTGaWPrjBsvU1TJ', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 2
 
-          const memoText = memo;
-          if (memoText) {
-               preparedTx.Memos = [
-                    {
-                         Memo: {
-                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
-                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+               const accountObjects = await fetchAccountObjects(address);
+               if (accountObjects == null) {
+                    return setError(`ERROR: No account objects for ${wallet.classicAddress}.\n`, spinner);
+               }
+
+               // Find the SignerList (returns `undefined` if not found)
+               const signerList = accountObjects.result.account_objects.find(obj => obj.LedgerEntryType === 'SignerList');
+
+               if (signerList && isMultiSignTransaction.checked) {
+                    console.log('SignerList found:', signerList);
+                    console.log('Signer Quorum:', signerList.SignerQuorum);
+                    console.log('Signer Entries:', signerList.SignerEntries);
+
+                    const account_data = await getAccountDetails(client, wallet.classicAddress, 'validated');
+
+                    preparedTx = {
+                         TransactionType: 'Payment',
+                         Account: wallet.classicAddress,
+                         Destination: destination.value,
+                         Amount: xrpl.xrpToDrops(amount.value),
+                         SigningPubKey: '', // required for multisign
+                         Sequence: account_data.result.account_data.Sequence,
+                    };
+
+                    const memoText = memo.value;
+                    if (memoText) {
+                         preparedTx.Memos = [
+                              {
+                                   Memo: {
+                                        MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                                        MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                                   },
+                              },
+                         ];
+                    }
+
+                    const destinationTagText = destinationTag.value;
+                    if (destinationTagText) {
+                         if (!isNaN(destinationTagText) || destinationTagText <= 0) {
+                              return setError('ERROR: Destination Tag must be a valid number and greater than zero', spinner);
+                         }
+                         preparedTx.DestinationTag = parseInt(destinationTagText, 10);
+                    }
+
+                    // Step 2: Autofill with correct fee/LastLedgerSequence
+                    const autofilledTx = await client.autofill(preparedTx);
+                    console.log('Base fee (drops):', autofilledTx.Fee);
+                    const signerCount = signerList.SignerEntries.length;
+                    autofilledTx.Fee = (parseInt(autofilledTx.Fee, 10) * signerCount + 10).toString();
+                    console.log('Adjusted fee (drops):', autofilledTx.Fee);
+
+                    // Step 3: Each signer signs the same baseTx
+                    const signed1 = signerWallet1.sign(autofilledTx, signerWallet1, { multisign: true });
+                    const signed2 = signerWallet2.sign(autofilledTx, signerWallet2, { multisign: true });
+
+                    // Step 4: Combine the signed transactions
+                    const combined = xrpl.multisign([signed1.tx_blob, signed2.tx_blob]);
+
+                    console.log('combined: ', combined);
+                    // Step 5: Submit the multisigned transaction
+                    const response = await client.submitAndWait(combined);
+                    console.log('Transaction response:', response);
+
+                    const resultCode = response.result.meta.TransactionResult;
+                    if (resultCode !== TES_SUCCESS) {
+                         return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+                    }
+
+                    results += `XRP payment finished successfully.\n\n`;
+                    results += prepareTxHashForOutput(response.result.hash) + '\n';
+                    results += parseXRPLTransaction(response.result);
+
+                    resultField.value = results;
+                    resultField.classList.add('success');
+               } else {
+                    return setError(`No Multi Sign accounts setup for ${wallet.classicAddress}`, spinner);
+               }
+          } else {
+               console.log('No SignerList found for this account.');
+               preparedTx = await client.autofill({
+                    TransactionType: 'Payment',
+                    Account: wallet.classicAddress,
+                    Amount: xrpl.xrpToDrops(amount.value),
+                    Destination: destination.value,
+               });
+
+               const memoText = memo.value;
+               if (memoText) {
+                    preparedTx.Memos = [
+                         {
+                              Memo: {
+                                   MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                                   MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                              },
                          },
-                    },
-               ];
+                    ];
+               }
+
+               const destinationTagText = destinationTag.value;
+               if (destinationTagText) {
+                    if (!isNaN(destinationTagText) || destinationTagText <= 0) {
+                         return setError('ERROR: Destination Tag must be a valid number and greater than zero', spinner);
+                    }
+                    preparedTx.DestinationTag = parseInt(destinationTagText, 10);
+               }
+
+               const signed = wallet.sign(preparedTx);
+               const response = await client.submitAndWait(signed.tx_blob);
+               console.log('Transaction response:', response);
+
+               const resultCode = response.result.meta.TransactionResult;
+               if (resultCode !== TES_SUCCESS) {
+                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               }
+
+               results += `XRP payment finished successfully.\n\n`;
+               results += prepareTxHashForOutput(response.result.hash) + '\n';
+               results += parseXRPLTransaction(response.result);
+
+               resultField.value = results;
+               resultField.classList.add('success');
           }
 
-          const destinationTagText = destinationTag;
-          if (destinationTagText) {
-               preparedTx.DestinationTag = parseInt(destinationTagText, 10);
-          }
-
-          const signed = wallet.sign(preparedTx);
-          const response = await client.submitAndWait(signed.tx_blob);
-          console.log('Transaction response:', response);
-
-          const resultCode = response.result.meta.TransactionResult;
-          if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
-          }
-
-          results += `XRP payment finished successfully.\n\n`;
-          results += prepareTxHashForOutput(response.result.hash) + '\n';
-          results += parseXRPLTransaction(response.result);
-
-          resultField.value = results;
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, wallet.address, fields.ownerCountField, fields.totalXrpReservesField);
-          fields.balance.value = (await client.getXrpBalance(wallet.address)) - fields.totalXrpReservesField.value;
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          xrpBalanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

@@ -5,13 +5,14 @@ const inputIds = ['account1name', 'account2name', 'issuerName', 'account1address
 
 const pageTitles = {
      'index.html': 'Send XRP',
-     'send-checks.html': 'Send Checks',
-     'send-currency.html': 'Send Currency',
+     'send-checks.html': 'Checks',
+     'send-currency.html': 'Currency',
      'create-time-escrow.html': 'Create Time Escrow',
      'create-conditional-escrow.html': 'Create Conditional Escrow',
      'account.html': 'Account Info',
      'create-offers.html': 'Create Offers',
      'create-nft.html': 'NFTs',
+     'create-tickets.html': 'Tickets',
 };
 
 fetch('navbar.html')

@@ -151,7 +151,19 @@
                                    <input type="text" id="xrpBalance2Field" size="40" />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Add address for multi sign. This is a comma seperated list">
+                                        <label for="multiSignAddress">Multi-Sign Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <textarea class="memoField" style="width: 300px" id="multiSignAddress" placeholder="Comma seperated list of address' for multi sign..."></textarea>
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
+
                     <table style="float: left">
                          <th></th>
                          <tr>
@@ -300,6 +312,8 @@
                                    <button type="button" onClick="updateFlags()">Update Flags</button>
                                    <button type="button" onClick="setDepositAuthAccounts('Y')">Set Deposit Auth</button>
                                    <button type="button" onClick="setDepositAuthAccounts('N')">Unauthorize Deposit Auth</button>
+                                   <button type="button" onClick="setMultiSign('Y')">Set Multi-Sign</button>
+                                   <button type="button" onClick="setMultiSign('N')">Remove Multi-Sign</button>
                                    <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
@@ -314,7 +328,7 @@
 
                <p></p>
                <details>
-                    <summary style="color: white; font-size: 14px; padding-top: 20px; cursor: pointer">NFT Flag Info</summary>
+                    <summary style="color: white; font-size: 14px; padding-top: 20px; cursor: pointer">Account Flag Info</summary>
                     <fieldset style="padding: 20px">
                          <legend style="color: white">Account Flag Info</legend>
                          <table style="float: left; color: white">

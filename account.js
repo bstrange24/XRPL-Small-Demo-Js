@@ -169,7 +169,6 @@ async function updateFlags() {
                resultField.value += `\n\nClear Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
-          resultField.value += `\nTotal execution time ${Date.now() - startTime}ms`;
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
@@ -289,7 +288,6 @@ async function setDepositAuthAccounts(authorizeFlag) {
           resultField.value += `Deposit Auth finished successfully.\n\n`;
           resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(response.result);
-          resultField.value += `\nTotal execution time ${Date.now() - startTime}ms`;
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
@@ -307,7 +305,130 @@ async function setDepositAuthAccounts(authorizeFlag) {
      }
 }
 
-export async function getLedgerAccountInfo(client, accountAddress, validated) {
+async function setMultiSign(enableMultiSignFlag) {
+     console.log('Entering setMultiSign');
+     const startTime = Date.now();
+     console.log('Enable Multi Sign Flag:', enableMultiSignFlag);
+
+     const resultField = document.getElementById('resultField');
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+     resultField?.classList.remove('error', 'success');
+
+     try {
+          const selected = getSelectedAccount();
+          if (!selected) return setError(`Please select an account.`, spinner);
+
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          const ownerCountField = document.getElementById('ownerCountField');
+          const totalXrpReservesField = document.getElementById('totalXrpReservesField');
+          const totalExecutionTime = document.getElementById('totalExecutionTime');
+
+          const accountSeedField = resolveAccountSeedField();
+          if (!accountSeedField) return setError('ERROR: Account seed field not found', spinner);
+          if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty', spinner);
+
+          const { seedField, balanceField } = resolveAccountFields();
+
+          const multiSignAddress = document.getElementById('multiSignAddress').value;
+          const addressesArray = multiSignAddress.split(',').map(address => address.trim());
+
+          // Generate SignerEntries with SignerWeight = 1 for each address
+          const SignerEntries = addressesArray.map(address => ({
+               SignerEntry: {
+                    Account: address,
+                    SignerWeight: 1,
+               },
+          }));
+
+          console.log(SignerEntries);
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          resultField.value = `Connected to ${environment} ${net}\nSetting MultiSign\n\n`;
+
+          let signerListTx;
+          if (enableMultiSignFlag === 'Y') {
+               // Set quorum dynamically (e.g., majority rule)
+               const SignerQuorum = Math.ceil(SignerEntries.length / 2);
+
+               // Validate
+               if (SignerQuorum > SignerEntries.length) {
+                    return setError(`ERROR: Quorum (${SignerQuorum}) > total signers (${SignerEntries.length})`, spinner);
+               }
+
+               signerListTx = await client.autofill({
+                    TransactionType: 'SignerListSet',
+                    Account: wallet.classicAddress,
+                    SignerQuorum: SignerQuorum,
+                    SignerEntries: SignerEntries,
+               });
+          } else {
+               signerListTx = await client.autofill({
+                    TransactionType: 'SignerListSet',
+                    Account: wallet.classicAddress,
+                    SignerQuorum: 0, // This removes the signer list
+                    // No SignerEntries
+               });
+          }
+
+          const signerListResponse = await client.submitAndWait(signerListTx, { wallet: wallet });
+          if (signerListResponse.result.meta.TransactionResult !== TES_SUCCESS) {
+               return setError(`ERROR: Failed to set signer list: ${signerListResponse.result.meta.TransactionResult}`, spinner);
+          }
+
+          resultField.value += `SignerListSet transaction successful\n\n`;
+          resultField.value += prepareTxHashForOutput(signerListResponse.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(signerListResponse.result);
+          resultField.classList.add('success');
+
+          await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+          balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
+
+          // // Prepare a multisignable Payment transaction
+          // const baseTx = {
+          //      TransactionType: 'Payment',
+          //      Account: mainWallet.classicAddress,
+          //      Destination: signerWallet2.classicAddress,
+          //      Amount: xrpl.xrpToDrops('1'),
+          //      SigningPubKey: '', // required for multisign
+          //      Sequence: (await client.getAccountInfo(mainWallet.classicAddress)).account_data.Sequence,
+          //      Fee: '0', // will be replaced automatically
+          // };
+
+          // const autofilledTx = await client.autofill(baseTx);
+
+          // // Each signer signs
+          // const signedBy2 = xrpl.sign(autofilledTx, { wallet: signerWallet2, multisign: true });
+          // const signedBy3 = xrpl.sign(autofilledTx, { wallet: signerWallet3, multisign: true });
+
+          // // Combine signatures
+          // const multisigned = xrpl.combine([signedBy2.signedTransaction, signedBy3.signedTransaction]);
+
+          // const submissionResult = await client.submitAndWait(multisigned.signedTransaction);
+
+          // const resultCode = submissionResult.result.meta.TransactionResult;
+          // if (resultCode !== TES_SUCCESS) {
+          //      return setError(`ERROR: Multisigned transaction failed: ${resultCode}`, spinner);
+          // }
+
+          // resultField.value += `Multisigned Payment successful!\n${prepareTxHashForOutput(submissionResult.result.hash)}\n`;
+          // resultField.classList.add('success');
+     } catch (error) {
+          console.error('Error in setMultiSign:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving setMultiSign in ${now}ms`);
+     }
+}
+
+export async function getAccountDetails(client, accountAddress, validated) {
      try {
           const accountInfo = await client.request({
                command: 'account_info',
@@ -463,6 +584,7 @@ export async function displayDataForAccount2() {
 window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
+window.setMultiSign = setMultiSign;
 window.getTransaction = getTransaction;
 window.convertToEstTime = convertToEstTime;
 window.displayDataForAccount1 = displayDataForAccount1;

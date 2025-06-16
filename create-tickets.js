@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode } from './utils.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode, addTime } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 
 async function getTickets() {
      console.log('Entering getTickets');
@@ -58,6 +58,7 @@ async function getTickets() {
                return;
           }
 
+          resultField.value += `Total tickets found for ${address.value}: ${ticket_objects.result.account_objects.length}\n`;
           resultField.value += parseXRPLAccountObjects(ticket_objects.result);
           resultField.classList.add('success');
 
@@ -66,7 +67,6 @@ async function getTickets() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -90,7 +90,6 @@ async function createTicket() {
           address: document.getElementById('accountAddressField'),
           seed: document.getElementById('accountSeedField'),
           ticketCount: document.getElementById('ticketCountField'),
-          expirationTime: document.getElementById('expirationTimeField'),
           finishUnit: document.getElementById('checkExpirationTime'), // Reused for Ticket expiration
           balance: document.getElementById('xrpBalanceField'),
           ownerCount: document.getElementById('ownerCountField'),
@@ -107,27 +106,19 @@ async function createTicket() {
           }
      }
 
-     const { address, seed, ticketCount, expirationTime, finishUnit, balance, ownerCount, totalXrpReserves, totalExecutionTime } = fields;
+     const { address, seed, ticketCount, finishUnit, balance, ownerCount, totalXrpReserves, totalExecutionTime } = fields;
 
      // Validate input values
      const validations = [
           [!validatInput(address.value), 'Address cannot be empty'],
           [!validatInput(seed.value), 'Seed cannot be empty'],
           [!validatInput(ticketCount.value), 'Ticket count cannot be empty'],
-          [isNaN(ticketCount.value) || parseInt(ticketCount.value) <= 0, 'Ticket count must be a positive number'],
+          [isNaN(ticketCount.value), 'Ticket count must be a valid number'],
+          [parseInt(ticketCount.value) <= 0, 'Ticket count must be a positive number'],
      ];
 
      for (const [condition, message] of validations) {
           if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     let ticketExpirationTime = '';
-     if (expirationTime.value !== '') {
-          if (isNaN(parseFloat(expirationTime.value)) || expirationTime.value <= 0) {
-               return setError('ERROR: Expiration time must be a valid number greater than zero', spinner);
-          }
-          ticketExpirationTime = addTime(parseInt(expirationTime.value), finishUnit.value);
-          console.log(`Raw expirationTime: ${expirationTime.value} finishUnit: ${finishUnit.value} ticketExpirationTime: ${convertXRPLTime(parseInt(ticketExpirationTime))}`);
      }
 
      try {
@@ -145,16 +136,11 @@ async function createTicket() {
                TicketCount: parseInt(ticketCount.value),
           });
 
-          if (ticketExpirationTime !== '') {
-               tx.Expiration = ticketExpirationTime;
-          }
-
-          const signed = wallet.sign(tx);
-
           results += `Creating ${ticketCount.value} Ticket(s)\n`;
           resultField.value = results;
 
-          const response = await client.submitAndWait(signed.tx_blob);
+          console.log(`tx ${JSON.stringify(tx, null, 2)}`);
+          const response = await client.submitAndWait(tx, { wallet });
           console.log('Response', response);
 
           const resultCode = response.result.meta.TransactionResult;
@@ -173,7 +159,6 @@ async function createTicket() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -235,7 +220,7 @@ async function useTicket() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-     if (tokenBalance && tokenBalance.value !== '') {
+     if (tokenBalance && tokenBalance.value !== EMPTY_STRING) {
           const balance = Number(tokenBalance.value);
           if (isNaN(balance)) {
                return setError('ERROR: Token balance must be a number', spinner);
@@ -245,7 +230,7 @@ async function useTicket() {
           }
      }
 
-     if (issuerField && tokenBalance.value !== '' && Number(tokenBalance.value) > 0 && issuerField.value === '') {
+     if (issuerField && tokenBalance.value !== EMPTY_STRING && Number(tokenBalance.value) > 0 && issuerField.value === EMPTY_STRING) {
           return setError('ERROR: Issuer cannot be empty when sending a token', spinner);
      }
 
@@ -276,11 +261,12 @@ async function useTicket() {
                Sequence: 0, // Must be 0 when using TicketSequence
           });
 
-          const signed = wallet.sign(tx);
+          // const signed = wallet.sign(tx);
           results += `Sending ${amount.value} ${currency.value} using Ticket Sequence ${ticketSequence.value}\n`;
           resultField.value = results;
 
-          const response = await client.submitAndWait(signed.tx_blob);
+          const response = await client.submitAndWait(tx, { wallet });
+          // const response = await client.submitAndWait(signed.tx_blob);
           console.log('Response:', response);
 
           const resultCode = response.result.meta.TransactionResult;
@@ -303,7 +289,6 @@ async function useTicket() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -386,7 +371,6 @@ async function cancelTicket() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -447,7 +431,7 @@ export async function getTokenBalance() {
           console.log('gatewayBalances', gatewayBalances);
 
           let tokenTotal = 0;
-          issuerField.innerHTML = '';
+          issuerField.innerHTML = EMPTY_STRING;
 
           Object.entries(gatewayBalances.result.assets).forEach(([issuer, assets]) => {
                console.log(`Issuer: ${issuer}`);
@@ -478,7 +462,6 @@ export async function getTokenBalance() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -493,8 +476,7 @@ async function displayTicketDataForAccount1() {
      accountAddressField.value = account1address.value;
      accountSeedField.value = account1seed.value;
      destinationField.value = account2address.value;
-     expirationTimeField.value = '';
-     amountField.value = '';
+     amountField.value = EMPTY_STRING;
      await getXrpBalance();
      await getTickets();
 }
@@ -504,8 +486,7 @@ async function displayTicketDataForAccount2() {
      accountAddressField.value = account2address.value;
      accountSeedField.value = account2seed.value;
      destinationField.value = account1address.value;
-     amountField.value = '';
-     expirationTimeField.value = '';
+     amountField.value = EMPTY_STRING;
      await getXrpBalance();
      await getTickets();
 }

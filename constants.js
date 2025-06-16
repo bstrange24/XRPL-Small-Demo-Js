@@ -7,6 +7,7 @@ export const secp256k1_ENCRYPTION = 'secp256k1';
 export const MAINNET = 'Mainnet';
 export const TESTNET = 'Testnet';
 export const DEVNET = 'Devnet';
+export const EMPTY_STRING = '';
 
 export const flagList = [
      { name: 'asfRequireDest', label: 'Require Destination Tag', value: 1, xrplName: 'requireDestinationTag', xrplEnum: xrpl.AccountSetAsfFlags.asfRequireDest },
