@@ -25,6 +25,7 @@ async function sendXRP() {
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           totalExecutionTime: document.getElementById('totalExecutionTime'),
           isMultiSignTransaction: document.getElementById('isMultiSignTransaction'),
+          multiSignAddress: document.getElementById('multiSignAddress'),
      };
 
      // DOM existence check
@@ -36,7 +37,7 @@ async function sendXRP() {
           }
      }
 
-     const { address, seed, xrpBalanceField, amount, destination, memo, destinationTag, ownerCountField, totalXrpReservesField, totalExecutionTime, isMultiSignTransaction } = fields;
+     const { address, seed, xrpBalanceField, amount, destination, memo, destinationTag, ownerCountField, totalXrpReservesField, totalExecutionTime, isMultiSignTransaction, multiSignAddress } = fields;
 
      // Validate user inputs
      const validations = [
@@ -61,8 +62,19 @@ async function sendXRP() {
 
           let preparedTx;
           if (isMultiSignTransaction.checked) {
-               const signerWallet1 = xrpl.Wallet.fromSeed('ss17VgF7xf6qt3JSPodNZwBhL8i8N', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 1
-               const signerWallet2 = xrpl.Wallet.fromSeed('ssBUTCsCNhpknBjTGaWPrjBsvU1TJ', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 2
+               const multiSignAddress = document.getElementById('multiSignAddress').value;
+               const addressesArray = multiSignAddress.split(',').map(address => address.trim());
+
+               const signerWallets = [];
+               for (const seed of addressesArray) {
+                    if (!xrpl.isValidSecret(seed)) {
+                         return setError(`ERROR: Invalid seed ${seed}.\n`, spinner);
+                    }
+                    signerWallets.push(xrpl.Wallet.fromSeed(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }));
+               }
+
+               // const signerWallet1 = xrpl.Wallet.fromSeed('ss17VgF7xf6qt3JSPodNZwBhL8i8N', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 1
+               // const signerWallet2 = xrpl.Wallet.fromSeed('ssBUTCsCNhpknBjTGaWPrjBsvU1TJ', { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }); // Signer 2
 
                const accountObjects = await fetchAccountObjects(address);
                if (accountObjects == null) {
@@ -116,11 +128,18 @@ async function sendXRP() {
                     console.log('Adjusted fee (drops):', autofilledTx.Fee);
 
                     // Step 3: Each signer signs the same baseTx
-                    const signed1 = signerWallet1.sign(autofilledTx, signerWallet1, { multisign: true });
-                    const signed2 = signerWallet2.sign(autofilledTx, signerWallet2, { multisign: true });
+                    const signedTxBlobs = [];
+                    for (const signerWallet of signerWallets) {
+                         const signed = signerWallet.sign(autofilledTx, signerWallet, { multisign: true });
+                         signedTxBlobs.push(signed.tx_blob);
+                    }
+
+                    const combined = xrpl.multisign(signedTxBlobs);
+                    // const signed1 = signerWallet1.sign(autofilledTx, signerWallet1, { multisign: true });
+                    // const signed2 = signerWallet2.sign(autofilledTx, signerWallet2, { multisign: true });
 
                     // Step 4: Combine the signed transactions
-                    const combined = xrpl.multisign([signed1.tx_blob, signed2.tx_blob]);
+                    // const combined = xrpl.multisign([signed1.tx_blob, signed2.tx_blob]);
 
                     console.log('combined: ', combined);
                     // Step 5: Submit the multisigned transaction

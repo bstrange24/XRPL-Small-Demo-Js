@@ -876,8 +876,8 @@ export function parseXRPLTransaction(response) {
                                              } else {
                                                   subValue = subValueTemp;
                                              }
-                                        } else if (subValue.SignerEntry != undefined) {
-                                             subValue = `Account: ${subValue.SignerEntry.Account} Signer Weight: ${subValue.SignerEntry.SignerWeight}`;
+                                        } else if (subValue.Signer != undefined) {
+                                             subValue = `Account: ${subValue.Signer.Account} Txn Signature: ${subValue.Signer.TxnSignature}`;
                                         }
                                         output.push(`        ${subKey}: ${subValue}`);
                                    }
