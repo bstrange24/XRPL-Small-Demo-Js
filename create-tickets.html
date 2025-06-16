@@ -1,23 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
      <head>
-          <title>Send Currency</title>
-          <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Send Checks</title>
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
+          <script src="https://unpkg.com/xrpl@4.1.0/build/xrpl-latest.js"></script>
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="./send-currency.js"></script>
+          <script type="module" src="./create-tickets.js"></script>
           <script type="module" src="./local-storage.js"></script>
      </head>
 
      <body>
           <div id="navbar-container"></div>
           <form id="theForm">
-               <div id="wallet-issuer-input-container"></div>
-
+               <div id="wallet-input-container"></div>
                <p></p>
-               <fieldset style="padding: 20px">
+               <fieldset>
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
                          <th></th>
@@ -53,8 +51,6 @@
                               </td>
                               <td>
                                    <input type="text" id="accountSeedField" size="40" />
-                                   <input type="radio" id="accountIssuer" name="accounts" value="accountIssuer" />
-                                   <label for="accountIssuer">Issuer</label>
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
@@ -89,6 +85,16 @@
                                    <br />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top" id="issuerRow" style="display: none">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of currencies held by the account">
+                                        <label for="tokenBalance">Currency Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="tokenBalance" size="40" readonly />
+                              </td>
+                         </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Total Execution time in milli seconds.">
@@ -105,13 +111,24 @@
                          <th></th>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Currency code for the trust line.">
+                                   <span class="tooltip" tooltip-data="Issuer field for authorized minting.">
+                                        <label for="issuerField">Issuer Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="issuerField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Currency code for the check.">
                                         <label for="currencyField">Currency Code</label>
                                    </span>
                               </td>
                               <td>
-                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
-                                        <!-- <option value="XRP">XRP</option> -->
+                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px" onchange="toggleIssuerField()">
+                                        <option value="XRP">XRP</option>
                                         <option value="RLUSD">RLUSD</option>
                                         <option value="USD">USD</option>
                                         <option value="USDC">USDC</option>
@@ -122,34 +139,61 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Currency blance.">
-                                        <label for="currencyBalanceField">Currency Balance</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="currencyBalanceField" size="40" readonly />
-                                   <br />
-                              </td>
-                         </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Amount of XRP to send.">
                                         <label for="amountField">Amount</label>
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="amountField" size="40" />
+                                   <input type="text" id="amountField" size="40" placeholder="Amount in XRP (not drops)" />
                                    <br />
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
+                                   <span class="tooltip" tooltip-data="Destination account address where ticket is sent.">
                                         <label for="destinationField">Destination</label>
                                    </span>
                               </td>
                               <td>
                                    <input type="text" id="destinationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Number of tickets to create 1-250">
+                                        <label for="ticketCountField">Ticket Count</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="ticketCountField" size="40" placeholder="Number of tickets to create 1-250" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Check will expire after this time.">
+                                        <label for="expirationTimeField">Expiration Time</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="expirationTimeField" placeholder="Enter time" size="40" />
+                                   <select class="timeUnit" id="checkExpirationTime">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                   </select>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Ticket Sequence number">
+                                        <label for="ticketSequenceField">Ticket Sequence</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="ticketSequenceField" size="85" />
                                    <br />
                               </td>
                          </tr>
@@ -172,22 +216,16 @@
                          <th></th>
                          <tr>
                               <td colspan="2">
-                                   <button type="button" onClick="getTokenBalance()">Get Token Balance</button>
-                                   <button type="button" onClick="sendCurrency()">Send Currency</button>
-                                   <button type="button" onClick="issueCurrency()">Issue Currency</button>
-                              </td>
-                         </tr>
-                         <tr>
-                              <td colspan="2">
-                                   <button type="button" onClick="getTrustLine()">Get Trust Lines</button>
-                                   <button type="button" onClick="createTrustLine()">Set Trust Line</button>
-                                   <button type="button" onClick="removeTrustLine()">Remove Trust Line</button>
+                                   <button type="button" onClick="getTickets()">Get Tickets</button>
+                                   <button type="button" onClick="createTicket()">Create Ticket</button>
+                                   <button type="button" onClick="useTicket()">Use Ticket</button>
+                                   <button type="button" onClick="cancelTicket()">Cancel Ticket</button>
                                    <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>
                               <td colspan="2">
-                                   <textarea id="resultField" style="width: 71%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false"></textarea>
+                                   <textarea id="resultField" style="width: 71%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false" readonly></textarea>
                               </td>
                          </tr>
                     </table>
@@ -196,49 +234,58 @@
      </body>
 
      <script>
+          document.addEventListener('DOMContentLoaded', () => {
+               toggleIssuerField();
+               const accountSeedField = document.getElementById('accountSeedField');
+               const currencyField = document.getElementById('currencyField');
+               if (accountSeedField && accountSeedField.value != '' && currencyField.value !== 'XRP') {
+                    getTokenBalance();
+               }
+          });
+
+          function toggleIssuerField() {
+               const currencyField = document.getElementById('currencyField');
+               const issuerLabel = document.querySelector('label[for="issuerField"]').parentNode.parentNode;
+               const tokenBalance = document.querySelector('label[for="tokenBalance"]').parentNode.parentNode;
+               const issuerInput = document.getElementById('issuerField').parentNode;
+               const tokenBalanceInput = document.getElementById('tokenBalance').parentNode;
+               const amountField = document.getElementById('amountField');
+
+               if (currencyField.value !== 'XRP') {
+                    amountField.placeholder = 'Currency amount';
+                    issuerLabel.style.display = '';
+                    issuerInput.style.display = '';
+                    tokenBalance.style.display = '';
+                    tokenBalanceInput.style.display = '';
+               } else {
+                    amountField.placeholder = 'Amount in XRP (not drops)';
+                    issuerLabel.style.display = 'none';
+                    issuerInput.style.display = 'none';
+                    tokenBalance.style.display = 'none';
+                    tokenBalanceInput.style.display = 'none';
+               }
+
+               const accountSeedField = document.getElementById('accountSeedField');
+               if (accountSeedField && accountSeedField.value != '' && currencyField.value !== 'XRP') {
+                    getTokenBalance();
+               }
+          }
+
           const radioButtons = document.querySelectorAll('input[type="radio"]');
           radioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         displayCurrencyDataForAccount1();
+                         displayTicketDataForAccount1();
                     } else if (this.value === 'account2') {
-                         displayCurrencyDataForAccount2();
-                    } else if (this.value === 'accountIssuer') {
-                         displayCurrencyDataForAccount3();
+                         displayTicketDataForAccount2();
                     }
                });
           });
 
-          document.getElementById('currencyField').addEventListener('change', async function () {
-               let currencyCode = this.value;
-               const balanceField = document.getElementById('currencyBalanceField');
-
-               if (currencyCode) {
-                    let balance = '';
-                    if (currencyCode === 'XRP') {
-                         balance = await getXrpBalance();
-                         balance = balance - parseFloat(document.getElementById('totalXrpReservesField').value);
-                    } else {
-                         if (currencyCode.length > 3) {
-                              currencyCode = encodeCurrencyCode(currencyCode);
-                         }
-                         balance = await getCurrencyBalance(currencyCode);
-                    }
-
-                    if (balance !== null) {
-                         balanceField.value = balance;
-                    } else {
-                         balanceField.value = '0'; // Or "Currency not found"
-                    }
-               } else {
-                    balanceField.value = '';
-               }
-          });
-
-          fetch('wallet-issuer-input.html')
+          fetch('wallet-input.html')
                .then(res => res.text())
                .then(html => {
-                    document.getElementById('wallet-issuer-input-container').innerHTML = html;
+                    document.getElementById('wallet-input-container').innerHTML = html;
 
                     function hideAllGenerateNewWalletButtons() {
                          const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
@@ -338,14 +385,14 @@
                                         hideAllDeriveWalletButtons();
                                    } else if (checkboxValue === 'N') {
                                         console.log('Account 2 checkbox is checked, calling populate2()');
-                                        populate2();
+                                        populateFieldSendCurrency2();
                                    }
                               }
                          }
                     }
                })
                .catch(error => {
-                    console.error('Error loading wallet-issuer-input.html:', error);
+                    console.error('Error loading wallet-input.html:', error);
                });
 
           const textarea = document.getElementById('resultField');

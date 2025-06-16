@@ -13,7 +13,7 @@ async function getNFT() {
      if (spinner) spinner.style.display = 'block';
 
      const fields = {
-          accountSeed: document.getElementById('accountSeedField'),
+          seed: document.getElementById('accountSeedField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
@@ -29,10 +29,13 @@ async function getNFT() {
           }
      }
 
-     const { accountSeed, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { seed, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      // Validate input values
-     const validations = [[!validatInput(accountSeed.value), 'Seed cannot be empty']];
+     const validations = [
+          [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
+     ];
 
      for (const [condition, message] of validations) {
           if (condition) return setError(`ERROR: ${message}`, spinner);
@@ -44,7 +47,7 @@ async function getNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const nftInfo = await client.request({
                command: 'account_nfts',
@@ -69,14 +72,12 @@ async function getNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
-          console.log(`Leaving createConditionalEscrow in ${now}ms`);
-          console.log('Leaving getNFT');
+          console.log(`Leaving getNFT in ${now}ms`);
      }
 }
 
@@ -113,12 +114,14 @@ async function mintNFT() {
           }
      }
 
-     const { seed, xrpBalanceField, issuerAddress, uriField, burnableNft, onlyXrpNft, transferableNft, mutableNft, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { seed, xrpBalanceField, issuerAddress, uriField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      const uri = uriField.value.trim() || 'ipfs://bafybeidf5geku675serlvutcibc5n5fjnzqacv43mjfcrh4ur6hcn4xkw4.metadata.json';
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
+          [!xrpl.isValidAddress(issuerAddress.value), 'Invalid Account address'],
           [!validatInput(uri), 'URI cannot be empty'],
      ];
 
@@ -159,9 +162,8 @@ async function mintNFT() {
           }
 
           resultField.value += `NFT mint finished successfully.\n\n`;
-          resultField.value += `Tx Hash: ${tx.result.hash}\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(tx.result);
-
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
@@ -169,7 +171,6 @@ async function mintNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -215,6 +216,7 @@ async function mintBatchNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -292,7 +294,6 @@ async function mintBatchNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -334,6 +335,7 @@ async function burnNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
      ];
 
@@ -371,7 +373,6 @@ async function burnNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -519,9 +520,8 @@ async function getNFTOffers() {
           await updateOwnerCountAndReserves(client, accountAddress.value, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = await client.getXrpBalance(accountAddress.value);
      } catch (error) {
-          console.error('Error in getNFTOffers:', error);
-          setError(`ERROR: ${error.message || 'Failed to fetch NFT offers'}`);
-          await client?.disconnect?.();
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -563,7 +563,8 @@ async function setAuthorizedMinter() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidAddress(minterAddress.value), 'Minter address cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
+          [!validatInput(minterAddress.value), 'Minter address cannot be empty'],
           [!xrpl.isValidAddress(minterAddress.value), 'Invalid issuer address'],
      ];
 
@@ -605,7 +606,6 @@ async function setAuthorizedMinter() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -648,6 +648,7 @@ async function buyNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -735,7 +736,6 @@ async function buyNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -776,6 +776,7 @@ async function cancelBuyOffer() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
      ];
 
@@ -817,7 +818,6 @@ async function cancelBuyOffer() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -861,6 +861,7 @@ async function sellNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -917,7 +918,6 @@ async function sellNFT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -959,6 +959,7 @@ async function cancelSellOffer() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
      ];
 
@@ -1000,7 +1001,6 @@ async function cancelSellOffer() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -1044,6 +1044,7 @@ async function updateNFTMetadata() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
+          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
           [!validatInput(uriField.value), 'NFT Id cannot be empty'],
      ];
@@ -1087,7 +1088,6 @@ async function updateNFTMetadata() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

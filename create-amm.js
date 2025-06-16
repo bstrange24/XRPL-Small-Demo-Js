@@ -42,20 +42,22 @@ export async function getAMMPoolInfo() {
      const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, tradingFee, withdrawlLpTokenFromPool, totalExecutionTime } = fields;
 
      const validations = [
-          [!validatInput(accountName.value), 'ERROR: Account Name can not be empty'],
-          [!validatInput(accountAddress.value), 'ERROR: Account Address can not be empty'],
-          [!validatInput(accountSeed.value), 'ERROR: Account seed amount can not be empty'],
-          [!validatInput(xrpBalance.value), 'ERROR: XRP balance can not be empty'],
-          [!validatInput(weWantCurrency.value), 'ERROR: Taker Gets currency can not be empty'],
+          [!validatInput(accountName.value), 'Account Name can not be empty'],
+          [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
+          [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
+          [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
+          [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
-          [!validatInput(weSpendCurrency.value), 'ERROR: Taker Pays currency can not be empty'],
+          [!validatInput(weSpendCurrency.value), 'Taker Pays currency can not be empty'],
           [weSpendCurrency.value.length < 3, 'Invalid Taker Pays currency. Length must be greater than 3'],
-          [!validatInput(weWantAmount.value), 'ERROR: Taker Gets amount cannot be empty'],
-          [isNaN(weWantAmount.value), 'ERROR: Taker Gets amount must be a valid number'],
-          [parseFloat(weWantAmount.value) <= 0, 'ERROR: Taker Gets amount must be greater than zero'],
-          [!validatInput(weSpendAmount.value), 'ERROR: Taker Pays amount cannot be empty'],
-          [isNaN(weSpendAmount.value), 'ERROR: Taker Pays amount must be a valid number'],
-          [parseFloat(weSpendAmount.value) <= 0, 'ERROR: Taker Pays amount must be greater than zero'],
+          [!validatInput(weWantAmount.value), 'Taker Gets amount cannot be empty'],
+          [isNaN(weWantAmount.value), 'Taker Gets amount must be a valid number'],
+          [parseFloat(weWantAmount.value) <= 0, 'Taker Gets amount must be greater than zero'],
+          [!validatInput(weSpendAmount.value), 'Taker Pays amount cannot be empty'],
+          [isNaN(weSpendAmount.value), 'Taker Pays amount must be a valid number'],
+          [parseFloat(weSpendAmount.value) <= 0, 'Taker Pays amount must be greater than zero'],
      ];
 
      for (const [condition, message] of validations) {
@@ -203,7 +205,9 @@ async function createAMMPool() {
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -236,9 +240,6 @@ async function createAMMPool() {
           if (weWantCurrency.value === XRP_CURRENCY) {
                asset = { currency: XRP_CURRENCY };
           } else {
-               if (!weWantIssuer.value) {
-                    throw new Error(`Issuer required for ${weWantCurrency.value}.`);
-               }
                if (weWantCurrency.value.length > 3) {
                     const endcodedCurrency = encodeCurrencyCode(weWantCurrency.value);
                     asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
@@ -450,7 +451,9 @@ async function depositToAMM() {
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -619,7 +622,9 @@ async function withdrawFromAMM() {
 
      const validations = [
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -724,7 +729,6 @@ async function withdrawFromAMM() {
           }
 
           resultField.value += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${weSpendCurrency.value}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${weSpendCurrency.value}` : 'No withdrawal option selected'}\n`;
-          // resultField.value += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${XRP_CURRENCY}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${XRP_CURRENCY}` : 'No withdrawl option selected'}\n`;
           resultField.value += `\nAssets remaining in pool: ${ammResponse.result.amm.amount.value} ${weWantCurrency.value} ${xrpl.dropsToXrp(ammResponse.result.amm.amount2)} XRP\n\n`;
           resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
           resultField.value += parseXRPLTransaction(tx.result);
@@ -789,7 +793,9 @@ async function deleteAMMPool() {
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -1033,7 +1039,9 @@ async function swapViaAMM() {
      const validations = [
           [!validatInput(accountName.value), 'Account Name can not be empty'],
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
+          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -1045,8 +1053,6 @@ async function swapViaAMM() {
           [!validatInput(weSpendAmount.value), 'Taker Pays amount cannot be empty'],
           [isNaN(weSpendAmount.value), 'Taker Pays amount must be a valid number'],
           [parseFloat(weSpendAmount.value) <= 0, 'Taker Pays amount must be greater than zero'],
-          [!xrpl.isValidAddress(weSpendIssuer.value), 'Invalid Taker Pays issuer address'],
-          [!xrpl.isValidAddress(weWantIssuer.value), 'Invalid Taker Gets issuer address'],
      ];
 
      for (const [condition, message] of validations) {
