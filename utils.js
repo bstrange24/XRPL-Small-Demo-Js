@@ -1567,6 +1567,14 @@ export async function getAccountReserves(client, address) {
 export async function getXrplReserve(client) {
      try {
           // Get the current ledger index from the client
+          const server_info = await client.request({
+               command: 'server_info',
+          });
+          console.log(`Server Info ${JSON.stringify(server_info, null, 2)}`);
+          console.log(`Base Fee: ${server_info.result.info.validated_ledger.base_fee_xrp} XRP`);
+          console.log(`Base Reserve: ${server_info.result.info.validated_ledger.reserve_base_xrp} XRP`);
+          console.log(`Total incremental owner count: ${server_info.result.info.validated_ledger.reserve_inc_xrp} XRP`);
+
           const ledger_info = await client.request({
                command: 'server_state',
                ledger_index: 'current',
@@ -1577,9 +1585,10 @@ export async function getXrplReserve(client) {
           const reserveBaseXRP = ledgerData.reserve_base;
           const reserveIncrementXRP = ledgerData.reserve_inc;
 
-          // console.log(`baseFee: ${baseFee}`);
-          // console.log(`reserveBaseXRP: ${reserveBaseXRP}`);
-          // console.log(`Total reserve: ${reserveIncrementXRP} XRP`);
+          console.log(`baseFee: ${baseFee}`);
+          console.log(`reserveBaseXRP: ${xrpl.dropsToXrp(reserveBaseXRP)}`);
+          console.log(`Total incremental owner count: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
+          console.log(`Total Reserve: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
 
           return { reserveBaseXRP, reserveIncrementXRP };
      } catch (error) {

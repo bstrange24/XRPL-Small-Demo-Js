@@ -55,8 +55,7 @@ async function sendXRP() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nSending XRP\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nSending XRP\n\n`;
 
           const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
@@ -151,11 +150,10 @@ async function sendXRP() {
                          return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
                     }
 
-                    results += `XRP payment finished successfully.\n\n`;
-                    results += prepareTxHashForOutput(response.result.hash) + '\n';
-                    results += parseXRPLTransaction(response.result);
+                    resultField.value += `XRP payment finished successfully.\n\n`;
+                    resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+                    resultField.value += parseXRPLTransaction(response.result);
 
-                    resultField.value = results;
                     resultField.classList.add('success');
                } else {
                     return setError(`No Multi Sign accounts setup for ${wallet.classicAddress}`, spinner);
@@ -198,11 +196,9 @@ async function sendXRP() {
                     return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
                }
 
-               results += `XRP payment finished successfully.\n\n`;
-               results += prepareTxHashForOutput(response.result.hash) + '\n';
-               results += parseXRPLTransaction(response.result);
-
-               resultField.value = results;
+               resultField.value += `XRP payment finished successfully.\n\n`;
+               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               resultField.value += parseXRPLTransaction(response.result);
                resultField.classList.add('success');
           }
 
