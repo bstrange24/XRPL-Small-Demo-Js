@@ -2,6 +2,7 @@ import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 import { sign } from 'ripple-keypairs';
+import { derive } from 'xrpl-accountlib';
 
 export async function getPaymentChannels() {
      console.log('Entering getPaymentChannels');
@@ -43,7 +44,18 @@ export async function getPaymentChannels() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
           resultField.value = `Connected to ${environment} ${net}\n`;
           resultField.value += `\nGetting Payment Channels\n`;
 
@@ -59,6 +71,8 @@ export async function getPaymentChannels() {
           if (!channels || channels.length === 0) {
                resultField.value += `\nNo payment channels found for ${wallet.classicAddress}`;
                resultField.classList.add('success');
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               xrpBalanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
                return;
           }
 
@@ -144,11 +158,27 @@ export async function handlePaymentChannelAction() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
           resultField.value = `Connected to ${environment} ${net}\n`;
 
           if (action === 'create') {
                resultField.value += `\nCreating Payment Channel\n`;
+
+               if (amount.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
+                    return setError('ERROR: Insufficent XRP to complete transaction', spinner);
+               }
+
                const tx = await client.autofill({
                     TransactionType: 'PaymentChannelCreate',
                     Account: wallet.classicAddress,
@@ -177,6 +207,11 @@ export async function handlePaymentChannelAction() {
                if (isNaN(amount.value) || parseFloat(amount.value) <= 0) {
                     return setError('Amount must be a valid number and greater than 0', spinner);
                }
+
+               if (amount.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
+                    return setError('ERROR: Insufficent XRP to complete transaction', spinner);
+               }
+
                resultField.value += `Funding Payment Channel\n\n`;
                const tx = await client.autofill({
                     TransactionType: 'PaymentChannelFund',
@@ -345,7 +380,18 @@ export function generateChannelSignatureForUI() {
 
      try {
           const { net, environment } = getNet();
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const amountDrops = xrpl.xrpToDrops(amount.value);
           if (isNaN(amountDrops)) {
@@ -382,14 +428,32 @@ export function generateChannelSignatureForUI() {
 export async function displayPaymentChannelsForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
+     // accountSeedField.value = account1seed.value;
      await getPaymentChannels();
 }
 
 export async function displayPaymentChannelsForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     accountSeedField.value = account2seed.value;
+     if (account2seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account2secretNumbers.value;
+          } else {
+               accountSeedField.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account2seed.value;
+     }
+     // accountSeedField.value = account2seed.value;
      await getPaymentChannels();
 }
 

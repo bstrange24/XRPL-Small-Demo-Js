@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, convertToEstTime } from './utils.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 async function createTimeBasedEscrow() {
      console.log('Entering createTimeBasedEscrow');
@@ -63,9 +64,23 @@ async function createTimeBasedEscrow() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nCreating time-based escrow.\n\n`;
+          resultField.value = `Connected to ${environment} ${net}\nCreating time-based escrow.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          if (amountField.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
+               return setError('ERROR: Insufficent XRP to complete transaction', spinner);
+          }
 
           const finishAfterTime = addTime(escrowFinishTime.value, finishUnit.value);
           const cancelAfterTime = addTime(escrowCancelTime.value, cancelUnit.value);
@@ -108,10 +123,9 @@ async function createTimeBasedEscrow() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          results += `Escrow created successfully.\n\n`;
-          results += prepareTxHashForOutput(tx.result.hash) + '\n';
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
+          resultField.value += `Escrow created successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
           resultField.classList.add('success');
 
           if (currentTimeField) {
@@ -179,10 +193,19 @@ async function finishTimeBasedEscrow() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nFinishing escrow.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nFinishing escrow.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
@@ -201,10 +224,9 @@ async function finishTimeBasedEscrow() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          results += `Escrow finsihed successfully.\n\n`;
-          results += prepareTxHashForOutput(tx.result.hash) + '\n';
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
+          resultField.value += `Escrow finsihed successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
           resultField.classList.add('success');
 
           if (currentTimeField) {
@@ -266,8 +288,7 @@ export async function getEscrows() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nGetting account escrows.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nGetting account escrows.\n\n`;
 
           const tx = await client.request({
                id: 5,
@@ -305,8 +326,7 @@ export async function getEscrows() {
                }
           }
 
-          results += '\n' + parseXRPLAccountObjects(tx.result);
-          resultField.value = results;
+          resultField.value += '\n' + parseXRPLAccountObjects(tx.result);
           resultField.classList.add('success');
 
           if (currentTimeField) {
@@ -374,10 +394,19 @@ async function cancelEscrow() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nCancelling escrow.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nCancelling escrow.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const prepared = await client.autofill({
                TransactionType: 'EscrowCancel',
@@ -396,10 +425,9 @@ async function cancelEscrow() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
           }
 
-          results += `Escrow cancelled successfully.\n\n`;
-          results += prepareTxHashForOutput(tx.result.hash) + '\n';
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
+          resultField.value += `Escrow cancelled successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(tx.result);
           resultField.classList.add('success');
 
           if (currentTimeField) {
@@ -423,7 +451,15 @@ async function cancelEscrow() {
 export async function displayDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
      destinationField.value = account2address.value;
      escrowOwnerField.value = account1address.value;
      await getEscrows();
@@ -432,7 +468,15 @@ export async function displayDataForAccount1() {
 export async function displayDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     accountSeedField.value = account2seed.value;
+     if (account2seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account2secretNumbers.value;
+          } else {
+               accountSeedField.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account2seed.value;
+     }
      destinationField.value = account1address.value;
      escrowOwnerField.value = account2address.value;
      await getEscrows();

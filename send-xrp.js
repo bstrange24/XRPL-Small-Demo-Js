@@ -2,6 +2,7 @@ import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 import { getAccountDetails, fetchAccountObjects } from './account.js';
+import { derive } from 'xrpl-accountlib';
 
 async function sendXRP() {
      console.log('Entering sendXRP');
@@ -57,7 +58,21 @@ async function sendXRP() {
 
           resultField.value = `Connected to ${environment} ${net}\nSending XRP\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          if (amount.value > (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value) {
+               return setError('ERROR: Insufficent XRP to complete transaction', spinner);
+          }
 
           let preparedTx;
           if (isMultiSignTransaction.checked) {
@@ -66,9 +81,6 @@ async function sendXRP() {
 
                const signerWallets = [];
                for (const seed of addressesArray) {
-                    if (!xrpl.isValidSecret(seed)) {
-                         return setError(`ERROR: Invalid seed ${seed}.\n`, spinner);
-                    }
                     signerWallets.push(xrpl.Wallet.fromSeed(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION }));
                }
 
@@ -113,7 +125,7 @@ async function sendXRP() {
 
                     const destinationTagText = destinationTag.value;
                     if (destinationTagText) {
-                         if (!isNaN(destinationTagText) || destinationTagText <= 0) {
+                         if (isNaN(destinationTagText) || parseInt(destinationTagText) <= 0) {
                               return setError('ERROR: Destination Tag must be a valid number and greater than zero', spinner);
                          }
                          preparedTx.DestinationTag = parseInt(destinationTagText, 10);
@@ -181,7 +193,7 @@ async function sendXRP() {
 
                const destinationTagText = destinationTag.value;
                if (destinationTagText) {
-                    if (!isNaN(destinationTagText) || destinationTagText <= 0) {
+                    if (isNaN(destinationTagText) || parseInt(destinationTagText) <= 0) {
                          return setError('ERROR: Destination Tag must be a valid number and greater than zero', spinner);
                     }
                     preparedTx.DestinationTag = parseInt(destinationTagText, 10);
@@ -219,14 +231,30 @@ async function sendXRP() {
 export async function displayDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
      await getAccountInfo();
 }
 
 export async function displayDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     accountSeedField.value = account2seed.value;
+     if (account2seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account2secretNumbers.value;
+          } else {
+               accountSeedField.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account2seed.value;
+     }
      await getAccountInfo();
 }
 

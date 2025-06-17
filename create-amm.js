@@ -3,6 +3,7 @@ import { getClient, disconnectClient, validatInput, populate1, populate2, popula
 import { fetchAccountObjects } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 export async function getAMMPoolInfo() {
      console.log('Entering getAMMPoolInfo');
@@ -46,7 +47,6 @@ export async function getAMMPoolInfo() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -70,7 +70,17 @@ export async function getAMMPoolInfo() {
 
           resultField.value = `Connected to ${environment} ${net}\nGet AMM Pool Info.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           let asset, asset2;
           if (weWantCurrency.value === XRP_CURRENCY) {
@@ -206,7 +216,6 @@ async function createAMMPool() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -230,7 +239,17 @@ async function createAMMPool() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nCreating AMM Pool\n\n`;
 
@@ -451,7 +470,6 @@ async function depositToAMM() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -475,7 +493,17 @@ async function depositToAMM() {
 
           resultField.value = `Connected to ${environment} ${net}\nDeposit token into AMM Pool.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           console.log(`Deposit Option: isDepositIntoBothPools ${isDepositIntoBothPools.checked} isDepositIntoFirstPoolOnly ${isDepositIntoFirstPoolOnly.checked} isDepositIntoSecondPoolOnly ${isDepositIntoSecondPoolOnly.checked}`);
 
@@ -621,7 +649,6 @@ async function withdrawFromAMM() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -652,7 +679,17 @@ async function withdrawFromAMM() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nWithdrawing from AMM Pool\n\n`;
 
@@ -791,7 +828,6 @@ async function deleteAMMPool() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -813,7 +849,17 @@ async function deleteAMMPool() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nDeleting AMM Pool\n\n`;
 
@@ -1036,7 +1082,6 @@ async function swapViaAMM() {
           [!validatInput(accountAddress.value), 'Account Address can not be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
           [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!xrpl.isValidSecret(accountSeed.value), 'Invalid Account seed'],
           [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
           [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
@@ -1058,7 +1103,17 @@ async function swapViaAMM() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const weWantCur = weWantCurrency.value.length > 3 ? encodeCurrencyCode(weWantCurrency.value) : weWantCurrency.value;
           const weSpendCur = weSpendCurrency.value.length > 3 ? encodeCurrencyCode(weSpendCurrency.value) : weSpendCurrency.value;

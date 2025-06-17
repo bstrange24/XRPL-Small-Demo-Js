@@ -205,21 +205,21 @@
                });
           });
 
-          document.addEventListener('DOMContentLoaded', () => {
-               const checkbox = document.getElementById('isMultiSignTransaction');
-               const multiSignRow = document.getElementById('multiSignAddressRow');
+          // document.addEventListener('DOMContentLoaded', () => {
+          //      const checkbox = document.getElementById('isMultiSignTransaction');
+          //      const multiSignRow = document.getElementById('multiSignAddressRow');
 
-               checkbox.addEventListener('change', () => {
-                    if (checkbox.checked) {
-                         multiSignRow.style.display = 'table-row';
-                    } else {
-                         multiSignRow.style.display = 'none';
-                    }
-               });
+          //      checkbox.addEventListener('change', () => {
+          //           if (checkbox.checked) {
+          //                multiSignRow.style.display = 'table-row';
+          //           } else {
+          //                multiSignRow.style.display = 'none';
+          //           }
+          //      });
 
-               // Optional safety check: make sure it's hidden at start
-               multiSignRow.style.display = 'none';
-          });
+          //      // Optional safety check: make sure it's hidden at start
+          //      multiSignRow.style.display = 'none';
+          // });
 
           fetch('wallet-input.html')
                .then(res => res.text())

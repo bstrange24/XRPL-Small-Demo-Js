@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode } from './utils.js';
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 async function sendCheck() {
      console.log('Entering sendCheck');
@@ -86,10 +87,25 @@ async function sendCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          if (currency.value === XRP_CURRENCY) {
+               if (amount.value > (await client.getXrpBalance(wallet.address)) - totalXrpReserves.value) {
+                    return setError('ERROR: Insufficent XRP to send check', spinner);
+               }
+          }
 
           // Build SendMax amount
           let sendMax;
@@ -127,8 +143,7 @@ async function sendCheck() {
 
           const signed = wallet.sign(tx);
 
-          results += `Sending Check for ${amount.value} ${currency.value} to ${destination.value}\n`;
-          resultField.value = results;
+          resultField.value += `Sending Check for ${amount.value} ${currency.value} to ${destination.value}\n`;
 
           const response = await client.submitAndWait(signed.tx_blob);
           console.log('Response', response);
@@ -138,10 +153,9 @@ async function sendCheck() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check sent successfully.\n\n`;
-          results += prepareTxHashForOutput(response.result.hash) + '\n';
-          results += parseXRPLTransaction(response.result);
-          resultField.value = results;
+          resultField.value += `Check sent successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
 
           if (currency.value !== XRP_CURRENCY) {
@@ -312,10 +326,19 @@ async function cashCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Build amount object depending on currency
           const amountToCash =
@@ -335,8 +358,7 @@ async function cashCheck() {
           });
 
           const signed = wallet.sign(tx);
-          results += `Cashing check for ${amount.value} ${currency.value}\n`;
-          resultField.value = results;
+          resultField.value += `Cashing check for ${amount.value} ${currency.value}\n`;
 
           const response = await client.submitAndWait(signed.tx_blob);
           console.log('Response:', response);
@@ -346,10 +368,9 @@ async function cashCheck() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check cashed successfully.\n\n`;
-          results += prepareTxHashForOutput(response.result.hash) + '\n';
-          results += parseXRPLTransaction(response.result);
-          resultField.value = results;
+          resultField.value += `Check cashed successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCount, totalXrpReserves);
@@ -410,10 +431,19 @@ async function cancelCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const tx = await client.autofill({
                TransactionType: 'CheckCancel',
@@ -430,10 +460,9 @@ async function cancelCheck() {
                return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
           }
 
-          results += `Check cancelled successfully.\n\n`;
-          results += prepareTxHashForOutput(response.result.hash) + '\n';
-          results += parseXRPLTransaction(response.result);
-          resultField.value = results;
+          resultField.value += `Check cancelled successfully.\n\n`;
+          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+          resultField.value += parseXRPLTransaction(response.result);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCount, totalXrpReserves);
@@ -490,7 +519,17 @@ export async function getTokenBalance() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const gatewayBalances = await client.request({
                command: 'gateway_balances',
@@ -544,7 +583,15 @@ export async function getTokenBalance() {
 async function displayCheckDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
      destinationField.value = account2address.value;
      amountField.value = '';
      memoField.value = '';
@@ -558,7 +605,15 @@ async function displayCheckDataForAccount1() {
 async function displayCheckDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     accountSeedField.value = account2seed.value;
+     if (account2seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account2secretNumbers.value;
+          } else {
+               accountSeedField.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account2seed.value;
+     }
      destinationField.value = account1address.value;
      amountField.value = '';
      memoField.value = '';

@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 async function getNFT() {
      console.log('Entering getNFT');
@@ -32,10 +33,7 @@ async function getNFT() {
      const { seed, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      // Validate input values
-     const validations = [
-          [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
-     ];
+     const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
 
      for (const [condition, message] of validations) {
           if (condition) return setError(`ERROR: ${message}`, spinner);
@@ -47,7 +45,17 @@ async function getNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const nftInfo = await client.request({
                command: 'account_nfts',
@@ -120,7 +128,6 @@ async function mintNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!xrpl.isValidAddress(issuerAddress.value), 'Invalid Account address'],
           [!validatInput(uri), 'URI cannot be empty'],
      ];
@@ -137,7 +144,17 @@ async function mintNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nMinting NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenMint',
@@ -216,7 +233,6 @@ async function mintBatchNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -238,7 +254,17 @@ async function mintBatchNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nMinting ${nftCount.value} NFTs\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Use Batch Transactions if supported (rippled 2.5.0+)
           const transactions = [];
@@ -335,7 +361,6 @@ async function burnNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
      ];
 
@@ -349,7 +374,17 @@ async function burnNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nBurning NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenBurn',
@@ -563,7 +598,6 @@ async function setAuthorizedMinter() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(minterAddress.value), 'Minter address cannot be empty'],
           [!xrpl.isValidAddress(minterAddress.value), 'Invalid issuer address'],
      ];
@@ -578,7 +612,17 @@ async function setAuthorizedMinter() {
 
           resultField.value = `Connected to ${environment} ${net}\nSetting Authorized Minter\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'AccountSet',
@@ -648,7 +692,6 @@ async function buyNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -665,7 +708,17 @@ async function buyNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nBuying NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Fetch sell offers
           let response = '';
@@ -776,7 +829,6 @@ async function cancelBuyOffer() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
      ];
 
@@ -790,7 +842,17 @@ async function cancelBuyOffer() {
 
           resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenCancelOffer',
@@ -861,7 +923,6 @@ async function sellNFT() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(amount.value), 'Amount cannot be empty'],
           [isNaN(amount.value), 'Amount must be a valid number'],
           [parseFloat(amount.value) <= 0, 'Amount must be greater than zero'],
@@ -881,7 +942,17 @@ async function sellNFT() {
 
           resultField.value = `Connected to ${environment} ${net}\nSelling NFT\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenCreateOffer',
@@ -959,7 +1030,6 @@ async function cancelSellOffer() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIndexField.value), 'Offer index cannot be empty'],
      ];
 
@@ -973,7 +1043,17 @@ async function cancelSellOffer() {
 
           resultField.value = `Connected to ${environment} ${net}\nCanceling NFT Sell Offer\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenCancelOffer',
@@ -1044,7 +1124,6 @@ async function updateNFTMetadata() {
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
-          [!xrpl.isValidSecret(seed.value), 'Invalid Account seed'],
           [!validatInput(nftIdField.value), 'NFT Id cannot be empty'],
           [!validatInput(uriField.value), 'NFT Id cannot be empty'],
      ];
@@ -1059,7 +1138,17 @@ async function updateNFTMetadata() {
 
           resultField.value = `Connected to ${environment} ${net}\nUpdating NFT Metadata\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const transaction = {
                TransactionType: 'NFTokenModify',
@@ -1135,7 +1224,16 @@ export async function displayNftDataForAccount1() {
      console.log('displayNftDataForAccount1');
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     // accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
 
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {
@@ -1180,7 +1278,16 @@ export async function displayNftDataForAccount2() {
      console.log('displayNftDataForAccount2');
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     accountSeedField.value = account2seed.value;
+     // accountSeedField.value = account2seed.value;
+     if (account2seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account2secretNumbers.value;
+          } else {
+               accountSeedField.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account2seed.value;
+     }
 
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {

@@ -4,6 +4,7 @@ import { saveInputValues } from './local-storage';
 import { getAccountInfo } from './account';
 import { getAMMPoolInfo } from './create-amm.js';
 import { getEscrows } from './create-time-escrow.js';
+import { EMPTY_STRING } from './constants.js';
 
 let clientInstance = null;
 let isConnecting = false;
@@ -105,7 +106,8 @@ export async function disconnectClient() {
 
 if (typeof window !== 'undefined') {
      window.addEventListener('beforeunload', async () => {
-          await clientInstance.disconnect();
+          const client = await getClient();
+          await client.disconnect();
      });
 }
 
@@ -165,17 +167,21 @@ export function clearFields() {
 }
 
 export function clearSecretNumberFields() {
-     const secretNumbers1Field = document.getElementById('account1secretNumbers');
-     const secretNumbers2Field = document.getElementById('account2secretNumbers');
-     secretNumbers1Field.value = '';
-     secretNumbers2Field.value = '';
+     document.getElementById('account1secretNumbers').value = '';
+     document.getElementById('account2secretNumbers').value = '';
+     document.getElementById('issuerSecretNumbers').value = '';
 }
 
 export function clearMnemonicFields() {
-     const mnemonic1Field = document.getElementById('account1mnemonic');
-     const mnemonic2Field = document.getElementById('account2mnemonic');
-     mnemonic1Field.value = '';
-     mnemonic2Field.value = '';
+     document.getElementById('account1mnemonic').value = '';
+     document.getElementById('account2mnemonic').value = '';
+     document.getElementById('issuerMnemonic').value = '';
+}
+
+export function clearSeedFields() {
+     document.getElementById('account1seed').value = '';
+     document.getElementById('account2seed').value = '';
+     document.getElementById('issuerSeed').value = '';
 }
 
 async function fundNewWallet(wallet) {
@@ -296,6 +302,13 @@ export async function generateNewWalletFromMnemonic(walletNumber) {
      let addrField = 'account' + walletNumber + 'address';
      let seedField = 'account' + walletNumber + 'seed';
      let mnemonicField = 'account' + walletNumber + 'mnemonic';
+
+     if (walletNumber == 3) {
+          addrField = 'issuerAddress';
+          seedField = 'issuerSeed';
+          mnemonicField = 'issuerMnemonic';
+     }
+
      const addressInput = document.getElementById(addrField);
      const seedInput = document.getElementById(seedField);
      const mnemonic = document.getElementById(mnemonicField);
@@ -318,6 +331,7 @@ export async function generateNewWalletFromMnemonic(walletNumber) {
           console.log('Funded wallet complete');
 
           clearSecretNumberFields();
+          clearSeedFields();
      } catch (error) {
           console.error('Error:', error);
           addressInput.value = 'Error';
@@ -331,6 +345,13 @@ export async function generateNewWalletFromSecretNumbers(walletNumber) {
      let addrField = 'account' + walletNumber + 'address';
      let seedField = 'account' + walletNumber + 'seed';
      let secretNumbersField = 'account' + walletNumber + 'secretNumbers';
+
+     if (walletNumber == 3) {
+          addrField = 'issuerAddress';
+          seedField = 'issuerSeed';
+          secretNumbersField = 'issuerSecretNumbers';
+     }
+
      const addressInput = document.getElementById(addrField);
      const seedInput = document.getElementById(seedField);
      const secretNumbers = document.getElementById(secretNumbersField);
@@ -354,6 +375,7 @@ export async function generateNewWalletFromSecretNumbers(walletNumber) {
           console.log('Funded wallet complete');
 
           clearMnemonicFields();
+          clearSeedFields();
      } catch (error) {
           console.error('Error:', error);
           addressInput.value = 'Error';
@@ -455,7 +477,16 @@ export async function getAccountFromSecretNumbers(walletNumber) {
 export async function populateTakerGetsTakerPayFields() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+     // accountSeedField.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
 
      const account2addressField = document.getElementById('account2address');
      if (validatInput(account2addressField)) {
@@ -611,10 +642,13 @@ export function setError(message, spinner) {
 export function gatherAccountInfo() {
      const resultField = document.getElementById('resultField');
      resultField.classList.remove('error', 'success');
-     let accountData = account1name.value + '\n' + account1address.value + '\n' + account1seed.value + '\n';
-     accountData += account2name.value + '\n' + account2address.value + '\n' + account2seed.value + '\n';
+     let seedOrMnemonicOrSecret1 = account1seed.value?.trim() || account1mnemonic.value?.trim() || account1secretNumbers.value?.trim();
+     let accountData = account1name.value + '\n' + account1address.value + '\n' + seedOrMnemonicOrSecret1 + '\n';
+     let seedOrMnemonicOrSecret2 = account2seed.value?.trim() || account2mnemonic.value?.trim() || account2secretNumbers.value?.trim();
+     accountData += account2name.value + '\n' + account2address.value + '\n' + seedOrMnemonicOrSecret2 + '\n';
      if (document.getElementById('issuerName')) {
-          accountData += issuerName.value + '\n' + issuerAddress.value + '\n' + issuerSeed.value + '\n';
+          let seedOrMnemonicOrSecret3 = issuerSeed.value?.trim() || issuerMnemonic.value?.trim() || issuerSecretNumbers.value?.trim();
+          accountData += issuerName.value + '\n' + issuerAddress.value + '\n' + seedOrMnemonicOrSecret3 + '\n';
      }
      resultField.value = accountData;
      autoResize();
@@ -624,14 +658,55 @@ export function distributeAccountInfo() {
      let accountInfo = resultField.value.split('\n');
      account1name.value = accountInfo[0];
      account1address.value = accountInfo[1];
-     account1seed.value = accountInfo[2];
+
+     if (accountInfo[2].split(' ').length > 1) {
+          account1mnemonic.value = accountInfo[2];
+          account1seed.value = '';
+          account1secretNumbers.value = '';
+     } else if (accountInfo[2].includes(',')) {
+          account1secretNumbers.value = accountInfo[2];
+          account1seed.value = '';
+          account1mnemonic.value = '';
+     } else {
+          account1seed.value = accountInfo[2];
+          account1secretNumbers.value = '';
+          account1mnemonic.value = '';
+     }
+
      account2name.value = accountInfo[3];
      account2address.value = accountInfo[4];
-     account2seed.value = accountInfo[5];
-     if (accountInfo.length >= 9) {
+
+     if (accountInfo[5].split(' ').length > 1) {
+          account2mnemonic.value = accountInfo[5];
+          account2seed.value = '';
+          account2secretNumbers.value = '';
+     } else if (accountInfo[5].includes(',')) {
+          account2secretNumbers.value = accountInfo[5];
+          account2seed.value = '';
+          account2mnemonic.value = '';
+     } else {
+          account2seed.value = accountInfo[5];
+          account2secretNumbers.value = '';
+          account2mnemonic.value = '';
+     }
+
+     if (accountInfo[8].length >= 9) {
           issuerName.value = accountInfo[6];
           issuerAddress.value = accountInfo[7];
-          issuerSeed.value = accountInfo[8];
+
+          if (accountInfo[8].split(' ').length > 1) {
+               issuerMnemonic.value = accountInfo[8];
+               issuerSeed.value = '';
+               issuerSecretNumbers.value = '';
+          } else if (accountInfo[8].includes(',')) {
+               issuerSecretNumbers.value = accountInfo[8];
+               issuerSeed.value = '';
+               issuerMnemonic.value = '';
+          } else {
+               issuerSeed.value = accountInfo[8];
+               issuerSecretNumbers.value = '';
+               issuerMnemonic.value = '';
+          }
      }
      saveInputValues();
 }
@@ -738,6 +813,9 @@ export function decodeCurrencyCode(hexCode) {
 // Decode hex string to ASCII
 export const decodeHex = hex => {
      try {
+          if (!validatInput(hex)) {
+               return EMPTY_STRING;
+          }
           return Buffer.from(hex, 'hex').toString('ascii');
      } catch (error) {
           console.error(`Error decoding hex: ${hex}`, error);

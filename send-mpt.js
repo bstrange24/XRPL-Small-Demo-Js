@@ -1,5 +1,6 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { derive } from 'xrpl-accountlib';
 
 async function getMPTs() {
      console.log('Entering getMPTs');
@@ -32,7 +33,17 @@ async function getMPTs() {
           let results = `Connected to ${environment} ${net}\nGetting MPT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = results;
           const mpts = await client.request({
@@ -111,7 +122,17 @@ async function sendMPT() {
           let results = `Connected to ${environment} ${net}\nGetting NFT\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === 'Mainnet' ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const mpt_issuance_id = mptIssuanceIdField;
           const mpt_quantity = amountField;
@@ -158,7 +179,18 @@ async function authorizeMPT() {
      await client.connect();
      let results = `Connected to ${net}`;
      resultField.value = results;
-     const wallet = xrpl.Wallet.fromSeed(accountSeedField.value);
+
+     let wallet;
+     if (accountSeedField.value.split(' ').length > 1) {
+          wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+     } else if (accountSeedField.value.includes(',')) {
+          const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+          wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+     } else {
+          wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+     }
+
+     // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value);
      const mpt_issuance_id = mptIdField.value;
      const auth_mpt_tx = {
           TransactionType: 'MPTokenAuthorize',

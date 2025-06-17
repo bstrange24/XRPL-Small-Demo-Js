@@ -1,6 +1,7 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, flagList, flagMap } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 export async function getAccountInfo() {
      console.log('Entering getAccountInfo');
@@ -38,7 +39,15 @@ export async function getAccountInfo() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
 
           resultField.value = `Connected to ${environment} ${net}\nGetting Account Data.\n\n`;
 
@@ -134,7 +143,17 @@ async function updateFlags() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nGetting Account Data\n`;
 
@@ -225,7 +244,17 @@ async function updateMetaData() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nUpdating Meta Data\n`;
 
@@ -347,7 +376,17 @@ async function setDepositAuthAccounts(authorizeFlag) {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (seed.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (seed.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(seed);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(seed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nSetting Deposit Authorization\n\n`;
 
@@ -467,7 +506,17 @@ async function setMultiSign(enableMultiSignFlag) {
 
           console.log(SignerEntries);
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           resultField.value = `Connected to ${environment} ${net}\nSetting MultiSign\n\n`;
 
@@ -508,36 +557,6 @@ async function setMultiSign(enableMultiSignFlag) {
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
           balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
-
-          // // Prepare a multisignable Payment transaction
-          // const baseTx = {
-          //      TransactionType: 'Payment',
-          //      Account: mainWallet.classicAddress,
-          //      Destination: signerWallet2.classicAddress,
-          //      Amount: xrpl.xrpToDrops('1'),
-          //      SigningPubKey: '', // required for multisign
-          //      Sequence: (await client.getAccountInfo(mainWallet.classicAddress)).account_data.Sequence,
-          //      Fee: '0', // will be replaced automatically
-          // };
-
-          // const autofilledTx = await client.autofill(baseTx);
-
-          // // Each signer signs
-          // const signedBy2 = xrpl.sign(autofilledTx, { wallet: signerWallet2, multisign: true });
-          // const signedBy3 = xrpl.sign(autofilledTx, { wallet: signerWallet3, multisign: true });
-
-          // // Combine signatures
-          // const multisigned = xrpl.combine([signedBy2.signedTransaction, signedBy3.signedTransaction]);
-
-          // const submissionResult = await client.submitAndWait(multisigned.signedTransaction);
-
-          // const resultCode = submissionResult.result.meta.TransactionResult;
-          // if (resultCode !== TES_SUCCESS) {
-          //      return setError(`ERROR: Multisigned transaction failed: ${resultCode}`, spinner);
-          // }
-
-          // resultField.value += `Multisigned Payment successful!\n${prepareTxHashForOutput(submissionResult.result.hash)}\n`;
-          // resultField.classList.add('success');
      } catch (error) {
           console.error('Error in setMultiSign:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
@@ -692,14 +711,31 @@ export function resolveAccountFields() {
 export async function displayDataForAccount1() {
      accountName1Field.value = account1name.value;
      accountAddress1Field.value = account1address.value;
-     accountSeed1Field.value = account1seed.value;
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeed1Field.value = account1secretNumbers.value;
+          } else {
+               accountSeed1Field.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeed1Field.value = account1seed.value;
+     }
      await getAccountInfo();
 }
 
 export async function displayDataForAccount2() {
      accountName2Field.value = account2name.value;
      accountAddress2Field.value = account2address.value;
-     accountSeed2Field.value = account2seed.value;
+
+     if (account2seed.value === '') {
+          if (account2mnemonic.value === '') {
+               accountSeed2Field.value = account2secretNumbers.value;
+          } else {
+               accountSeed2Field.value = account2mnemonic.value;
+          }
+     } else {
+          accountSeed2Field.value = account2seed.value;
+     }
      await getAccountInfo();
 }
 

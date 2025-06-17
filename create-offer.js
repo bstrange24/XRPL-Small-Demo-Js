@@ -4,6 +4,7 @@ import { fetchAccountObjects, getTrustLines } from './account.js';
 import { getTokenBalance } from './send-currency.js';
 import BigNumber from 'bignumber.js';
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { derive } from 'xrpl-accountlib';
 
 async function createOffer() {
      console.log('Entering createOffer');
@@ -75,7 +76,17 @@ async function createOffer() {
 
           let results = `Connected to ${environment} ${net}\nCreating Offer.\n\n`;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           results += accountNameField.value + ' account address: ' + wallet.address + '\n';
           resultField.value = results;
@@ -85,13 +96,13 @@ async function createOffer() {
                // Ensure trustline exists. If not, get trust line from A1 to hotwallet
                let issuerAddr;
                let issuerCur;
-               if (weWantIssuerField.value === 'XRP' || weWantIssuerField.value === '') {
+               if (weWantIssuerField.value === XRP_CURRENCY || weWantIssuerField.value === '') {
                     issuerAddr = weSpendIssuerField.value;
                } else {
                     issuerAddr = weWantIssuerField.value;
                }
 
-               if (weWantCurrencyField.value === 'XRP') {
+               if (weWantCurrencyField.value === XRP_CURRENCY) {
                     issuerCur = weSpendCurrencyField.value;
                } else {
                     issuerCur = weWantCurrencyField.value;
@@ -137,18 +148,18 @@ async function createOffer() {
           console.log(`XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`);
           resultField.value += `Initial XRP Balance ${xrpBalance} (drops): ${xrpl.xrpToDrops(xrpBalance)}`;
 
-          let tokenBalance = weSpendCurrencyField.value === 'XRP' ? weWantCurrencyField.value : weSpendCurrencyField.value;
+          let tokenBalance = weSpendCurrencyField.value === XRP_CURRENCY ? weWantCurrencyField.value : weSpendCurrencyField.value;
           const tstBalance = await getOnlyTokenBalance(client, wallet.address, tokenBalance);
           console.log(`${tokenBalance} Balance: ${tstBalance}`);
           resultField.value += `\nInital ${tokenBalance} Balance: ${tstBalance}\n\n`;
 
           // Build currency objects
-          let we_want = weWantCurrencyField.value === 'XRP' ? { currency: 'XRP', value: weWantAmountField.value } : { currency: weWantCurrencyField.value, issuer: weWantIssuerField.value, value: weWantAmountField.value };
-          let we_spend = weSpendCurrencyField.value === 'XRP' ? { currency: 'XRP', value: weSpendAmountField.value } : { currency: weSpendCurrencyField.value, issuer: weSpendIssuerField.value, value: weSpendAmountField.value };
+          let we_want = weWantCurrencyField.value === XRP_CURRENCY ? { currency: XRP_CURRENCY, value: weWantAmountField.value } : { currency: weWantCurrencyField.value, issuer: weWantIssuerField.value, value: weWantAmountField.value };
+          let we_spend = weSpendCurrencyField.value === XRP_CURRENCY ? { currency: XRP_CURRENCY, value: weSpendAmountField.value } : { currency: weSpendCurrencyField.value, issuer: weSpendIssuerField.value, value: weSpendAmountField.value };
 
-          if (weSpendCurrencyField.value === 'XRP' && xrpl.xrpToDrops(xrpBalance) < Number(weSpendAmountField.value)) {
+          if (weSpendCurrencyField.value === XRP_CURRENCY && xrpl.xrpToDrops(xrpBalance) < Number(weSpendAmountField.value)) {
                throw new Error('Insufficient XRP balance');
-          } else if (weSpendCurrencyField.value !== 'XRP' && tstBalance < weSpendAmountField.value) {
+          } else if (weSpendCurrencyField.value !== XRP_CURRENCY && tstBalance < weSpendAmountField.value) {
                throw new Error(`Insufficient ${weSpendCurrencyField.value} balance`);
           }
 
@@ -163,7 +174,7 @@ async function createOffer() {
                we_spend.currency = encodeCurrencyCode(we_spend.currency);
           }
 
-          const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
+          const offerType = we_spend.currency === XRP_CURRENCY ? 'buy' : 'sell';
           console.log(`Offer Type: ${offerType}`);
 
           // Get reserve requirements
@@ -331,7 +342,7 @@ async function createOffer() {
 
                const offers2 = orderbook2_resp.result.offers;
                let tally_currency = we_spend.currency;
-               if (tally_currency == 'XRP') {
+               if (tally_currency == XRP_CURRENCY) {
                     tally_currency = 'drops of XRP';
                }
                let running_total2 = BigNumber(0);
@@ -380,7 +391,7 @@ async function createOffer() {
           }
 
           let prepared;
-          if (we_spend.currency === 'XRP') {
+          if (we_spend.currency === XRP_CURRENCY) {
                prepared = await client.autofill({
                     TransactionType: 'OfferCreate',
                     Account: wallet.address,
@@ -476,7 +487,7 @@ async function createOffer() {
           console.log(`Final XRP Balance: ${finalXrpBalance}`);
           resultField.value += `Final XRP Balance: ${finalXrpBalance}\n`;
 
-          if (weWantCurrencyField.value === 'XRP') {
+          if (weWantCurrencyField.value === XRP_CURRENCY) {
                document.getElementById('weWantTokenBalanceField').value = finalXrpBalance;
                document.getElementById('weSpendTokenBalanceField').value = updatedBalance;
           } else {
@@ -524,7 +535,17 @@ async function getOffers() {
           let results = `Connected to ${environment} ${net}\nGetting Offers\n\n`;
           resultField.value = results;
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const offers = await client.request({
                method: 'account_offers',
@@ -612,7 +633,17 @@ async function cancelOffer() {
 
           const offerSequenceArray = offerSequenceField.value.split(',').map(item => item.trim());
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           let tx;
 
@@ -717,13 +748,23 @@ async function getOrderBook() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-     const buildCurrencyObject = (currency, issuer, value) => (currency === 'XRP' ? { currency, value } : { currency, issuer, value });
+     const buildCurrencyObject = (currency, issuer, value) => (currency === XRP_CURRENCY ? { currency, value } : { currency, issuer, value });
 
      try {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          let wallet;
+          if (accountSeedField.value.split(' ').length > 1) {
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else if (accountSeedField.value.includes(',')) {
+               const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          } else {
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          }
+
+          // const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           let results = `Connected to ${environment} ${net}\nGet Order Book.\n\n`;
           results += `${accountNameField.value} account: ${wallet.address}\n\n*** Order Book ***\n`;
@@ -749,7 +790,7 @@ async function getOrderBook() {
           console.log('we_want:', we_want);
           console.log('we_spend:', we_spend);
 
-          const offerType = we_spend.currency === 'XRP' ? 'buy' : 'sell';
+          const offerType = we_spend.currency === XRP_CURRENCY ? 'buy' : 'sell';
           console.log(`Offer Type: ${offerType}`);
           let orderBook;
           let buySideOrderBook;
@@ -1043,8 +1084,8 @@ function formatOffers(offers) {
           let paysXRP = false;
           let getsValue = 0;
           let paysValue = 0;
-          let getsCurrency = 'XRP';
-          let paysCurrency = 'XRP';
+          let getsCurrency = XRP_CURRENCY;
+          let paysCurrency = XRP_CURRENCY;
 
           for (const [key, value] of Object.entries(offer)) {
                if (key === 'Account' || key === 'TakerGets' || key === 'TakerPays') {
@@ -1175,7 +1216,17 @@ async function getXrpBalance() {
 export async function displayOfferDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     accountSeedField.value = account1seed.value;
+
+     if (account1seed.value === '') {
+          if (account1mnemonic.value === '') {
+               accountSeedField.value = account1secretNumbers.value;
+          } else {
+               accountSeedField.value = account1mnemonic.value;
+          }
+     } else {
+          accountSeedField.value = account1seed.value;
+     }
+     // accountSeedField.value = account1seed.value;
 
      const account2addressField = document.getElementById('account2address');
      if (validatInput(account2addressField)) {
@@ -1185,7 +1236,7 @@ export async function displayOfferDataForAccount1() {
      // Default to DOG
      document.getElementById('weWantCurrencyField').value = 'DOG'; // RLUSD DOGGY
      document.getElementById('weWantAmountField').value = '1';
-     document.getElementById('weSpendCurrencyField').value = 'XRP';
+     document.getElementById('weSpendCurrencyField').value = XRP_CURRENCY;
      document.getElementById('weSpendAmountField').value = '1';
 
      const client = await getClient();
