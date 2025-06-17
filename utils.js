@@ -105,7 +105,7 @@ export async function disconnectClient() {
 
 if (typeof window !== 'undefined') {
      window.addEventListener('beforeunload', async () => {
-          await client?.disconnect?.();
+          await clientInstance.disconnect();
      });
 }
 
@@ -768,20 +768,25 @@ export function parseAccountFlagsDetails(response) {
      if (response) {
           // Extract specific fields from the response
           const transactionDetails = {
-               allowTrustLineClawback: response.allowTrustLineClawback || 'false',
-               defaultRipple: response.defaultRipple || 'false',
-               depositAuth: response.depositAuth || 'false',
-               disableMasterKey: response.disableMasterKey || 'false',
-               disallowIncomingCheck: response.disallowIncomingCheck || 'false',
-               disallowIncomingNFTokenOffer: response.disallowIncomingNFTokenOffer || 'false',
-               disallowIncomingPayChan: response.disallowIncomingPayChan || 'false',
-               disallowIncomingTrustline: response.disallowIncomingTrustline || 'false',
-               disallowIncomingXRP: response.disallowIncomingXRP || 'false',
-               globalFreeze: response.globalFreeze || 'false',
-               noFreeze: response.noFreeze || 'false',
-               passwordSpent: response.passwordSpent || 'false',
-               requireAuthorization: response.requireAuthorization || 'false',
-               requireDestinationTag: response.requireDestinationTag || 'false',
+               allowTrustLineClawback: response.account_flags.allowTrustLineClawback || 'false',
+               defaultRipple: response.account_flags.defaultRipple || 'false',
+               depositAuth: response.account_flags.depositAuth || 'false',
+               disableMasterKey: response.account_flags.disableMasterKey || 'false',
+               disallowIncomingCheck: response.account_flags.disallowIncomingCheck || 'false',
+               disallowIncomingNFTokenOffer: response.account_flags.disallowIncomingNFTokenOffer || 'false',
+               disallowIncomingPayChan: response.account_flags.disallowIncomingPayChan || 'false',
+               disallowIncomingTrustline: response.account_flags.disallowIncomingTrustline || 'false',
+               disallowIncomingXRP: response.account_flags.disallowIncomingXRP || 'false',
+               globalFreeze: response.account_flags.globalFreeze || 'false',
+               noFreeze: response.account_flags.noFreeze || 'false',
+               passwordSpent: response.account_flags.passwordSpent || 'false',
+               requireAuthorization: response.account_flags.requireAuthorization || 'false',
+               requireDestinationTag: response.account_flags.requireDestinationTag || 'false',
+               burnedNFTokens: response.account_data.BurnedNFTokens || '0',
+               domain: decodeHex(response.account_data.Domain) || '',
+               mintedNFTokens: response.account_data.MintedNFTokens || '0',
+               tickSize: response.account_data.TickSize || '0',
+               transferRate: parseTransferRateToPercentage(response.account_data.TransferRate) || '0',
           };
 
           // Format the details into a string
@@ -800,7 +805,13 @@ export function parseAccountFlagsDetails(response) {
     No Freeze: ${transactionDetails.noFreeze}
     Password Spent: ${transactionDetails.passwordSpent}
     Require Authorization: ${transactionDetails.requireAuthorization}
-    Require Destination Tag: ${transactionDetails.requireDestinationTag}`.trim() + '\n'
+    Require Destination Tag: ${transactionDetails.requireDestinationTag}
+               \nAccount Meta Data:
+     BurnedNFTokens: ${transactionDetails.burnedNFTokens}
+     Domain: ${transactionDetails.domain}
+     MintedNFTokens: ${transactionDetails.mintedNFTokens}
+     TickSize: ${transactionDetails.tickSize}
+     TransferRate: ${transactionDetails.transferRate}`.trim() + '\n'
           );
      }
 }
@@ -1550,10 +1561,10 @@ export async function getXrplReserve(client) {
           const server_info = await client.request({
                command: 'server_info',
           });
-          console.log(`Server Info ${JSON.stringify(server_info, null, 2)}`);
-          console.log(`Base Fee: ${server_info.result.info.validated_ledger.base_fee_xrp} XRP`);
-          console.log(`Base Reserve: ${server_info.result.info.validated_ledger.reserve_base_xrp} XRP`);
-          console.log(`Total incremental owner count: ${server_info.result.info.validated_ledger.reserve_inc_xrp} XRP`);
+          console.debug(`Server Info ${JSON.stringify(server_info, null, 2)}`);
+          console.debug(`Base Fee: ${server_info.result.info.validated_ledger.base_fee_xrp} XRP`);
+          console.debug(`Base Reserve: ${server_info.result.info.validated_ledger.reserve_base_xrp} XRP`);
+          console.debug(`Total incremental owner count: ${server_info.result.info.validated_ledger.reserve_inc_xrp} XRP`);
 
           const ledger_info = await client.request({
                command: 'server_state',
@@ -1565,10 +1576,10 @@ export async function getXrplReserve(client) {
           const reserveBaseXRP = ledgerData.reserve_base;
           const reserveIncrementXRP = ledgerData.reserve_inc;
 
-          console.log(`baseFee: ${baseFee}`);
-          console.log(`reserveBaseXRP: ${xrpl.dropsToXrp(reserveBaseXRP)}`);
-          console.log(`Total incremental owner count: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
-          console.log(`Total Reserve: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
+          console.debug(`baseFee: ${baseFee}`);
+          console.debug(`reserveBaseXRP: ${xrpl.dropsToXrp(reserveBaseXRP)}`);
+          console.debug(`Total incremental owner count: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
+          console.debug(`Total Reserve: ${xrpl.dropsToXrp(reserveIncrementXRP)} XRP`);
 
           return { reserveBaseXRP, reserveIncrementXRP };
      } catch (error) {
@@ -1582,6 +1593,35 @@ export async function updateOwnerCountAndReserves(client, address, ownerCountFie
      console.log(`Owner Count: ${ownerCount} Total XRP Reserves: ${xrpl.dropsToXrp(totalReserveXRP)}`);
      ownerCountField.value = ownerCount;
      totalXrpReservesField.value = xrpl.dropsToXrp(totalReserveXRP);
+}
+
+export function convertUserInputToInt(userInput) {
+     const input = parseInt(userInput);
+     if (isNaN(input) || input < 0) {
+          throw new Error(`Invalid user input. ${userInput} is not a valid number and cannot be less than zero`);
+     }
+     return input;
+}
+
+export function convertUserInputToFloat(userInput) {
+     const input = parseFloat(userInput);
+     if (isNaN(input) || input < 0) {
+          throw new Error(`Invalid user input. ${userInput} is not a valid number and cannot be less than zero`);
+     }
+     return input;
+}
+
+export function getTransferRate(userInput) {
+     const ratePercent = convertUserInputToFloat(userInput);
+     return Math.round(1_000_000_000 * (1 + ratePercent / 100));
+}
+
+export function parseTransferRateToPercentage(transferRate) {
+     const rate = parseInt(transferRate, 10);
+     if (isNaN(rate) || rate < 1000000000) {
+          return 0; // Default rate is 0% fee (1.0x multiplier)
+     }
+     return (rate / 1_000_000_000 - 1) * 100;
 }
 
 function decodeNFTFlags(flags) {

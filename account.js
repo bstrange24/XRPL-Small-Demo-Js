@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, flagList, flagMap } from './constants.js';
 
 export async function getAccountInfo() {
@@ -69,8 +69,8 @@ export async function getAccountInfo() {
 
           console.log('accountObjects', accountObjects);
 
-          const flagsDetails = parseAccountFlagsDetails(accountInfo.account_flags);
-          resultField.value += `Address: ${wallet.classicAddress}\nBalance: ${balanceField.value} XRP\n${flagsDetails}\n`;
+          const flagsDetails = parseAccountFlagsDetails(accountInfo);
+          resultField.value += `Address: ${wallet.classicAddress}\n${flagsDetails}\n`;
 
           if (accountObjects.account_objects.length <= 0) {
                resultField.value += `No account objects found for ${wallet.classicAddress}`;
@@ -181,6 +181,131 @@ async function updateFlags() {
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving updateFlags in ${now}ms`);
+     }
+}
+
+async function updateMetaData() {
+     console.log('Entering updateMetaData');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     resultField?.classList.remove('error', 'success');
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          tickSizeField: document.getElementById('tickSizeField'),
+          transferRateField: document.getElementById('transferRateField'),
+          isMessageKey: document.getElementById('isMessageKey'),
+          domainField: document.getElementById('domainField'),
+          memo: document.getElementById('memoField'),
+          ownerCountField: document.getElementById('ownerCountField'),
+          totalXrpReservesField: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim(); // Trim whitespace
+          }
+     }
+
+     const { tickSizeField, transferRateField, isMessageKey, domainField, memo, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+
+     const { seedField, balanceField } = resolveAccountFields();
+     const accountSeedField = resolveAccountSeedField();
+     if (!accountSeedField) return setError('ERROR: Account seed field not found', spinner);
+     if (!accountSeedField.value.trim()) return setError('ERROR: Account seed cannot be empty', spinner);
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          const wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+
+          resultField.value = `Connected to ${environment} ${net}\nUpdating Meta Data\n`;
+
+          const tx = await client.autofill({
+               TransactionType: 'AccountSet',
+               Account: wallet.classicAddress,
+          });
+
+          let updatedData = false;
+          const memoText = memo.value;
+          if (memoText) {
+               updatedData = true;
+               tx.Memos = [
+                    {
+                         Memo: {
+                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+                         },
+                    },
+               ];
+          }
+
+          const tickSizeFieldTagText = tickSizeField.value;
+          if (tickSizeFieldTagText) {
+               const tickSize = convertUserInputToInt(tickSizeFieldTagText);
+               if (tickSize < 3 || tickSize > 15) {
+                    return setError(`ERROR: Tick size must be between 3 and 15.`, spinner);
+               }
+               updatedData = true;
+               tx.TickSize = tickSize;
+          }
+
+          const transferRateFieldTagText = transferRateField.value;
+          if (transferRateFieldTagText) {
+               const transferRate = convertUserInputToFloat(transferRateFieldTagText);
+               if (transferRate > 100) {
+                    return setError(`ERROR: Transfer rate cannot be greater than 100%.`, spinner);
+               }
+               updatedData = true;
+               tx.TransferRate = getTransferRate(transferRate);
+          }
+
+          if (isMessageKey.checked) {
+               tx.MessageKey = wallet.publicKey;
+          }
+
+          const domainFieldTagText = domainField.value;
+          if (domainFieldTagText) {
+               updatedData = true;
+               tx.Domain = Buffer.from(domainFieldTagText, 'utf8').toString('hex');
+          }
+
+          if (updatedData) {
+               const response = await client.submitAndWait(tx, { wallet });
+
+               const resultCode = response.result.meta.TransactionResult;
+               if (resultCode !== TES_SUCCESS) {
+                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               }
+
+               resultField.value += `Account fields successfully updated.\n\n`;
+               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               resultField.value += parseXRPLTransaction(response.result);
+
+               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
+               balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
+          } else {
+               resultField.value += `\nNo fields have data to update.\n\n`;
+          }
+
+          resultField.classList.add('success');
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`);
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          autoResize();
+          const now = Date.now() - startTime;
+          totalExecutionTime.value = now;
+          console.log(`Leaving updateMetaData in ${now}ms`);
      }
 }
 
@@ -580,6 +705,7 @@ export async function displayDataForAccount2() {
 
 window.getAccountInfo = getAccountInfo;
 window.updateFlags = updateFlags;
+window.updateMetaData = updateMetaData;
 window.setDepositAuthAccounts = setDepositAuthAccounts;
 window.setMultiSign = setMultiSign;
 window.getTransaction = getTransaction;
