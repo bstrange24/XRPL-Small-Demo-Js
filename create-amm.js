@@ -152,7 +152,6 @@ export async function getAMMPoolInfo() {
                errorMessage = `ERROR: ${error.message || 'Unknown error'}`;
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -395,7 +394,6 @@ async function createAMMPool() {
                errorMessage += '\nInsufficient funds or reserves to create the AMM pool. Check your XRP and token balances.';
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -574,7 +572,6 @@ async function depositToAMM() {
                errorMessage = `ERROR: ${error.message || 'Unknown error'}`;
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -745,7 +742,6 @@ async function withdrawFromAMM() {
                errorMessage += '\nLedger sequence expired. Retry.';
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -991,7 +987,6 @@ async function deleteAMMPool() {
                errorMessage += '\nLedger sequence expired. Please try again.';
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -1140,7 +1135,6 @@ async function swapViaAMM() {
                errorMessage += '\nLedger sequence expired. Please try again.';
           }
           setError(errorMessage);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

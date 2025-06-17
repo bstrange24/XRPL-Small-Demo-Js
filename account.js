@@ -97,7 +97,6 @@ export async function getAccountInfo() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -176,7 +175,6 @@ async function updateFlags() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -295,7 +293,6 @@ async function setDepositAuthAccounts(authorizeFlag) {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

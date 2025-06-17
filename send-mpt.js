@@ -69,7 +69,6 @@ async function getMPTs() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -146,7 +145,6 @@ async function sendMPT() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

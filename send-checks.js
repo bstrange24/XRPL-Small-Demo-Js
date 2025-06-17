@@ -153,7 +153,6 @@ async function sendCheck() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -230,7 +229,6 @@ async function getChecks() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -359,7 +357,6 @@ async function cashCheck() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -444,7 +441,6 @@ async function cancelCheck() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -536,7 +532,6 @@ export async function getTokenBalance() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

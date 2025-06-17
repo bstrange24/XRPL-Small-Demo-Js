@@ -486,7 +486,6 @@ async function createOffer() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -551,7 +550,6 @@ async function getOffers() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -649,7 +647,6 @@ async function cancelOffer() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -845,7 +842,6 @@ async function getOrderBook() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

@@ -123,7 +123,6 @@ async function createTimeBasedEscrow() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -217,7 +216,6 @@ async function finishTimeBasedEscrow() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -318,7 +316,6 @@ export async function getEscrows() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -414,7 +411,6 @@ async function cancelEscrow() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

@@ -103,7 +103,6 @@ async function createTrustLine() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -227,7 +226,6 @@ async function removeTrustLine() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -323,7 +321,6 @@ async function getTrustLine() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -480,7 +477,6 @@ async function sendCurrency() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -674,7 +670,6 @@ async function issueCurrency() {
      } catch (error) {
           console.error('Error setting up issuer or issuing', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -778,7 +773,6 @@ export async function getTokenBalance() {
      } catch (error) {
           console.error('Error:', error);
           setError('ERROR: ' + (error.message || 'Unknown error'));
-          await client?.disconnect?.();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

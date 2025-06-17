@@ -105,7 +105,7 @@ export async function disconnectClient() {
 
 if (typeof window !== 'undefined') {
      window.addEventListener('beforeunload', async () => {
-          await disconnectClient();
+          await client?.disconnect?.();
      });
 }
 
@@ -451,22 +451,6 @@ export async function getAccountFromSecretNumbers(walletNumber) {
           console.log('Leaving getAccountFromSecretNumbers');
      }
 }
-
-// export async function populateAccount1Only() {
-//      accountName1Field.value = account1name.value;
-//      accountAddress1Field.value = account1address.value;
-//      accountSeed1Field.value = account1seed.value;
-//      getXrpBalance('accountAddress1Field', 'xrpBalance1Field');
-//      await getAccountInfo();
-// }
-
-// export async function populateAccount2Only() {
-//      accountName2Field.value = account2name.value;
-//      accountAddress2Field.value = account2address.value;
-//      accountSeed2Field.value = account2seed.value;
-//      getXrpBalance('accountAddress2Field', 'xrpBalance2Field');
-//      await getAccountInfo();
-// }
 
 export async function populateTakerGetsTakerPayFields() {
      accountNameField.value = account1name.value;
@@ -1452,7 +1436,6 @@ export async function getTransaction() {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await disconnectClient();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -1518,7 +1501,6 @@ export async function getXrpBalance(accountField, balanceField) {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await disconnectClient();
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();
@@ -1537,7 +1519,6 @@ export async function getCurrentLedger(client) {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await disconnectClient();
      }
 }
 
@@ -1560,7 +1541,6 @@ export async function getAccountReserves(client, address) {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await disconnectClient();
      }
 }
 
@@ -1594,7 +1574,6 @@ export async function getXrplReserve(client) {
      } catch (error) {
           console.error('Error:', error);
           setError(`ERROR: ${error.message || 'Unknown error'}`);
-          await disconnectClient();
      }
 }
 
