@@ -381,3 +381,23 @@ summary {
      cursor: pointer;
      margin-bottom: 10px;
 }
+
+.transactionDivClass {
+     display: flex;
+     justify-content: center;
+     width: fit-content;
+     margin: 0 auto;
+     padding: 25px 20px 10px 20px;
+}
+
+#transactionField {
+     height: 35px;
+     /* Sets a taller height (adjust as needed) */
+     padding: 10px;
+     /* Adds internal padding for better appearance */
+     font-size: 16px;
+     /* Optional: Adjust font size for balance */
+     line-height: 1.5;
+     /* Optional: Ensure text is vertically centered */
+     color: #4CAF50;
+}

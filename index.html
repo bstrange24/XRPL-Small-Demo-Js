@@ -87,7 +87,17 @@
                                    <br />
                               </td>
                          </tr>
-
+                         <!-- <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
+                                        <label for="transactionField">Transaction</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="transactionField" size="85" />
+                                   <br />
+                              </td>
+                         </tr> -->
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Total Execution time in milli seconds.">
@@ -135,17 +145,6 @@
                                    <br />
                               </td>
                          </tr>
-                         <tr id="multiSignAddressRow" style="vertical-align: top; display: none">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Add address seeds for multi sign. This is a comma seperated list">
-                                        <label for="multiSignAddress">Multi-Sign Address</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <textarea class="memoField" style="width: 300px" id="multiSignAddress" placeholder="Comma seperated list of address seeds for multi sign..."></textarea>
-                                   <br />
-                              </td>
-                         </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
@@ -153,7 +152,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
+                                   <textarea style="width: 300px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
                                    <br />
                               </td>
                          </tr>
@@ -168,14 +167,14 @@
                                    <label for="isMultiSignTransaction"></label>
                               </td>
                          </tr>
-                         <tr style="vertical-align: top">
+                         <tr id="multiSignAddressRow" style="vertical-align: top; display: none">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                        <label for="transactionField">Transaction</label>
+                                   <span class="tooltip" tooltip-data="Add address seeds for multi sign. This is a comma seperated list">
+                                        <label for="multiSignAddress">Multi-Sign Address</label>
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="transactionField" size="85" />
+                                   <textarea class="memoField" style="width: 300px" id="multiSignAddress" placeholder="Comma seperated list of address seeds for multi sign"></textarea>
                                    <br />
                               </td>
                          </tr>
@@ -188,8 +187,6 @@
                          <tr>
                               <td colspan="2">
                                    <button type="button" onclick="sendXRP()">Send XRP</button>
-                                   <button type="button" onclick="handlePaymentChannelAction()">Execute Payment Channel Action</button>
-                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>

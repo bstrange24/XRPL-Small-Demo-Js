@@ -199,18 +199,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
-                                   <br />
-                              </td>
-                         </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                        <label for="transactionField">Transaction</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="transactionField" size="85" />
+                                   <textarea style="width: 300px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
                                    <br />
                               </td>
                          </tr>
@@ -227,7 +216,6 @@
                                    <button type="button" onClick="finishConditionalEscrow()">Finish Escrow</button>
                                    <button type="button" onClick="getCondition()">Get Condition</button>
                                    <button type="button" onClick="cancelEscrow()">Cancel Escrow</button>
-                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>
@@ -246,7 +234,7 @@
                               <th></th>
                               <tr style="vertical-align: top">
                                    <td>
-                                        <textarea class="memoField" style="padding: 20px" id="memoField" placeholder="Optional memo...">
+                                        <textarea class="memoField" style="padding: 20px" id="memoField" placeholder="Optional memo">
 Time Condition                                         | Can Finish? | Can Cancel?
 ----------------------------------------------------   | ----------- | -----------
 Fulfillment required                                   | Yes         |          

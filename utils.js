@@ -292,7 +292,6 @@ export const fundWallet = async () => {
           const data = await res.json();
           console.log('New funded wallet:', data);
           return data;
-          // You can use data.account.address and data.account.secret
      } catch (err) {
           console.error('Error funding wallet:', err);
      }
@@ -477,7 +476,6 @@ export async function getAccountFromSecretNumbers(walletNumber) {
 export async function populateTakerGetsTakerPayFields() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     // accountSeedField.value = account1seed.value;
      if (account1seed.value === '') {
           if (account1mnemonic.value === '') {
                accountSeedField.value = account1secretNumbers.value;
@@ -549,9 +547,6 @@ export async function populate1() {
           getXrpBalance();
           await getAccountInfo();
      }
-
-     // getXrpBalance();
-     // await getAccountInfo();
 }
 
 export async function populate2() {
@@ -593,7 +588,6 @@ export async function populate3() {
      accountNameField.value = issuerName.value;
      accountAddressField.value = issuerAddress.value;
      accountSeedField.value = issuerSeed.value;
-     // destinationField.value = account1address.value
 
      const escrowOwnerField = document.getElementById('escrowOwnerField');
      if (validatInput(escrowOwnerField)) {
@@ -778,6 +772,10 @@ export function convertXRPLTime(rippleTime) {
      return formatter.format(date);
 }
 
+function isValidCTID(input) {
+     return /^C[0-9A-Fa-f]+$/.test(input);
+}
+
 function isValidTransactionHash(hash) {
      return /^[A-Fa-f0-9]{64}$/.test(hash);
 }
@@ -942,7 +940,6 @@ export function parseXRPLTransaction(response) {
                               Object.entries(value).forEach(([subKey, subValue]) => {
                                    if (subValue !== null && subValue !== undefined) {
                                         if (subValue.length == 40) {
-                                             // subValue = decodeCurrencyCode(subValue);
                                              let subValueTemp = decodeCurrencyCode(subValue);
                                              if (subValueTemp.length > 10) {
                                                   subValue = labelCurrencyCode(subValue);
@@ -1023,7 +1020,6 @@ export function parseXRPLTransaction(response) {
                                                        Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
                                                                  if (subValue.length == 40) {
-                                                                      // subValue = decodeCurrencyCode(subValue);
                                                                       let subValueTemp = decodeCurrencyCode(subValue);
                                                                       if (subValueTemp.length > 10) {
                                                                            subValue = labelCurrencyCode(subValue);
@@ -1042,7 +1038,6 @@ export function parseXRPLTransaction(response) {
                                                   Object.entries(value).forEach(([subKey, subValue]) => {
                                                        if (subValue !== null && subValue !== undefined) {
                                                             if (subValue.length == 40) {
-                                                                 // subValue = decodeCurrencyCode(subValue);
                                                                  let subValueTemp = decodeCurrencyCode(subValue);
                                                                  if (subValueTemp.length > 10) {
                                                                       subValue = labelCurrencyCode(subValue);
@@ -1076,7 +1071,6 @@ export function parseXRPLTransaction(response) {
                                                             Object.entries(nft.NFToken).forEach(([subKey, subValue]) => {
                                                                  if (subValue !== null && subValue !== undefined) {
                                                                       if (subValue.length == 40) {
-                                                                           // subValue = decodeCurrencyCode(subValue);
                                                                            let subValueTemp = decodeCurrencyCode(subValue);
                                                                            if (subValueTemp.length > 10) {
                                                                                 subValue = labelCurrencyCode(subValue);
@@ -1093,7 +1087,6 @@ export function parseXRPLTransaction(response) {
                                                        Object.entries(value).forEach(([subKey, subValue]) => {
                                                             if (subValue !== null && subValue !== undefined) {
                                                                  if (subValue.length == 40) {
-                                                                      // subValue = decodeCurrencyCode(subValue);
                                                                       let subValueTemp = decodeCurrencyCode(subValue);
                                                                       if (subValueTemp.length > 10) {
                                                                            subValue = labelCurrencyCode(subValue);
@@ -1125,16 +1118,6 @@ export function parseXRPLTransaction(response) {
                     });
                });
           }
-
-          // Append general metadata
-          // output.push('\nGeneral Metadata:');
-          // if (closeTimeIso) output.push(`    close_time_iso: ${convertToEstTime(closeTimeIso)}`);
-          // if (ctid) output.push(`    ctid: ${ctid}`);
-          // if (hash) output.push(`    hash: ${hash}`);
-          // if (ledgerHash) output.push(`    ledger_hash: ${ledgerHash}`);
-          // if (ledgerIndex) output.push(`    ledger_index: ${ledgerIndex}`);
-          // if (validated !== null) output.push(`    validated: ${validated}`);
-
           return output.join('\n');
      } catch (error) {
           console.error('Error parsing XRPL transaction:', error);
@@ -1497,34 +1480,35 @@ export async function getTransaction() {
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
 
-     let transactionHash = document.getElementById('transactionField');
-
-     if (!transactionHash) return setError('ERROR: DOM element "transactionField" not found', spinner);
-     transactionHash = transactionHash.value.trim();
-     if (!validatInput(transactionHash)) return setError('ERROR: Transaction field cannot be empty', spinner);
-     if (!isValidTransactionHash(transactionHash)) return setError('ERROR: Invalid Transaction hash', spinner);
+     let transactionInput = document.getElementById('transactionField');
+     if (!transactionInput) return setError('ERROR: DOM element "transactionField" not found', spinner);
+     transactionInput = transactionInput.value.trim();
+     if (!transactionInput) return setError('ERROR: Transaction field cannot be empty', spinner);
 
      try {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;
-          resultField.value = results;
+          resultField.value = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;
 
-          const tx = await client.request({
-               id: 1,
-               command: 'tx',
-               transaction: transactionHash,
-          });
+          // Determine if input is a transaction hash or CTID
+          let requestParams = { id: 1, command: 'tx' };
+          if (isValidTransactionHash(transactionInput)) {
+               requestParams.transaction = transactionInput;
+          } else if (isValidCTID(transactionInput)) {
+               requestParams.ctid = transactionInput;
+          } else {
+               return setError('ERROR: Invalid input. Must be a valid Transaction Hash, CTID or r-address', spinner);
+          }
 
-          console.log('Get transaction tx', tx);
+          const tx = await client.request(requestParams);
+          console.log('Get transaction response', tx);
+          resultField.value += parseXRPLTransaction(tx.result);
 
-          results += parseXRPLTransaction(tx.result);
-          resultField.value = results;
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          setError(`ERROR: ${error.message || 'Unknown error'}`, spinner);
      } finally {
           if (spinner) spinner.style.display = 'none';
           autoResize();

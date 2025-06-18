@@ -229,17 +229,6 @@
                                    <br />
                               </td>
                          </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                        <label for="transactionField">Transaction</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="transactionField" size="85" />
-                                   <br />
-                              </td>
-                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>
@@ -267,7 +256,6 @@
                               <td colspan="2">
                                    <button type="button" onclick="setAuthorizedMinter()">Set Authorized Minter</button>
                                    <button type="button" onclick="updateNFTMetadata()">Update NFT Metadata</button>
-                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>
@@ -288,7 +276,7 @@
                               <th></th>
                               <tr style="vertical-align: top">
                                    <td>
-                                        <textarea class="nftMemoField" style="padding: 20px" id="nftMemoField" placeholder="Optional memo...">
+                                        <textarea class="nftMemoField" style="padding: 20px" id="nftMemoField" placeholder="Optional memo">
 Flag Name          | Hex Value  | Decimal Value | Description                                              
 ------------------ | ---------- | ------------- | ---------------------------------------------------------
 tfBurnable         | 0x00000001 |       1       | Allows anyone to burn the NFT if they hold it.           

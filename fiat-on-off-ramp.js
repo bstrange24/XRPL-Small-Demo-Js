@@ -38,7 +38,7 @@ export async function createOnRamp(fiatAmount, currency, walletAddress) {
           if (!response.ok) throw new Error(data.error || 'MoonPay API error');
 
           // Redirect user to MoonPay’s hosted payment page
-          resultField.value = `Redirecting to MoonPay for ${fiatAmount} ${currency} to XRP...\n`;
+          resultField.value = `Redirecting to MoonPay for ${fiatAmount} ${currency} to XRP\n`;
           window.location.href = data.redirectUrl;
 
           resultField.classList.add('success');

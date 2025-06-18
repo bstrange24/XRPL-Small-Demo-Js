@@ -18,201 +18,188 @@
                <fieldset>
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
-                         <th>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Name of the currently selected account.">
-                                             <label for="accountNameField">Name</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountNameField" size="40" />
-                                        <input type="radio" id="account1" name="accounts" value="account1" />
-                                        <label for="account1">Account 1</label>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Address of the currently selected account.">
-                                             <label for="accountAddressField">Address</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountAddressField" size="40" />
-                                        <input type="radio" id="account2" name="accounts" value="account2" />
-                                        <label for="account2">Account 2</label>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Seed of the currently selected account.">
-                                             <label for="accountSeedField">Seed</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="accountSeedField" size="40" />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
-                                             <label for="xrpBalanceField">Balance</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="xrpBalanceField" size="40" />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top" id="issuerRow" style="display: none">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Issuer address for non-XRP currencies.">
-                                             <label for="issuerField">Issuer</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <!-- Replace the input with a select dropdown -->
-                                        <select class="timeUnit" id="issuerField" style="width: 305px; height: 25px">
-                                             <!-- Options will be added dynamically -->
-                                        </select>
-                                        <p></p>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top" id="issuerRow" style="display: none">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Amounts of currencies held by the account">
-                                             <label for="tokenBalance">Currency Balance</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="tokenBalance" size="40" readonly />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve.">
-                                             <label for="ownerCountField">Owner Count</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="ownerCountField" size="40" readonly />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
-                                             <label for="totalXrpReservesField">Total XRP Reserves</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="totalXrpReservesField" size="40" readonly />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Total Execution time in milli seconds.">
-                                             <label for="totalExecutionTime">Total Execution Time in ms</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="totalExecutionTime" size="40" />
-                                   </td>
-                              </tr>
-                         </th>
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Name of the currently selected account.">
+                                        <label for="accountNameField">Name</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountNameField" size="40" />
+                                   <input type="radio" id="account1" name="accounts" value="account1" />
+                                   <label for="account1">Account 1</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Address of the currently selected account.">
+                                        <label for="accountAddressField">Address</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountAddressField" size="40" />
+                                   <input type="radio" id="account2" name="accounts" value="account2" />
+                                   <label for="account2">Account 2</label>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Seed of the currently selected account.">
+                                        <label for="accountSeedField">Seed</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="accountSeedField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="XRP balance for the currently selected account.">
+                                        <label for="xrpBalanceField">Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="xrpBalanceField" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top" id="issuerRow" style="display: none">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Issuer address for non-XRP currencies.">
+                                        <label for="issuerField">Issuer</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <!-- Replace the input with a select dropdown -->
+                                   <select class="timeUnit" id="issuerField" style="width: 305px; height: 25px">
+                                        <!-- Options will be added dynamically -->
+                                   </select>
+                                   <p></p>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top" id="issuerRow" style="display: none">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of currencies held by the account">
+                                        <label for="tokenBalance">Currency Balance</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="tokenBalance" size="40" readonly />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total account objects that require an XRP reserve.">
+                                        <label for="ownerCountField">Owner Count</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="ownerCountField" size="40" readonly />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total number of XRP reserves. This includes the base reserve and any account objects that require a reserve.">
+                                        <label for="totalXrpReservesField">Total XRP Reserves</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="totalXrpReservesField" size="40" readonly />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Total Execution time in milli seconds.">
+                                        <label for="totalExecutionTime">Total Execution Time in ms</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="totalExecutionTime" size="40" />
+                              </td>
+                         </tr>
                     </table>
 
                     <table style="float: left">
-                         <th>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Currency code for the check.">
-                                             <label for="currencyField">Currency Code</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px" onchange="toggleIssuerField()">
-                                             <option value="XRP">XRP</option>
-                                             <option value="RLUSD">RLUSD</option>
-                                             <option value="USD">USD</option>
-                                             <option value="USDC">USDC</option>
-                                             <option value="DOG">DOG</option>
-                                        </select>
-                                        <p></p>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Amount of XRP to send.">
-                                             <label for="amountField">Amount</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="amountField" size="40" placeholder="Amount in XRP (not drops)" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
-                                             <label for="destinationField">Destination</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="destinationField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Check will expire after this time.">
-                                             <label for="expirationTimeField">Expiration Time</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="expirationTimeField" placeholder="Enter time" size="40" />
-                                        <select class="timeUnit" id="checkExpirationTime">
-                                             <option value="seconds">Seconds</option>
-                                             <option value="minutes">Minutes</option>
-                                             <option value="hours">Hours</option>
-                                             <option value="days">Days</option>
-                                        </select>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Check ID.">
-                                             <label for="checkIdField">Check ID / Ledger Index</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="checkIdField" size="85" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
-                                             <label for="destinationField">Memo</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <textarea class="memoField" id="memoField" placeholder="Optional memo..."></textarea>
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                             <label for="transactionField">Transaction</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="transactionField" size="85" />
-                                        <br />
-                                   </td>
-                              </tr>
-                         </th>
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Currency code for the check.">
+                                        <label for="currencyField">Currency Code</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px" onchange="toggleIssuerField()">
+                                        <option value="XRP">XRP</option>
+                                        <option value="RLUSD">RLUSD</option>
+                                        <option value="USD">USD</option>
+                                        <option value="USDC">USDC</option>
+                                        <option value="DOG">DOG</option>
+                                   </select>
+                                   <p></p>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amount of XRP to send.">
+                                        <label for="amountField">Amount</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="amountField" size="40" placeholder="Amount in XRP (not drops)" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
+                                        <label for="destinationField">Destination</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="destinationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Check will expire after this time.">
+                                        <label for="expirationTimeField">Expiration Time</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="expirationTimeField" placeholder="Enter time" size="40" />
+                                   <select class="timeUnit" id="checkExpirationTime">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                   </select>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
+                                        <label for="destinationField">Memo</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <textarea style="width: 300px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Check ID.">
+                                        <label for="checkIdField">Check ID / Ledger Index</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="checkIdField" size="85" />
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>
@@ -225,7 +212,6 @@
                                    <button type="button" onClick="sendCheck()">Send Check</button>
                                    <button type="button" onClick="cashCheck()">Cash Check</button>
                                    <button type="button" onClick="cancelCheck()">Cancel Check</button>
-                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
                               </td>
                          </tr>
                          <tr>
