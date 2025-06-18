@@ -128,6 +128,7 @@ export async function handlePaymentChannelAction() {
           amount: document.getElementById('amountField'),
           channelIDField: document.getElementById('channelIDField'),
           // channelClaimSignature: document.getElementById('channelClaimSignature'),
+          settleDelayField: document.getElementById('settleDelayField'),
           xrpBalanceField: document.getElementById('xrpBalanceField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
@@ -143,7 +144,7 @@ export async function handlePaymentChannelAction() {
           }
      }
 
-     const { seed, destinationField, amount, channelIDField, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { seed, destinationField, amount, channelIDField, settleDelayField, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      // Validate user inputs
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
@@ -169,6 +170,9 @@ export async function handlePaymentChannelAction() {
           }
 
           // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+          if (!validatInput(settleDelayField.value)) {
+               settleDelayField.value = 60;
+          }
 
           resultField.value = `Connected to ${environment} ${net}\n`;
 
@@ -184,7 +188,7 @@ export async function handlePaymentChannelAction() {
                     Account: wallet.classicAddress,
                     Amount: xrpl.xrpToDrops(amount.value),
                     Destination: destinationField.value,
-                    SettleDelay: 60,
+                    SettleDelay: parseInt(settleDelayField.value),
                     PublicKey: wallet.publicKey,
                });
 

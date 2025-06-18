@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
      <head>
-          <title>Payment Channel</title>
+          <title>Send XRP</title>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css?family=Work Sans" rel="stylesheet" />
           <link href="modular-tutorials.css" rel="stylesheet" />
           <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-          <script type="module" src="create-payment-channel.js"></script>
+          <script type="module" src="fiat-on-off-ramp.js"></script>
           <script type="module" src="local-storage.js"></script>
           <script type="module" src="utils.js"></script>
      </head>
@@ -102,10 +102,11 @@
 
                     <table style="float: left">
                          <th></th>
+                         <!-- On-Ramp -->
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Amount of XRP to send.">
-                                        <label for="amountField">XRP Amount</label>
+                                        <label for="amountField">Fiat Amount:</label>
                                    </span>
                               </td>
                               <td>
@@ -115,67 +116,36 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Destination account address where XRP is sent.">
-                                        <label for="destinationField">Destination</label>
+                                   <span class="tooltip" tooltip-data="Currency code for the trust line.">
+                                        <label for="currencyField">Fiat Currency</label>
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="destinationField" size="40" />
+                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px">
+                                        <option value="USD">USD</option>
+                                   </select>
+                                   <p></p>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Bank Account">
+                                        <label for="bankAccountField">Bank Account Number:</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="bankAccountField" size="40" />
                                    <br />
                               </td>
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Channel ID for Payment Channel.">
-                                        <label for="channelIDField">Channel ID</label>
+                                   <span class="tooltip" tooltip-data="Bank Account">
+                                        <label for="routingNumberField">Routing Number:</label>
                                    </span>
                               </td>
                               <td>
-                                   <input type="text" id="channelIDField" size="85" />
-                                   <br />
-                              </td>
-                         </tr>
-                         <!-- <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Claim Signature for Payment Channel">
-                                        <label for="channelClaimSignature">Claim Signature</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="channelClaimSignature" size="110" />
-                                   <br />
-                              </td>
-                         </tr> -->
-                         <tr>
-                              <td style="text-align: right">
-                                   <label>Action</label>
-                              </td>
-                              <td style="display: flex; gap: 20px">
-                                   <label><input type="radio" name="channelAction" value="create" checked /> Create</label>
-                                   <label><input type="radio" name="channelAction" value="fund" /> Fund</label>
-                                   <label><input type="radio" name="channelAction" value="claim" /> Claim</label>
-                                   <label><input type="radio" name="channelAction" value="close" /> Close</label>
-                              </td>
-                         </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="It defines the minimum amount of time (in seconds) that must elapse after the sender requests to close the channel before the actual settlement can occur.">
-                                        <label for="settleDelayField">Settle Delay</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="settleDelayField" size="40" placeholder="Time in seconds" />
-                                   <br />
-                              </td>
-                         </tr>
-                         <tr style="vertical-align: top">
-                              <td style="text-align: right">
-                                   <span class="tooltip" tooltip-data="Transaction number, used with the Get Transaction button.">
-                                        <label for="transactionField">Transaction</label>
-                                   </span>
-                              </td>
-                              <td>
-                                   <input type="text" id="transactionField" size="85" />
+                                   <input type="text" id="routingNumberField" size="40" />
                                    <br />
                               </td>
                          </tr>
@@ -187,10 +157,8 @@
                          <th></th>
                          <tr>
                               <td colspan="2">
-                                   <button type="button" onclick="getPaymentChannels()">Get Payment Channels</button>
-                                   <button type="button" onclick="handlePaymentChannelAction()">Execute Payment Channel Action</button>
-                                   <!-- <button type="button" onclick="generateChannelSignatureForUI()">Generate Claim Signature</button> -->
-                                   <button type="button" onClick="getTransaction()">Get Transaction</button>
+                                   <button type="button" onclick="createOnRamp()">Buy XRP</button>
+                                   <button type="button" onclick="createOffRamp()">Sell XRP</button>
                               </td>
                          </tr>
                          <tr>
@@ -208,28 +176,28 @@
           accountRadioButtons.forEach(radio => {
                radio.addEventListener('change', function () {
                     if (this.value === 'account1') {
-                         displayPaymentChannelsForAccount1();
+                         displayDataForAccount1();
                     } else if (this.value === 'account2') {
-                         displayPaymentChannelsForAccount2();
+                         displayDataForAccount2();
                     }
                });
           });
 
-          // document.addEventListener('DOMContentLoaded', () => {
-          //      const checkbox = document.getElementById('isMultiSignTransaction');
-          //      const multiSignRow = document.getElementById('multiSignAddressRow');
+          document.addEventListener('DOMContentLoaded', () => {
+               const checkbox = document.getElementById('isMultiSignTransaction');
+               const multiSignRow = document.getElementById('multiSignAddressRow');
 
-          //      checkbox.addEventListener('change', () => {
-          //           if (checkbox.checked) {
-          //                multiSignRow.style.display = 'table-row';
-          //           } else {
-          //                multiSignRow.style.display = 'none';
-          //           }
-          //      });
+               checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) {
+                         multiSignRow.style.display = 'table-row';
+                    } else {
+                         multiSignRow.style.display = 'none';
+                    }
+               });
 
-          //      // Optional safety check: make sure it's hidden at start
-          //      multiSignRow.style.display = 'none';
-          // });
+               // Optional safety check: make sure it's hidden at start
+               multiSignRow.style.display = 'none';
+          });
 
           fetch('wallet-input.html')
                .then(res => res.text())
