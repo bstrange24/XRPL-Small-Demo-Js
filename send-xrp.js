@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, renderTransactionDetails } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
 import { getAccountDetails, fetchAccountObjects } from './account.js';
 import { derive } from 'xrpl-accountlib';
@@ -10,6 +10,7 @@ async function sendXRP() {
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
+     resultField.innerHTML = ''; // Clear content
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -56,7 +57,7 @@ async function sendXRP() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nSending XRP\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nSending XRP\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -67,8 +68,6 @@ async function sendXRP() {
           } else {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
-
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           if (amount.value > (await client.getXrpBalance(wallet.address)) - totalXrpReservesField.value) {
                return setError('ERROR: Insufficent XRP to complete transaction', spinner);
@@ -162,10 +161,10 @@ async function sendXRP() {
                          return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
                     }
 
-                    resultField.value += `XRP payment finished successfully.\n\n`;
-                    resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-                    resultField.value += parseXRPLTransaction(response.result);
-
+                    resultField.innerHTML += `XRP payment finished successfully.\n\n`;
+                    // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+                    // resultField.value += parseXRPLTransaction(response.result);
+                    renderTransactionDetails(response);
                     resultField.classList.add('success');
                } else {
                     return setError(`No Multi Sign accounts setup for ${wallet.classicAddress}`, spinner);
@@ -208,9 +207,10 @@ async function sendXRP() {
                     return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
                }
 
-               resultField.value += `XRP payment finished successfully.\n\n`;
-               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               resultField.value += parseXRPLTransaction(response.result);
+               resultField.innerHTML += `XRP payment finished successfully.\n\n`;
+               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               // resultField.value += parseXRPLTransaction(response.result);
+               renderTransactionDetails(response);
                resultField.classList.add('success');
           }
 
@@ -221,7 +221,7 @@ async function sendXRP() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
+          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving sendXRP in ${now}ms`);

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { JSDOM } from 'jsdom';
 
 const formatXRPLAmount = value => {
      if (typeof value === 'object' && value.currency && value.value) {
@@ -953,6 +954,194 @@ function parseXRPLTransaction(response) {
           return `Error: Failed to parse XRPL transaction\nDetails: ${error.message}`;
      }
 }
+
+function renderAccountDetails(rawOutput) {
+     const dom = new JSDOM(`<!DOCTYPE html><body></body>`);
+     const document = dom.window.document;
+
+     const resultField = document.createElement('textarea');
+     resultField.id = 'resultField';
+     document.body.appendChild(resultField);
+
+     const container = document.getElementById('resultField');
+     if (!container) {
+          console.error('Error: #resultField not found');
+          return;
+     }
+     container.innerHTML = ''; // Clear content
+
+     // Split output into lines
+     const lines = rawOutput.trim().split('\n');
+     let sections = {
+          connection: { title: 'Connection Status', content: [] },
+          account: { title: 'Account Data', content: [] },
+          flags: { title: 'Flag Details', content: [] },
+          metadata: { title: 'Account Meta Data', content: [] },
+          objects: { title: 'Account Objects', content: [], subSections: [] },
+          ledger: { title: 'Ledger Info', content: [] },
+     };
+     let currentSection = null;
+     let currentObject = null;
+     let currentSubObject = null;
+     let indentLevel = 0;
+
+     // Parse lines
+     for (let line of lines) {
+          const trimmed = line.trim();
+          const indent = line.match(/^\s*/)[0].length;
+
+          if (trimmed.startsWith('Connected to')) {
+               currentSection = sections.connection;
+               currentSection.content.push({ key: 'Network', value: trimmed });
+          } else if (trimmed.startsWith('Address:')) {
+               currentSection = sections.account;
+               currentSection.content.push({ key: 'Address', value: trimmed.replace('Address: ', '') });
+          } else if (trimmed === 'Flag Details:') {
+               currentSection = sections.flags;
+          } else if (trimmed === 'Account Meta Data:') {
+               currentSection = sections.metadata;
+          } else if (trimmed === 'Account Objects') {
+               currentSection = sections.objects;
+          } else if (trimmed === 'Ledger Info') {
+               currentSection = sections.ledger;
+          } else if (currentSection === sections.flags && trimmed.match(/^[A-Za-z\s]+: (true|false)$/)) {
+               const [key, value] = trimmed.split(': ');
+               currentSection.content.push({ key, value });
+          } else if (currentSection === sections.metadata && trimmed.match(/^(BurnedNFTokens|MintedNFTokens|TickSize|TransferRate): /)) {
+               const [key, value] = trimmed.split(': ');
+               currentSection.content.push({ key, value });
+          } else if (trimmed.match(/^(RippleState|Offer|Signer List) \d+$/)) {
+               currentSection = sections.objects;
+               currentObject = { type: trimmed.split(' ')[0], id: trimmed, content: [], subItems: [] };
+               sections.objects.subSections.push(currentObject);
+               indentLevel = indent;
+               currentSubObject = null;
+          } else if (currentObject && indent > indentLevel) {
+               if (trimmed.match(/^[A-Za-z]+:/)) {
+                    if (trimmed.match(/^(Balance|HighLimit|LowLimit):$/)) {
+                         currentSubObject = { key: trimmed.replace(':', ''), content: [] };
+                         currentObject.subItems.push(currentSubObject);
+                    } else if (currentSubObject && trimmed.match(/^\s*(currency|issuer|value|Flags|HighNode|LowNode|PreviousTxnID|PreviousTxnLgrSeq|index): /)) {
+                         const [key, value] = trimmed.split(': ');
+                         currentSubObject.content.push({ key, value: value || '' });
+                    } else {
+                         const [key, value] = trimmed.split(': ');
+                         currentObject.content.push({ key, value: value || '' });
+                    }
+               }
+          } else if (currentSection === sections.ledger && trimmed.match(/^(Ledger Hash|Ledger index): /)) {
+               const [key, value] = trimmed.split(': ');
+               currentSection.content.push({ key, value });
+          }
+     }
+
+     // Render sections
+     for (const [sectionKey, section] of Object.entries(sections)) {
+          if (section.content.length || (section.subSections && section.subSections.length)) {
+               const details = document.createElement('details');
+               details.className = 'result-section';
+               details.setAttribute('open', 'open');
+               const summary = document.createElement('summary');
+               summary.textContent = section.title;
+               details.appendChild(summary);
+
+               if (section.content.length) {
+                    const table = document.createElement('div');
+                    table.className = 'result-table';
+                    const header = document.createElement('div');
+                    header.className = 'result-row result-header';
+                    header.innerHTML = `
+                     <div class="result-cell key">Key</div>
+                     <div class="result-cell value">Value</div>
+                 `;
+                    table.appendChild(header);
+
+                    for (const item of section.content) {
+                         const row = document.createElement('div');
+                         row.className = 'result-row';
+                         row.innerHTML = `
+                         <div class="result-cell key">${item.key}</div>
+                         <div class="result-cell value">${item.key.includes('Hash') || item.key === 'Address' || item.key.includes('PreviousTxnID') || item.key.includes('index') ? `<code>${item.value}</code>` : item.value}</div>
+                     `;
+                         table.appendChild(row);
+                    }
+                    details.appendChild(table);
+               }
+
+               if (section.subSections) {
+                    for (const obj of section.subSections) {
+                         const objDetails = document.createElement('details');
+                         objDetails.className = 'nested-object';
+                         objDetails.setAttribute('open', 'open');
+                         const objSummary = document.createElement('summary');
+                         objSummary.textContent = `${obj.type} ${obj.id.split(' ')[1]}`;
+                         objDetails.appendChild(objSummary);
+
+                         if (obj.content.length) {
+                              const objTable = document.createElement('div');
+                              objTable.className = 'result-table';
+                              const objHeader = document.createElement('div');
+                              objHeader.className = 'result-row result-header';
+                              objHeader.innerHTML = `
+                             <div class="result-cell key">Key</div>
+                             <div class="result-cell value">Value</div>
+                         `;
+                              objTable.appendChild(objHeader);
+
+                              for (const item of obj.content) {
+                                   const row = document.createElement('div');
+                                   row.className = 'result-row';
+                                   row.innerHTML = `
+                                 <div class="result-cell key">${item.key}</div>
+                                 <div class="result-cell value">${item.key.includes('index') || item.key.includes('PreviousTxnID') ? `<code>${item.value}</code>` : item.value}</div>
+                             `;
+                                   objTable.appendChild(row);
+                              }
+                              objDetails.appendChild(objTable);
+                         }
+
+                         if (obj.subItems.length) {
+                              for (const subItem of obj.subItems) {
+                                   const subDetails = document.createElement('details');
+                                   subDetails.className = 'nested-object';
+                                   subDetails.setAttribute('open', 'open');
+                                   const subSummary = document.createElement('summary');
+                                   subSummary.textContent = subItem.key;
+                                   subDetails.appendChild(subSummary);
+
+                                   const subTable = document.createElement('div');
+                                   subTable.className = 'result-table';
+                                   const subHeader = document.createElement('div');
+                                   subHeader.className = 'result-row result-header';
+                                   subHeader.innerHTML = `
+                                 <div class="result-cell key">Key</div>
+                                 <div class="result-cell value">Value</div>
+                             `;
+                                   subTable.appendChild(subHeader);
+
+                                   for (const subContent of subItem.content) {
+                                        const subRow = document.createElement('div');
+                                        subRow.className = 'result-row';
+                                        subRow.innerHTML = `
+                                     <div class="result-cell key">${subContent.key}</div>
+                                     <div class="result-cell value">${subContent.key.includes('issuer') || subContent.key.includes('index') || subContent.key.includes('PreviousTxnID') ? `<code>${subContent.value}</code>` : subContent.value}</div>
+                                 `;
+                                        subTable.appendChild(subRow);
+                                   }
+                                   subDetails.appendChild(subTable);
+                                   objDetails.appendChild(subDetails);
+                              }
+                         }
+
+                         details.appendChild(objDetails);
+                    }
+               }
+
+               container.appendChild(details);
+          }
+     }
+}
+
 // Sample XRPL response
 const nftResponse = {
      account: 'r445P3SQcDEp9tsBEofCF6s9FG9nb99UxX',
@@ -1469,6 +1658,181 @@ const escrow = {
      },
 };
 
+const formattedAccountObject = `Connected to Testnet wss://s.altnet.rippletest.net:51233/
+Getting Account Data.
+
+Address: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+Flag Details: 
+    Allow Trust Line Clawback: false
+    Default Ripple: true
+    Deposit Authorization: false
+    Disable Master Key: false
+    Disallow Incoming Check: false
+    Disallow Incoming NFToken Offer: false
+    Disallow Incoming Payment Channel: false
+    Disallow Incoming Trust Line: false
+    Disallow Incoming XRP: false
+    Global Freeze: false
+    No Freeze: false
+    Password Spent: false
+    Require Authorization: false
+    Require Destination Tag: false
+               
+Account Meta Data:
+     BurnedNFTokens: 27
+     Domain: example.com
+     MintedNFTokens: 27
+     TickSize: 3
+     TransferRate: 1.0000000000000009
+
+Account Objects
+RippleState 1
+    LedgerEntryType: RippleState
+    RippleState:
+        RippleState
+            Balance:
+                currency: RLUSD
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: 0
+            Flags: 65536
+            HighLimit:
+                currency: RLUSD
+                issuer: rQhWct2fv4Vc4KRjRgMrxa8xPN9Zx9iLKV
+                value: 0
+            HighNode: 23
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: RLUSD
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 100000
+            LowNode: 0
+            PreviousTxnID: 35186E3FB4F22FF74905435E83F96F136452E4F397DD5E2F84ECF560158A1ABB
+            PreviousTxnLgrSeq: 8049012
+            index: 032161B652DD5893796D44CB147C4AF79F9ABADD87063B9A723CB17BA36A2042
+        RippleState
+            Balance:
+                currency: LP-034D1B8322E9BD4DD27164B84D8AE44AC2BC37B0
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: 99000
+            Flags: 65536
+            HighLimit:
+                currency: LP-034D1B8322E9BD4DD27164B84D8AE44AC2BC37B0
+                issuer: rfCRJaJSEt4JtqaGJFAfwvNkJxDWtNmcrX
+                value: 0
+            HighNode: 0
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: LP-034D1B8322E9BD4DD27164B84D8AE44AC2BC37B0
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 0
+            LowNode: 0
+            PreviousTxnID: 04EF254BC1C398D7F61F095E4D559AD880EDAE78BCA1DB0E61F22F71B19A4DF4
+            PreviousTxnLgrSeq: 8051842
+            index: 3892B18843A6AB077D8DB7CB10DEB824B866B93CB107CBB7CF40E08E01B47679
+        RippleState
+            Balance:
+                currency: DOG
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: 20200
+            Flags: 2293760
+            HighLimit:
+                currency: DOG
+                issuer: rDTzDGqWyh5myV9Y9mmjhzpc1F5xLBDTSN
+                value: 1000000
+            HighNode: 0
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: DOG
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 1000000
+            LowNode: 0
+            PreviousTxnID: A0ACB2DC14B1CE77C66783096F348837B974ECDEA7CA0333FE4C8F153F22B2CD
+            PreviousTxnLgrSeq: 7919814
+            index: 91956F9EE4DD3954D673D8FB6918564F41A30C87C350BCF478FB9F87DFFF9D22
+        RippleState
+            Balance:
+                currency: DGG
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: 0
+            Flags: 3276800
+            HighLimit:
+                currency: DGG
+                issuer: rDTzDGqWyh5myV9Y9mmjhzpc1F5xLBDTSN
+                value: 0
+            HighNode: 2
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: DGG
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 0
+            LowNode: 0
+            PreviousTxnID: 6C30173374C7948A52601949317EBFEB68878016FE1A2F5BB9C32AF1DEC93A42
+            PreviousTxnLgrSeq: 7920150
+            index: 9B6BB9583FE71F4A7139F423CD4DAE3B64CC41E96374001CC37553FCFAD75EE2
+        RippleState
+            Balance:
+                currency: RLUSD
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: -100
+            Flags: 196608
+            HighLimit:
+                currency: RLUSD
+                issuer: rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo
+                value: 100000
+            HighNode: 0
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: RLUSD
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 100000
+            LowNode: 0
+            PreviousTxnID: EAECC82F9F247D2B5F3737527625180AF9E8E46AD2C9C3971061FDD14E5DF25D
+            PreviousTxnLgrSeq: 8108108
+            index: B7B8485CAEF3DAAC63C40C6487028CD45805F075DE28635D2C49AFBC428D2A9E
+        RippleState
+            Balance:
+                currency: DOG
+                issuer: rrrrrrrrrrrrrrrrrrrrBZbvji
+                value: 108.2870879999997
+            Flags: 3342336
+            HighLimit:
+                currency: DOG
+                issuer: rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo
+                value: 1000000
+            HighNode: 0
+            LedgerEntryType: RippleState
+            LowLimit:
+                currency: DOG
+                issuer: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+                value: 1000000
+            LowNode: 0
+            PreviousTxnID: 6F9D32796F2EBB3F7B2503A869751968E33D3FA4C5A76B4227D97F1779BEBD56
+            PreviousTxnLgrSeq: 8072543
+            index: E1B24793321B19842DBB7E8DA01DAC5996B525CFE646DBD503134D62AE402770
+Offer 2
+    Account: rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH
+    TakerPays:
+        currency: DOG
+        issuer: rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo
+        value: 13.274923
+    TakerGets: 1.324173 XRP
+    PreviousTxnID: FF796DC5C49829F50A748EF52BB6543EA240287C87E22392BF779FB5275C5379
+    PreviousTxnLgrSeq: 8072530
+    index: 3DB22B8B5532876068BAE27041AF32372AF07FDBEF6B0A83845045E37CCF2FBB
+Signer List 3
+    Flags: 65536
+    SignerQuorum: 1
+    SignerEntries:
+        0: Account: rHpaVSpumTQFbjwy2amn7wwuaeW4HyDtco Signer Weight: 1
+        1: Account: rPzumycz5wWawXKudCUNHLDo4kXYY8Up4W Signer Weight: 1
+    PreviousTxnID: A1F513692ACB122085210B272F9C1A132640CD1FB95B63A060CE859562009672
+    PreviousTxnLgrSeq: 8149477
+    index: 43C0666A9613A4BE750E24F2F6C0802D079C695E3014D05506C01B6F2C99CFED
+
+Ledger Hash: CB2BFC33556C4F01D1D14D45DF85AF1EAABCDE1D9F53CE2FF7B67033F339B0D1
+Ledger index: 8226107
+Validated: true`;
+
 // Main function to run the script
 function main() {
      // let response = sampleResponse;
@@ -1478,7 +1842,8 @@ function main() {
      // let response = tx;
      // let response = tx1;
      // let response = escrow;
-     let response = offer;
+     // let response = offer;
+     let response = formattedAccountObject;
 
      // Check if a JSON file or string was provided via command-line arguments
      // if (process.argv.length > 2) {
@@ -1504,7 +1869,8 @@ function main() {
 
      // Parse and display the response
      // const parsedResponse = parseXRPLResponse(response);
-     const parsedResponse = parseXRPLTransaction(response);
+     // const parsedResponse = parseXRPLTransaction(response);
+     const parsedResponse = renderAccountDetails(response);
      console.log(parsedResponse);
 }
 

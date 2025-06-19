@@ -11,11 +11,12 @@
                "skipFiles": [
                     "<node_internals>/**"
                ],
-               "program": "${workspaceFolder}\\get-xrp-usd-prod.js",
+               // "program": "${workspaceFolder}\\get-xrp-usd-prod.js",
+               "program": "${workspaceFolder}\\parse_tx_response.js",
                "outFiles": [
                     "${workspaceFolder}/**/*.js"
                ],
-                "args": ["buy"] // <-- Add this line. Change "buy" to "sell" or "round-trip" as needed.
+                //"args": ["buy"] // <-- Add this line. Change "buy" to "sell" or "round-trip" as needed.
           }
      ]
 } 

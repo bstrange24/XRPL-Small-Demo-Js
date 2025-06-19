@@ -7,11 +7,8 @@ button,
 
 body {
      font-size: 14px;
-     /* line-height: 1.4; */
      padding: 10px;
-     /* background: #8497a1; */
      background: #1a1c21;
-     /* max-width: 1000px; */
      margin: 0 auto;
      line-height: 21px;
 }
@@ -35,22 +32,6 @@ tr.buttons td {
      gap: 10px;
 }
 
-/* input[type="text"] {
-     background-color: #1a1c21;
-     color: #fff;
-     border-radius: 10px;
-     border: 1px solid white;
-     padding: 4px;
-} */
-
-/* input[type="checkbox"] .createWallet {
-  background-color: red;
-  color: aqua;
-  border-radius: 10px;
-  border: 1px solid yellow;
-  padding: 4px;
-} */
-
 /* Ensure dropdown-toggle and dropdown-menu links also get green and bold when active */
 .navbar-links .dropdown-toggle.active,
 .navbar-links .dropdown-menu a.active {
@@ -61,22 +42,16 @@ tr.buttons td {
 /* Optional: Ensure dropdown items don’t override background when active */
 .dropdown-menu a.active {
      background-color: #2a2c31;
-     /* Keep your existing dropdown active background */
 }
 
-/* Add this to your existing CSS */
 .navbar-links a {
      color: white;
-     /* Default color */
      transition: color 0.3s ease;
-     /* Smooth color transition */
 }
 
 .navbar-links a.active {
      color: #4CAF50;
-     /* Your desired active color (green example) */
      font-weight: bold;
-     /* Optional: make active link bold */
 }
 
 fieldset {
@@ -88,9 +63,7 @@ label {
      color: #fff;
      background-color: #1a1c21;
      padding: 4px;
-     /* Optional: for spacing */
      border-radius: 10px;
-     /* Optional: rounded corners */
 }
 
 .input {
@@ -111,9 +84,7 @@ button {
 }
 
 input:read-only {
-     /* background-color: rgb(145, 145, 145); */
      background-color: #000000;
-     /* color: black; */
      color: white;
      border: 0;
      border: 1px solid white;
@@ -129,24 +100,11 @@ input:read-only {
      background-color: #1a1c21;
 }
 
-/* #resultField {
-     color: #62bb8b;
-     background-color: #1a1c21;
-     box-sizing: border-box;
-     border-radius: 10px;
-     border: 1px solid white;
-     font-family: monospace;
-     white-space: pre;
-} */
-
 #resultField {
-     width: 50%;
-     overflow: auto;
-     /* Changed from 'hidden' to 'auto' to allow scrolling */
+     width: 80%;
      resize: none;
      font-size: 12px;
      padding: 15px;
-     /* Inner spacing (already set) */
      color: #62bb8b;
      background-color: #1a1c21;
      box-sizing: border-box;
@@ -154,13 +112,9 @@ input:read-only {
      border: 1px solid white;
      font-family: monospace;
      white-space: pre-wrap;
-     /* Changed from 'pre' to 'pre-wrap' for text wrapping */
      word-break: break-word;
-     /* Ensures long words break instead of overflowing */
      line-height: 1.5;
-     /* Improves readability */
      margin: 10px 0;
-     /* Optional: Adds outer spacing */
 }
 
 table {
@@ -328,7 +282,6 @@ input:checked+.slider:before {
      height: 40px;
      border: 4px solid rgba(0, 0, 0, 0.1);
      border-left-color: #007bff;
-     /* Blue spinner */
      border-radius: 50%;
      animation: spin 0.8s linear infinite;
      margin: 10px auto;
@@ -392,17 +345,12 @@ summary {
 
 #transactionField {
      height: 35px;
-     /* Sets a taller height (adjust as needed) */
      padding: 10px;
-     /* Adds internal padding for better appearance */
      font-size: 16px;
-     /* Optional: Adjust font size for balance */
      line-height: 1.5;
-     /* Optional: Ensure text is vertically centered */
      color: #4CAF50;
 }
 
-/* Wallet Info Section */
 .wallet-info {
      margin: 20px 0;
 }
@@ -497,19 +445,13 @@ summary {
 #account2address,
 #account1seed,
 #account2seed,
-/* #account1mnemonic, */
-/* #account2mnemonic, */
 #account1secretNumbers,
 #account2secretNumbers {
      max-width: 450px;
-     /* Cap width at 200px */
      flex: 1;
-     /* Allow shrinking */
      min-width: 150px;
-     /* Ensure minimum usability */
 }
 
-/* Ensure responsive behavior */
 @media (max-width: 768px) {
 
      #account1name,
@@ -518,14 +460,10 @@ summary {
      #account2address,
      #account1seed,
      #account2seed,
-     /* #account1mnemonic, */
-     /* #account2mnemonic, */
      #account1secretNumbers,
      #account2secretNumbers {
           width: 100%;
-          /* Full width on mobile */
           max-width: none;
-          /* Remove cap on mobile */
      }
 }
 
@@ -533,45 +471,30 @@ summary {
 #account2mnemonic,
 #issuerMnemonic {
      max-width: 450px;
-     /* Same width as before */
      flex: 1;
-     /* Allow shrinking */
      min-width: 150px;
-     /* Prevent excessive shrinking */
      background: #1a1c21;
-     /* Match input */
      color: white;
      border: 1px solid white;
      border-radius: 8px;
      padding: 6px;
-     /* Match input */
      font-size: 12px;
-     /* Match input */
      font-family: "Work Sans", sans-serif;
-     /* Match body font */
      resize: vertical;
-     /* Allow vertical resize */
      height: 60px;
-     /* Mimic single-line input height */
      line-height: 1.4;
-     /* Ensure text readability */
      white-space: normal;
-     /* Allow text to wrap */
      overflow-wrap: break-word;
-     /* Wrap long words */
      transition: border-color 0.3s ease;
 }
 
-/* Ensure responsive behavior */
 @media (max-width: 768px) {
 
      #account1mnemonic,
      #account2mnemonic,
      #issuerMnemonic {
           width: 100%;
-          /* Full width on mobile */
           max-width: none;
-          /* Remove cap on mobile */
      }
 }
 
@@ -606,7 +529,6 @@ input[type="text"]:focus {
      outline: none;
 }
 
-/* Checkbox Toggle */
 .switch {
      position: relative;
      display: inline-block;
@@ -628,9 +550,7 @@ input[type="text"]:focus {
      right: 0;
      bottom: 0;
      background: #686868;
-     /* transition: background 0.3s ease, transform 0.3s ease; */
      transition: background 0.3s ease;
-     /* border-radius: 10px; */
      border-radius: 7.5px;
 }
 
@@ -658,7 +578,6 @@ input:focus+.slider {
      box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
 }
 
-/* Tooltip (keep existing, but ensure smooth transitions) */
 .tooltip:before,
 .tooltip:after {
      transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -742,30 +661,24 @@ input:focus+.slider {
 
 .flag-header .flag-cell {
      border-bottom: 2px solid #4CAF50;
-     /* Thicker header underline */
 }
 
-/* Specific column widths for better readability */
 .flag-cell:nth-child(1) {
      flex: 1.5;
 }
 
-/* Flag: Slightly wider */
 .flag-cell:nth-child(2) {
      flex: 2.5;
 }
 
-/* Purpose: Widest */
 .flag-cell:nth-child(3) {
      flex: 1;
 }
 
-/* Set Once?: Narrow */
 .flag-cell:nth-child(4) {
      flex: 1.5;
 }
 
-/* Mutually Exclusive: Medium */
 .flag-cell:nth-child(5) {
      flex: 2;
 }
@@ -788,13 +701,9 @@ input:focus+.slider {
      padding-bottom: 5px;
 }
 
-/* Notes: Wide */
-
-/* Responsive design for smaller screens */
 @media (max-width: 768px) {
      .flag-table {
           display: block;
-          /* Stack rows */
      }
 
      .flag-row {
@@ -813,7 +722,6 @@ input:focus+.slider {
           border-bottom: none;
      }
 
-     /* Add labels for mobile */
      .flag-cell::before {
           content: attr(data-label);
           font-weight: bold;
@@ -841,4 +749,297 @@ input:focus+.slider {
      .flag-cell:nth-child(5)::before {
           content: "Notes: ";
      }
+}
+
+.result-container {
+     width: 100%;
+     max-width: none;
+     margin: 20px 0;
+     padding: 15px;
+     background: #2a2c31;
+     border-radius: 10px;
+     color: white;
+     font-family: "Work Sans", sans-serif;
+     height: auto;
+     min-height: 0;
+     overflow-x: hidden;
+     overflow-y: auto;
+}
+
+#wallet-input-container {
+     width: 100%;
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+}
+
+.result-section {
+     margin-bottom: 10px;
+     background: #1a1c21;
+     border-radius: 8px;
+     overflow: hidden;
+}
+
+.result-section summary {
+     color: white;
+     font-weight: bold;
+     font-size: 14px;
+     padding: 12px;
+     cursor: pointer;
+     transition: background 0.3s ease;
+}
+
+.result-section summary:hover {
+     background: #3a3c41;
+}
+
+.result-section summary::marker {
+     content: '▶ ';
+}
+
+.result-section[open] summary::marker {
+     content: '▼ ';
+}
+
+.result-table {
+     display: flex;
+     flex-direction: column;
+     gap: 2px;
+     background: #2a2c31;
+     border-radius: 8px;
+     padding: 10px;
+}
+
+.result-row {
+     display: flex;
+     transition: background 0.3s ease;
+}
+
+.result-row:hover:not(.result-header) {
+     background: #3a3c41;
+}
+
+.result-header {
+     font-weight: bold;
+     color: #4caf50;
+     background: #1a1c21;
+}
+
+.result-cell {
+     flex: 1;
+     padding: 8px;
+     font-size: 12px;
+     text-align: left;
+     border-bottom: 1px solid #686868;
+}
+
+.result-header .result-cell {
+     border-bottom: 2px solid #4caf50;
+}
+
+.result-cell.key {
+     flex: 1.5;
+     font-weight: bold;
+}
+
+.result-cell.value {
+     flex: 2;
+}
+
+.nested-object .result-cell.key {
+     flex: 0.8;
+}
+
+.nested-object .result-cell.value {
+     flex: 1.2;
+}
+
+.nested-object .result-cell {
+     padding: 4px;
+}
+
+.nested-object {
+     margin: 10px 0 10px 20px;
+     background: #25272c;
+     border-radius: 8px;
+     padding: 10px;
+}
+
+.nested-object summary {
+     font-size: 13px;
+     padding: 8px;
+}
+
+.result-section summary,
+.nested-object summary {
+     color: white;
+     font-weight: bold;
+     font-size: 14px;
+     padding: 12px;
+     cursor: pointer;
+     transition: background 0.3s ease;
+}
+
+.nested-object .result-table {
+     margin-top: 10px;
+}
+
+.result-cell code {
+     background: #3a3c41;
+     padding: 2px 4px;
+     border-radius: 4px;
+     font-family: monospace;
+     color: #4caf50;
+}
+
+@media (max-width: 768px) {
+     .result-table {
+          display: block;
+     }
+
+     .result-row {
+          flex-direction: column;
+          border-bottom: 1px solid #686868;
+          margin-bottom: 8px;
+     }
+
+     .result-cell {
+          flex: none;
+          padding: 8px;
+          border-bottom: none;
+     }
+
+     .result-header .result-cell {
+          border-bottom: none;
+     }
+
+     .result-cell::before {
+          content: attr(data-label);
+          font-weight: bold;
+          display: inline-block;
+          width: 100px;
+          color: #4caf50;
+     }
+
+     .result-cell.key::before {
+          content: 'Key: ';
+     }
+
+     .result-cell.value::before {
+          content: 'Value: ';
+     }
+}
+
+.copy-button {
+     padding: 4px 8px;
+     background: #4caf50;
+     color: white;
+     border: none;
+     border-radius: 5px;
+     cursor: pointer;
+}
+
+.copy-button:hover {
+     background: #45a049;
+}
+
+*,
+*:before,
+*:after {
+     box-sizing: border-box;
+}
+
+.result-search {
+     width: 100%;
+     max-width: 100%;
+     padding: 8px;
+     background: #1a1c21;
+     color: white;
+     border: 1px solid #686868;
+     border-radius: 8px;
+     margin-bottom: 10px;
+     font-family: "Work Sans", sans-serif;
+     font-size: 14px;
+     display: block;
+}
+
+.result-search:focus {
+     outline: none;
+     border-color: #4CAF50;
+}
+
+#theForm button {
+     padding: 5px 13px;
+     background: #1a1c21;
+     color: white;
+     border: 1px solid #4CAF50;
+     border-radius: 8px;
+     cursor: pointer;
+     margin-right: 10px;
+     margin-bottom: 10px;
+}
+
+#theForm button:hover {
+     background: #45a049;
+}
+
+#theForm table th,
+#theForm table td {
+     padding: 5px;
+     vertical-align: top;
+     text-align: left;
+     color: white;
+}
+
+mark {
+     background: #4CAF50;
+     color: white;
+     padding: 2px;
+     border-radius: 3px;
+}
+
+.no-results {
+     color: #686868;
+     text-align: center;
+     padding: 10px;
+     font-size: 14px;
+}
+
+.result-section,
+.nested-object {
+     display: block;
+     margin-bottom: 10px;
+     background: #1a1c21;
+     border-radius: 8px;
+     overflow: hidden;
+}
+
+.result-section[style*="display: none"],
+.nested-object[style*="display: none"] {
+     display: none !important;
+}
+
+.result-section summary,
+.nested-object summary {
+     color: white;
+     font-weight: bold;
+     font-size: 14px;
+     padding: 12px;
+     cursor: pointer;
+     transition: background 0.3s ease;
+}
+
+.result-section summary:hover,
+.nested-object summary:hover {
+     background: #3a3c41;
+}
+
+.result-section summary::marker,
+.nested-object summary::marker {
+     content: '▶ ';
+}
+
+.result-section[open] summary::marker,
+.nested-object[open] summary::marker {
+     content: '▼ ';
 }

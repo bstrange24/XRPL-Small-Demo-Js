@@ -17,6 +17,7 @@
         "events": "^3.3.0",
         "express": "^5.1.0",
         "five-bells-condition": "^5.0.1",
+        "jsdom": "^26.1.0",
         "node-fetch": "^3.3.2",
         "stream-browserify": "^3.0.0",
         "ws": "^8.18.0",

@@ -151,37 +151,37 @@ export function clearFields() {
           const issuerAddressField = document.getElementById('issuerAddress');
           const issuerSeedField = document.getElementById('issuerSeed');
 
-          issuerNameField.value = '';
-          issuerAddressField.value = '';
-          issuerSeedField.value = '';
+          issuerNameField.value = EMPTY_STRING;
+          issuerAddressField.value = EMPTY_STRING;
+          issuerSeedField.value = EMPTY_STRING;
      }
 
-     account1addressField.value = '';
-     seed1Field.value = '';
-     account2addressField.value = '';
-     seed2Field.value = '';
-     mnemonic1Field.value = '';
-     mnemonic2Field.value = '';
-     secretNumbers1Field.value = '';
-     secretNumbers2Field.value = '';
+     account1addressField.value = EMPTY_STRING;
+     seed1Field.value = EMPTY_STRING;
+     account2addressField.value = EMPTY_STRING;
+     seed2Field.value = EMPTY_STRING;
+     mnemonic1Field.value = EMPTY_STRING;
+     mnemonic2Field.value = EMPTY_STRING;
+     secretNumbers1Field.value = EMPTY_STRING;
+     secretNumbers2Field.value = EMPTY_STRING;
 }
 
 export function clearSecretNumberFields() {
-     document.getElementById('account1secretNumbers').value = '';
-     document.getElementById('account2secretNumbers').value = '';
-     document.getElementById('issuerSecretNumbers').value = '';
+     document.getElementById('account1secretNumbers').value = EMPTY_STRING;
+     document.getElementById('account2secretNumbers').value = EMPTY_STRING;
+     document.getElementById('issuerSecretNumbers').value = EMPTY_STRING;
 }
 
 export function clearMnemonicFields() {
-     document.getElementById('account1mnemonic').value = '';
-     document.getElementById('account2mnemonic').value = '';
-     document.getElementById('issuerMnemonic').value = '';
+     document.getElementById('account1mnemonic').value = EMPTY_STRING;
+     document.getElementById('account2mnemonic').value = EMPTY_STRING;
+     document.getElementById('issuerMnemonic').value = EMPTY_STRING;
 }
 
 export function clearSeedFields() {
-     document.getElementById('account1seed').value = '';
-     document.getElementById('account2seed').value = '';
-     document.getElementById('issuerSeed').value = '';
+     document.getElementById('account1seed').value = EMPTY_STRING;
+     document.getElementById('account2seed').value = EMPTY_STRING;
+     document.getElementById('issuerSeed').value = EMPTY_STRING;
 }
 
 async function fundNewWallet(wallet) {
@@ -240,8 +240,8 @@ async function sendXRPtoNewWallet(fundingWallet, wallet) {
 }
 
 export async function generateNewWallet(walletNumber) {
-     let addrField = '';
-     let seedField = '';
+     let addrField = EMPTY_STRING;
+     let seedField = EMPTY_STRING;
      if (walletNumber == 3) {
           addrField = 'issuerAddress';
           seedField = 'issuerSeed';
@@ -258,14 +258,14 @@ export async function generateNewWallet(walletNumber) {
      }
 
      addressInput.value = 'Generating';
-     seedInput.value = '';
+     seedInput.value = EMPTY_STRING;
 
      try {
           const account = generate.familySeed();
           console.log('Generated account:', account);
 
           addressInput.value = account.address || 'No address generated';
-          seedInput.value = account.secret?.familySeed || '';
+          seedInput.value = account.secret?.familySeed || EMPTY_STRING;
 
           await fundNewWallet(account);
           console.log('Funded wallet complete');
@@ -318,13 +318,13 @@ export async function generateNewWalletFromMnemonic(walletNumber) {
      }
 
      addressInput.value = 'Generating';
-     seedInput.value = '';
+     seedInput.value = EMPTY_STRING;
 
      try {
           const account_with_mnemonic = generate.mnemonic();
           console.log('Generated wallet:', account_with_mnemonic);
           addressInput.value = account_with_mnemonic.address || 'No address generated';
-          mnemonic.value = account_with_mnemonic.secret?.mnemonic || '';
+          mnemonic.value = account_with_mnemonic.secret?.mnemonic || EMPTY_STRING;
 
           await fundNewWallet(account_with_mnemonic);
           console.log('Funded wallet complete');
@@ -361,7 +361,7 @@ export async function generateNewWalletFromSecretNumbers(walletNumber) {
      }
 
      addressInput.value = 'Generating';
-     seedInput.value = '';
+     seedInput.value = EMPTY_STRING;
 
      try {
           const account_with_secret_numbers = generate.secretNumbers();
@@ -401,7 +401,7 @@ export async function getAccountFromSeed(walletNumber) {
           const derive_account_with_family_seed = derive.familySeed(seedInput.value);
           console.log('derive_account_with_family_seed:', derive_account_with_family_seed);
           addressInput.value = derive_account_with_family_seed.address || 'No address generated';
-          seedInput.value = derive_account_with_family_seed.secret?.familySeed || '';
+          seedInput.value = derive_account_with_family_seed.secret?.familySeed || EMPTY_STRING;
      } catch (error) {
           console.error('Error:', error);
           addressInput.value = 'Error';
@@ -431,7 +431,7 @@ export async function getAccountFromMnemonic(walletNumber) {
           console.log('derive_account_with_mnemonic:', derive_account_with_mnemonic);
 
           addressInput.value = derive_account_with_mnemonic.address || 'No address generated';
-          seedInput.value = derive_account_with_mnemonic.secret?.familySeed || '';
+          seedInput.value = derive_account_with_mnemonic.secret?.familySeed || EMPTY_STRING;
           mnemonic.value = derive_account_with_mnemonic.secret?.mnemonic;
      } catch (error) {
           console.error('Error:', error);
@@ -462,7 +462,7 @@ export async function getAccountFromSecretNumbers(walletNumber) {
           console.log('derive_account_with_secret_numbers:', derive_account_with_secret_numbers);
 
           addressInput.value = derive_account_with_secret_numbers.address || 'No address generated';
-          seedInput.value = derive_account_with_secret_numbers.secret?.familySeed || '';
+          seedInput.value = derive_account_with_secret_numbers.secret?.familySeed || EMPTY_STRING;
           secretNumbers.value = derive_account_with_secret_numbers.secret?.secretNumbers;
      } catch (error) {
           console.error('Error:', error);
@@ -476,8 +476,8 @@ export async function getAccountFromSecretNumbers(walletNumber) {
 export async function populateTakerGetsTakerPayFields() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account1secretNumbers.value;
           } else {
                accountSeedField.value = account1mnemonic.value;
@@ -525,17 +525,17 @@ export async function populate1() {
      const issuerField = document.getElementById('issuerField');
      if (validatInput(issuerField)) {
           issuerField.value = account2address.value;
-          destinationField.value = '';
+          destinationField.value = EMPTY_STRING;
      }
 
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {
-          amountField.value = '';
+          amountField.value = EMPTY_STRING;
      }
 
      const memoField = document.getElementById('memoField');
      if (validatInput(memoField)) {
-          memoField.value = '';
+          memoField.value = EMPTY_STRING;
      }
 
      const escrowOwnerField = document.getElementById('escrowOwnerField');
@@ -567,17 +567,17 @@ export async function populate2() {
      const issuerField = document.getElementById('issuerField');
      if (validatInput(issuerField)) {
           issuerField.value = account1address.value;
-          destinationField.value = '';
+          destinationField.value = EMPTY_STRING;
      }
 
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {
-          amountField.value = '';
+          amountField.value = EMPTY_STRING;
      }
 
      const memoField = document.getElementById('memoField');
      if (validatInput(memoField)) {
-          memoField.value = '';
+          memoField.value = EMPTY_STRING;
      }
 
      getXrpBalance();
@@ -601,17 +601,17 @@ export async function populate3() {
 
      const destinationField = document.getElementById('destinationField');
      if (validatInput(destinationField)) {
-          destinationField.value = '';
+          destinationField.value = EMPTY_STRING;
      }
 
      const amountField = document.getElementById('amountField');
      if (validatInput(amountField)) {
-          amountField.value = '';
+          amountField.value = EMPTY_STRING;
      }
 
      const memoField = document.getElementById('memoField');
      if (validatInput(memoField)) {
-          memoField.value = '';
+          memoField.value = EMPTY_STRING;
      }
 
      getXrpBalance();
@@ -623,12 +623,16 @@ export function safeDrops(input) {
 }
 
 export function validatInput(value) {
-     return !!(value !== null && value !== undefined && value !== '');
+     return !!(value !== null && value !== undefined && value !== EMPTY_STRING);
 }
 
 export function setError(message, spinner) {
      if (spinner) spinner.style.display = 'none';
-     resultField.value = message;
+
+     const resultField = document.getElementById('resultField');
+     resultField.innerHTML = message;
+
+     // resultField.value = message;
      resultField.classList.add('error');
      autoResize();
 }
@@ -655,16 +659,16 @@ export function distributeAccountInfo() {
 
      if (accountInfo[2].split(' ').length > 1) {
           account1mnemonic.value = accountInfo[2];
-          account1seed.value = '';
-          account1secretNumbers.value = '';
+          account1seed.value = EMPTY_STRING;
+          account1secretNumbers.value = EMPTY_STRING;
      } else if (accountInfo[2].includes(',')) {
           account1secretNumbers.value = accountInfo[2];
-          account1seed.value = '';
-          account1mnemonic.value = '';
+          account1seed.value = EMPTY_STRING;
+          account1mnemonic.value = EMPTY_STRING;
      } else {
           account1seed.value = accountInfo[2];
-          account1secretNumbers.value = '';
-          account1mnemonic.value = '';
+          account1secretNumbers.value = EMPTY_STRING;
+          account1mnemonic.value = EMPTY_STRING;
      }
 
      account2name.value = accountInfo[3];
@@ -672,16 +676,16 @@ export function distributeAccountInfo() {
 
      if (accountInfo[5].split(' ').length > 1) {
           account2mnemonic.value = accountInfo[5];
-          account2seed.value = '';
-          account2secretNumbers.value = '';
+          account2seed.value = EMPTY_STRING;
+          account2secretNumbers.value = EMPTY_STRING;
      } else if (accountInfo[5].includes(',')) {
           account2secretNumbers.value = accountInfo[5];
-          account2seed.value = '';
-          account2mnemonic.value = '';
+          account2seed.value = EMPTY_STRING;
+          account2mnemonic.value = EMPTY_STRING;
      } else {
           account2seed.value = accountInfo[5];
-          account2secretNumbers.value = '';
-          account2mnemonic.value = '';
+          account2secretNumbers.value = EMPTY_STRING;
+          account2mnemonic.value = EMPTY_STRING;
      }
 
      if (accountInfo[8].length >= 9) {
@@ -690,16 +694,16 @@ export function distributeAccountInfo() {
 
           if (accountInfo[8].split(' ').length > 1) {
                issuerMnemonic.value = accountInfo[8];
-               issuerSeed.value = '';
-               issuerSecretNumbers.value = '';
+               issuerSeed.value = EMPTY_STRING;
+               issuerSecretNumbers.value = EMPTY_STRING;
           } else if (accountInfo[8].includes(',')) {
                issuerSecretNumbers.value = accountInfo[8];
-               issuerSeed.value = '';
-               issuerMnemonic.value = '';
+               issuerSeed.value = EMPTY_STRING;
+               issuerMnemonic.value = EMPTY_STRING;
           } else {
                issuerSeed.value = accountInfo[8];
-               issuerSecretNumbers.value = '';
-               issuerMnemonic.value = '';
+               issuerSecretNumbers.value = EMPTY_STRING;
+               issuerMnemonic.value = EMPTY_STRING;
           }
      }
      saveInputValues();
@@ -713,14 +717,6 @@ export function addSeconds(numOfSeconds, date = new Date()) {
      return date;
 }
 
-/**
- * Adds time to the current date and returns the XRPL-compatible time format (Ripple epoch).
- *
- * @param {number} amount - The number of time units to add.
- * @param {'seconds' | 'minutes' | 'hours' | 'days'} unit - The unit of time.
- * @param {Date} [date=new Date()] - Optional date to add to; defaults to now.
- * @returns {number} - The Ripple epoch time.
- */
 export function addTime(amount, unit = 'seconds', date = new Date()) {
      const multiplierMap = {
           seconds: 1,
@@ -827,7 +823,7 @@ const formatXRPLAmount = value => {
      }
 
      if (typeof value === 'object' && value.currency && value.value) {
-          return `${value.value} ${value.currency}${value.issuer ? ` (Issuer: ${value.issuer})` : ''}`;
+          return `${value.value} ${value.currency}${value.issuer ? ` (Issuer: ${value.issuer})` : EMPTY_STRING}`;
      }
      return `${(parseInt(value) / 1000000).toFixed(6)} XRP`;
 };
@@ -859,7 +855,7 @@ export function parseAccountFlagsDetails(response) {
                requireAuthorization: response.account_flags.requireAuthorization || 'false',
                requireDestinationTag: response.account_flags.requireDestinationTag || 'false',
                burnedNFTokens: response.account_data.BurnedNFTokens || '0',
-               domain: decodeHex(response.account_data.Domain) || '',
+               domain: decodeHex(response.account_data.Domain) || EMPTY_STRING,
                mintedNFTokens: response.account_data.MintedNFTokens || '0',
                tickSize: response.account_data.TickSize || '0',
                transferRate: parseTransferRateToPercentage(response.account_data.TransferRate) || '0',
@@ -1340,7 +1336,7 @@ export function parseXRPLAccountObjects(response) {
                const groupedObjects = {};
                objects.forEach(obj => {
                     let entryType = obj.LedgerEntryType || (field === 'account_nfts' ? 'NFT' : 'Unknown');
-                    if (entryType === 'Unknown' && obj.taker_pays != undefined && obj.taker_pays != '') {
+                    if (entryType === 'Unknown' && obj.taker_pays != undefined && obj.taker_pays != EMPTY_STRING) {
                          entryType = 'Offers';
                     }
                     if (!groupedObjects[entryType]) {
@@ -1476,6 +1472,7 @@ export async function getTransaction() {
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING; // Clear content
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -1489,7 +1486,7 @@ export async function getTransaction() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nGetting transaction information.\n\n`;
 
           // Determine if input is a transaction hash or CTID
           let requestParams = { id: 1, command: 'tx' };
@@ -1498,13 +1495,12 @@ export async function getTransaction() {
           } else if (isValidCTID(transactionInput)) {
                requestParams.ctid = transactionInput;
           } else {
-               return setError('ERROR: Invalid input. Must be a valid Transaction Hash, CTID or r-address', spinner);
+               return setError('ERROR: Invalid input. Must be a valid Transaction Hash orCTID', spinner);
           }
 
           const tx = await client.request(requestParams);
           console.log('Get transaction response', tx);
-          resultField.value += parseXRPLTransaction(tx.result);
-
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
@@ -1687,7 +1683,7 @@ export function parseTransferRateToPercentage(transferRate) {
 }
 
 function decodeNFTFlags(flags) {
-     if (typeof flags !== 'number') return '';
+     if (typeof flags !== 'number') return EMPTY_STRING;
 
      const flagMap = {
           1: 'Burnable',
@@ -1715,3 +1711,699 @@ export function autoResize() {
 
 textarea.addEventListener('input', autoResize);
 window.addEventListener('load', autoResize);
+
+export function renderAccountDetails(accountInfo, accountObjects) {
+     const container = document.getElementById('resultField');
+     if (!container) {
+          console.error('Error: #resultField not found');
+          return;
+     }
+     // container.innerHTML = EMPTY_STRING; // Clear content
+     container.innerHTML += EMPTY_STRING;
+
+     // Add search bar
+     const searchBar = document.createElement('input');
+     searchBar.type = 'text';
+     searchBar.id = 'resultSearch';
+     searchBar.placeholder = 'Search account info...';
+     searchBar.className = 'result-search';
+     searchBar.style.boxSizing = 'border-box'; // Extra precaution
+     container.appendChild(searchBar);
+
+     const sections = {
+          // connection: {
+          //      title: 'Connection Status',
+          //      content: [{ key: 'Network', value: 'Connected to Testnet wss://s.altnet.rippletest.net:51233/' }],
+          // },
+          account: {
+               title: 'Account Data',
+               content: [
+                    { key: 'Account', value: `<code>${accountInfo.account_data.Account}</code>` },
+                    { key: 'Balance', value: (parseInt(accountInfo.account_data.Balance) / 1_000_000).toFixed(6) + ' XRP' },
+                    { key: 'OwnerCount', value: accountInfo.account_data.OwnerCount },
+                    { key: 'Sequence', value: accountInfo.account_data.Sequence },
+               ],
+          },
+          metadata: {
+               title: 'Account Meta Data',
+               content: [
+                    { key: 'BurnedNFTokens', value: accountInfo.account_data.BurnedNFTokens },
+                    { key: 'MintedNFTokens', value: accountInfo.account_data.MintedNFTokens },
+                    {
+                         key: 'Domain',
+                         value: accountInfo.account_data.Domain ? Buffer.from(accountInfo.account_data.Domain, 'hex').toString('ascii') : 'Not Set',
+                    },
+                    { key: 'TickSize', value: accountInfo.account_data.TickSize },
+                    { key: 'TransferRate', value: (accountInfo.account_data.TransferRate / 1_000_000_000).toFixed(9) },
+                    { key: 'FirstNFTokenSequence', value: accountInfo.account_data.FirstNFTokenSequence },
+               ],
+          },
+          flags: {
+               title: 'Flag Details',
+               content: Object.entries(accountInfo.account_flags).map(([key, value]) => ({ key, value })),
+          },
+          objects: {
+               title: 'Account Objects',
+               content: [],
+               subSections: accountObjects.account_objects
+                    .map((obj, idx) => {
+                         const type = obj.LedgerEntryType;
+                         const nestedFields =
+                              {
+                                   RippleState: ['Balance', 'HighLimit', 'LowLimit'],
+                                   Offer: ['TakerPays', 'TakerGets'],
+                                   SignerList: ['SignerEntries'],
+                                   Check: ['Amount', 'DestinationTag', 'SourceTag'],
+                                   Escrow: ['Amount', 'Condition', 'DestinationTag', 'SourceTag'],
+                                   PayChannel: ['Amount', 'Balance', 'PublicKey', 'DestinationTag', 'SourceTag'],
+                                   NFTokenPage: ['NFTokens'],
+                                   Ticket: [],
+                                   DepositPreauth: [],
+                                   AMMBid: ['BidMin', 'BidMax', 'AuthAccounts'],
+                                   AMM: ['LPTokenBalance', 'TradingFee', 'Asset', 'Asset2'],
+                              }[type] || [];
+
+                         const subItems = [];
+                         nestedFields.forEach(field => {
+                              if (obj[field]) {
+                                   let content;
+                                   if (field === 'SignerEntries') {
+                                        content = obj[field].map((entry, i) => ({
+                                             key: `Signer ${i + 1}`,
+                                             value: `<code>${entry.SignerEntry.Account}</code> (Weight: ${entry.SignerEntry.SignerWeight})`,
+                                        }));
+                                   } else if (field === 'NFTokens') {
+                                        content = obj[field].map((nft, i) => ({
+                                             key: `NFT ${i + 1}`,
+                                             value: `<code>${nft.NFToken.NFTokenID}</code>`,
+                                        }));
+                                   } else if (field === 'AuthAccounts') {
+                                        content = obj[field].map((acc, i) => ({
+                                             key: `Account ${i + 1}`,
+                                             value: `<code>${acc.AuthAccount.Account}</code>`,
+                                        }));
+                                   } else if (typeof obj[field] === 'object') {
+                                        content = Object.entries(obj[field]).map(([k, v]) => ({
+                                             key: k,
+                                             value: k === 'issuer' || k === 'index' || k === 'Account' ? `<code>${v}</code>` : v,
+                                        }));
+                                   } else {
+                                        content = [{ key: field, value: obj[field] }];
+                                   }
+                                   subItems.push({ key: field, content });
+                              }
+                         });
+
+                         const content = Object.entries(obj)
+                              .filter(([k]) => !nestedFields.includes(k))
+                              .map(([key, value]) => ({
+                                   key,
+                                   value: key.includes('PreviousTxnID') || key.includes('index') || key === 'Account' || key.includes('PublicKey') ? `<code>${value}</code>` : value,
+                              }));
+
+                         return {
+                              type,
+                              id: `${type} ${idx + 1}`,
+                              content,
+                              subItems,
+                         };
+                    })
+                    .sort((a, b) => {
+                         if (a.type === 'RippleState' && b.type !== 'RippleState') return -1;
+                         if (a.type !== 'RippleState' && b.type === 'RippleState') return 1;
+                         return 0;
+                    }),
+          },
+          ledger: {
+               title: 'Ledger Info',
+               content: [
+                    { key: 'Ledger Hash', value: `<code>${accountInfo.ledger_hash}</code>` },
+                    { key: 'Ledger Index', value: accountInfo.ledger_index },
+                    { key: 'Validated', value: accountInfo.validated },
+               ],
+          },
+     };
+
+     // Render sections
+     for (const section of Object.values(sections)) {
+          if (section.content.length || (section.subSections && section.subSections.length)) {
+               const details = document.createElement('details');
+               details.className = 'result-section';
+               // Set open only for Connection Status and Account Data
+               if (section.title === 'Connection Status' || section.title === 'Account Data') {
+                    details.setAttribute('open', 'open');
+               }
+               const summary = document.createElement('summary');
+               summary.textContent = section.title;
+               details.appendChild(summary);
+
+               if (section.content.length) {
+                    const table = document.createElement('div');
+                    table.className = 'result-table';
+                    const header = document.createElement('div');
+                    header.className = 'result-row result-header';
+                    header.innerHTML = `
+                     <div class="result-cell key">Key</div>
+                     <div class="result-cell value">Value</div>
+                 `;
+                    table.appendChild(header);
+
+                    for (const item of section.content) {
+                         const row = document.createElement('div');
+                         row.className = 'result-row';
+                         row.innerHTML = `
+                         <div class="result-cell key">${item.key}</div>
+                         <div class="result-cell value">${item.value}</div>
+                     `;
+                         table.appendChild(row);
+                    }
+                    details.appendChild(table);
+               }
+
+               if (section.subSections) {
+                    for (const obj of section.subSections) {
+                         const objDetails = document.createElement('details');
+                         objDetails.className = 'nested-object';
+                         // Default nested objects to collapsed
+                         const objSummary = document.createElement('summary');
+                         objSummary.textContent = obj.id;
+                         objDetails.appendChild(objSummary);
+
+                         if (obj.content.length) {
+                              const objTable = document.createElement('div');
+                              objTable.className = 'result-table';
+                              const objHeader = document.createElement('div');
+                              objHeader.className = 'result-row result-header';
+                              objHeader.innerHTML = `
+                             <div class="result-cell key">Key</div>
+                             <div class="result-cell value">Value</div>
+                         `;
+                              objTable.appendChild(objHeader);
+
+                              for (const item of obj.content) {
+                                   const row = document.createElement('div');
+                                   row.className = 'result-row';
+                                   row.innerHTML = `
+                                 <div class="result-cell key">${item.key}</div>
+                                 <div class="result-cell value">${item.value}</div>
+                             `;
+                                   objTable.appendChild(row);
+                              }
+                              objDetails.appendChild(objTable);
+                         }
+
+                         for (const subItem of obj.subItems) {
+                              const subDetails = document.createElement('details');
+                              subDetails.className = 'nested-object';
+                              // Default sub-items to collapsed
+                              const subSummary = document.createElement('summary');
+                              subSummary.textContent = subItem.key;
+                              subDetails.appendChild(subSummary);
+
+                              const subTable = document.createElement('div');
+                              subTable.className = 'result-table';
+                              const subHeader = document.createElement('div');
+                              subHeader.className = 'result-row result-header';
+                              subHeader.innerHTML = `
+                             <div class="result-cell key">Key</div>
+                             <div class="result-cell value">Value</div>
+                         `;
+                              subTable.appendChild(subHeader);
+
+                              for (const subContent of subItem.content) {
+                                   const subRow = document.createElement('div');
+                                   subRow.className = 'result-row';
+                                   subRow.innerHTML = `
+                                 <div class="result-cell key">${subContent.key}</div>
+                                 <div class="result-cell value">${subContent.value}</div>
+                             `;
+                                   subTable.appendChild(subRow);
+                              }
+                              subDetails.appendChild(subTable);
+                              objDetails.appendChild(subDetails);
+                         }
+
+                         details.appendChild(objDetails);
+                    }
+               }
+
+               container.appendChild(details);
+          }
+     }
+
+     // Add toggle event listeners for dynamic resizing (unchanged)
+     document.querySelectorAll('.result-section, .nested-object').forEach(details => {
+          details.addEventListener('toggle', () => {
+               container.offsetHeight;
+               container.style.height = 'auto';
+          });
+     });
+
+     searchBar.addEventListener('input', e => {
+          const search = e.target.value.toLowerCase().trim();
+          const sections = document.querySelectorAll('.result-section');
+
+          if (!search) {
+               sections.forEach(section => {
+                    section.style.display = EMPTY_STRING;
+                    section.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    section.querySelectorAll('.nested-object').forEach(nested => {
+                         nested.style.display = EMPTY_STRING;
+                         nested.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    });
+                    const title = section.querySelector('summary').textContent;
+                    if (title === 'Connection Status' || title === 'Account Data') {
+                         section.setAttribute('open', 'open');
+                    } else {
+                         section.removeAttribute('open');
+                    }
+               });
+               return;
+          }
+
+          sections.forEach(section => {
+               let hasVisibleContent = false;
+               const directRows = section.querySelectorAll(':scope > .result-table > .result-row:not(.result-header)');
+               directRows.forEach(row => {
+                    const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                    const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                    const isMatch = keyText.includes(search) || valueText.includes(search);
+                    row.style.display = isMatch ? 'flex' : 'none';
+                    if (isMatch) hasVisibleContent = true;
+               });
+
+               const nestedDetails = section.querySelectorAll('.nested-object');
+               nestedDetails.forEach(nested => {
+                    let nestedHasVisibleContent = false;
+                    const tableRows = nested.querySelectorAll('.result-table > .result-row:not(.result-header)');
+                    tableRows.forEach(row => {
+                         const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                         const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                         const isMatch = keyText.includes(search) || valueText.includes(search);
+                         row.style.display = isMatch ? 'flex' : 'none';
+                         if (isMatch) nestedHasVisibleContent = true;
+                    });
+                    const deeperDetails = nested.querySelectorAll('.nested-object');
+                    deeperDetails.forEach(deeper => {
+                         let deeperHasVisibleContent = false;
+                         const deeperRows = deeper.querySelectorAll('.result-table > .result-row:not(.result-header)');
+                         deeperRows.forEach(row => {
+                              const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                              const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                              const isMatch = keyText.includes(search) || valueText.includes(search);
+                              row.style.display = isMatch ? 'flex' : 'none';
+                              if (isMatch) deeperHasVisibleContent = true;
+                         });
+                         deeper.style.display = deeperHasVisibleContent ? EMPTY_STRING : 'none';
+                         if (deeperHasVisibleContent) nestedHasVisibleContent = true;
+                    });
+                    nested.style.display = nestedHasVisibleContent ? EMPTY_STRING : 'none';
+                    if (nestedHasVisibleContent) hasVisibleContent = true;
+               });
+
+               section.style.display = hasVisibleContent ? EMPTY_STRING : 'none';
+               if (hasVisibleContent) section.setAttribute('open', 'open');
+          });
+     });
+
+     document.querySelectorAll('.result-section').forEach(details => {
+          const title = details.querySelector('summary').textContent;
+          const savedState = localStorage.getItem(`collapse_${title}`);
+          if (savedState === 'closed') details.removeAttribute('open');
+          else if (savedState === 'open' || title === 'Connection Status' || title === 'Account Data') {
+               details.setAttribute('open', 'open');
+          }
+          details.addEventListener('toggle', () => {
+               localStorage.setItem(`collapse_${title}`, details.open ? 'open' : 'closed');
+               container.offsetHeight;
+               container.style.height = 'auto';
+          });
+     });
+}
+
+export function renderTransactionDetails(transactionResponse) {
+     const container = document.getElementById('resultField');
+     if (!container) {
+          console.error('Error: #resultField not found');
+          return;
+     }
+     container.innerHTML = EMPTY_STRING;
+
+     // Add search bar
+     const searchBar = document.createElement('input');
+     searchBar.type = 'text';
+     searchBar.id = 'resultSearch';
+     searchBar.placeholder = 'Search transaction...';
+     searchBar.className = 'result-search';
+     searchBar.style.boxSizing = 'border-box';
+     container.appendChild(searchBar);
+
+     const result = transactionResponse.result;
+
+     // Define nested fields for each transaction type (unchanged)
+     const nestedFieldsByType = {
+          Payment: ['Amount', 'DeliverMax', 'DestinationTag', 'SourceTag', 'InvoiceID'],
+          OfferCreate: ['TakerGets', 'TakerPays'],
+          OfferCancel: [],
+          TrustSet: ['LimitAmount'],
+          AccountSet: ['ClearFlag', 'SetFlag', 'Domain', 'EmailHash', 'MessageKey', 'TransferRate', 'TickSize'],
+          AccountDelete: [],
+          SetRegularKey: ['RegularKey'],
+          SignerListSet: ['SignerEntries'],
+          EscrowCreate: ['Amount', 'Condition', 'DestinationTag', 'SourceTag'],
+          EscrowFinish: ['Condition', 'Fulfillment'],
+          EscrowCancel: [],
+          PaymentChannelCreate: ['Amount', 'DestinationTag', 'SourceTag', 'PublicKey'],
+          PaymentChannelFund: ['Amount'],
+          PaymentChannelClaim: ['Balance', 'Amount', 'Signature', 'PublicKey'],
+          CheckCreate: ['Amount', 'DestinationTag', 'SourceTag', 'InvoiceID'],
+          CheckCash: ['Amount', 'DeliverMin'],
+          CheckCancel: [],
+          DepositPreauth: ['Authorize', 'Unauthorize'],
+          TicketCreate: [],
+          NFTokenMint: ['NFTokenTaxon', 'Issuer', 'TransferFee', 'URI'],
+          NFTokenBurn: [],
+          NFTokenCreateOffer: ['Amount', 'Destination'],
+          NFTokenCancelOffer: ['NFTokenOffers'],
+          NFTokenAcceptOffer: [],
+          AMMCreate: ['Amount', 'Amount2', 'TradingFee'],
+          AMMFund: ['Amount', 'Amount2'],
+          AMMBid: ['BidMin', 'BidMax', 'AuthAccounts'],
+          AMMWithdraw: ['Amount', 'Amount2', 'LPTokenIn'],
+          AMMVote: [],
+          AMMDelete: [],
+          EnableAmendment: [],
+          SetFee: [],
+          UNLModify: [],
+          Clawback: ['Amount'],
+          XChainBridge: ['MinAccountCreateAmount', 'SignatureReward'],
+          XChainCreateClaimId: [],
+          XChainCommit: ['Amount', 'OtherChainDestination'],
+          XChainClaim: [],
+          XChainAccountCreateCommit: ['Amount', 'SignatureReward'],
+          XChainAddAccountCreateAttestation: [],
+          XChainAddClaimAttestation: [],
+          XChainCreateBridge: ['MinAccountCreateAmount', 'SignatureReward'],
+          XChainModifyBridge: ['MinAccountCreateAmount', 'SignatureReward'],
+          DIDSet: ['Data', 'URI', 'Attestation'],
+          DIDDelete: [],
+     };
+
+     // Define sections
+     const sections = {
+          transaction: {
+               title: 'Transaction Details',
+               content: [
+                    { key: 'Transaction Type', value: result.tx_json.TransactionType },
+                    { key: 'Hash', value: `<code>${result.hash}</code>` },
+                    { key: 'CTID', value: result.ctid },
+                    { key: 'Date', value: new Date(result.close_time_iso).toLocaleString() },
+                    { key: 'Result', value: result.meta.TransactionResult },
+               ],
+          },
+          tx_data: {
+               title: 'Transaction Data',
+               content: Object.entries(result.tx_json)
+                    .filter(([key]) => !['TransactionType', 'date', 'ledger_index'].includes(key))
+                    .map(([key, value]) => {
+                         const nestedFields = nestedFieldsByType[result.tx_json.TransactionType] || [];
+                         if (nestedFields.includes(key) && typeof value === 'object') return null;
+                         return {
+                              key,
+                              value: key === 'Account' || key === 'Destination' || key.includes('PubKey') || key.includes('Signature') || key.includes('TxnSignature') ? `<code>${value}</code>` : typeof value === 'string' && value.length > 50 ? `<code>${value.slice(0, 50)}...</code>` : value,
+                         };
+                    })
+                    .filter(item => item),
+               subItems: (nestedFieldsByType[result.tx_json.TransactionType] || [])
+                    .filter(field => result.tx_json[field])
+                    .map(field => {
+                         let content;
+                         if (field === 'SignerEntries') {
+                              content = result.tx_json[field].map((entry, i) => ({
+                                   key: `Signer ${i + 1}`,
+                                   value: `<code>${entry.SignerEntry.Account}</code> (Weight: ${entry.SignerEntry.SignerWeight})`,
+                              }));
+                         } else if (field === 'NFTokenOffers') {
+                              content = result.tx_json[field].map((offer, i) => ({
+                                   key: `Offer ${i + 1}`,
+                                   value: `<code>${offer}</code>`,
+                              }));
+                         } else if (field === 'AuthAccounts') {
+                              content = result.tx_json[field].map((acc, i) => ({
+                                   key: `Account ${i + 1}`,
+                                   value: `<code>${acc.AuthAccount.Account}</code>`,
+                              }));
+                         } else if (typeof result.tx_json[field] === 'object') {
+                              content = Object.entries(result.tx_json[field]).map(([k, v]) => ({
+                                   key: k,
+                                   value: k === 'issuer' || k === 'Account' ? `<code>${v}</code>` : v,
+                              }));
+                         } else {
+                              content = [{ key: field, value: result.tx_json[field] }];
+                         }
+                         return { key: field, content };
+                    }),
+          },
+          meta: {
+               title: 'Meta Data',
+               content: [
+                    { key: 'Transaction Index', value: result.meta.TransactionIndex },
+                    { key: 'Transaction Result', value: result.meta.TransactionResult },
+                    { key: 'Delivered Amount', value: result.meta.delivered_amount ? formatAmount(result.meta.delivered_amount) : 'N/A' },
+               ],
+               subItems: [
+                    {
+                         key: 'Affected Nodes',
+                         content: result.meta.AffectedNodes.map((node, idx) => {
+                              const nodeType = Object.keys(node)[0];
+                              const entry = node[nodeType];
+                              return {
+                                   key: `${nodeType} ${idx + 1}`,
+                                   value: null,
+                                   subContent: [
+                                        { key: 'Ledger Entry Type', value: entry.LedgerEntryType },
+                                        { key: 'Ledger Index', value: `<code>${entry.LedgerIndex}</code>` },
+                                        ...Object.entries(entry.FinalFields || {}).map(([k, v]) => ({
+                                             key: k,
+                                             value: k === 'Account' || k.includes('index') ? `<code>${v}</code>` : formatAmount(v),
+                                        })),
+                                        ...(entry.PreviousFields
+                                             ? [
+                                                    {
+                                                         key: 'Previous Fields',
+                                                         subContent: Object.entries(entry.PreviousFields).map(([k, v]) => ({
+                                                              key: k,
+                                                              value: k === 'Account' || k.includes('index') ? `<code>${v}</code>` : formatAmount(v),
+                                                         })),
+                                                    },
+                                               ]
+                                             : []),
+                                   ],
+                              };
+                         }),
+                    },
+               ],
+          },
+          ledger: {
+               title: 'Ledger Info',
+               content: [
+                    { key: 'Ledger Hash', value: `<code>${result.ledger_hash}</code>` },
+                    { key: 'Ledger Index', value: result.ledger_index },
+                    { key: 'Validated', value: result.validated },
+               ],
+          },
+     };
+
+     // Helper to format amounts (unchanged)
+     function formatAmount(value) {
+          if (typeof value === 'string' && /^\d+$/.test(value)) {
+               return (parseInt(value) / 1_000_000).toFixed(6) + ' XRP';
+          } else if (typeof value === 'object' && value.currency) {
+               return `${value.value} ${value.currency}${value.issuer ? ` (<code>${value.issuer}</code>)` : EMPTY_STRING}`;
+          }
+          return value;
+     }
+
+     // Render sections
+     for (const section of Object.values(sections)) {
+          if (section.content.length || (section.subItems && section.subItems.length)) {
+               const details = document.createElement('details');
+               details.className = 'result-section';
+               if (section.title === 'Transaction Details' || section.title === 'Transaction Data') {
+                    details.setAttribute('open', 'open');
+               }
+               const summary = document.createElement('summary');
+               summary.textContent = section.title;
+               details.appendChild(summary);
+
+               if (section.content.length) {
+                    const table = document.createElement('div');
+                    table.className = 'result-table';
+                    const header = document.createElement('div');
+                    header.className = 'result-row result-header';
+                    header.innerHTML = `
+                     <div class="result-cell key" data-key="Key">Key</div>
+                     <div class="result-cell value" data-key="Value">Value</div>
+                 `;
+                    table.appendChild(header);
+
+                    for (const item of section.content) {
+                         const row = document.createElement('div');
+                         row.className = 'result-row';
+                         row.innerHTML = `
+                         <div class="result-cell key" data-key="Key">${item.key}</div>
+                         <div class="result-cell value" data-key="Value">${item.value}</div>
+                     `;
+                         table.appendChild(row);
+                    }
+                    details.appendChild(table);
+               }
+
+               if (section.subItems) {
+                    for (const subItem of section.subItems) {
+                         const subDetails = document.createElement('details');
+                         subDetails.className = 'nested-object';
+                         const subSummary = document.createElement('summary');
+                         subSummary.textContent = subItem.key;
+                         subDetails.appendChild(subSummary);
+
+                         const subTable = document.createElement('div');
+                         subTable.className = 'result-table';
+                         const subHeader = document.createElement('div');
+                         subHeader.className = 'result-row result-header';
+                         subHeader.innerHTML = `
+                         <div class="result-cell key" data-key="Key">Key</div>
+                         <div class="result-cell value" data-key="Value">Value</div>
+                     `;
+                         subTable.appendChild(subHeader);
+
+                         for (const subContent of subItem.content) {
+                              const subRow = document.createElement('div');
+                              subRow.className = 'result-row';
+                              subRow.innerHTML = `
+                             <div class="result-cell key" data-key="Key">${subContent.key}</div>
+                             <div class="result-cell value" data-key="Value">${subContent.value || EMPTY_STRING}</div>
+                         `;
+                              if (subContent.subContent) {
+                                   const nestedDetails = document.createElement('details');
+                                   nestedDetails.className = 'nested-object';
+                                   const nestedSummary = document.createElement('summary');
+                                   nestedSummary.textContent = subContent.key;
+                                   nestedDetails.appendChild(nestedSummary);
+
+                                   const nestedTable = document.createElement('div');
+                                   nestedTable.className = 'result-table';
+                                   const nestedHeader = document.createElement('div');
+                                   nestedHeader.className = 'result-row result-header';
+                                   nestedHeader.innerHTML = `
+                                 <div class="result-cell key" data-key="Key">Key</div>
+                                 <div class="result-cell value" data-key="Value">Value</div>
+                             `;
+                                   nestedTable.appendChild(nestedHeader);
+
+                                   for (const nestedItem of subContent.subContent) {
+                                        const nestedRow = document.createElement('div');
+                                        nestedRow.className = 'result-row';
+                                        const value = nestedItem.value || EMPTY_STRING;
+                                        nestedRow.innerHTML = `
+                                     <div class="result-cell key" data-key="Key">${nestedItem.key}</div>
+                                     <div class="result-cell value" data-key="Value">${value}</div>
+                                 `;
+                                        nestedTable.appendChild(nestedRow);
+                                   }
+                                   nestedDetails.appendChild(nestedTable);
+                                   subRow.appendChild(nestedDetails);
+                              }
+                              subTable.appendChild(subRow);
+                         }
+                         subDetails.appendChild(subTable);
+                         details.appendChild(subDetails);
+                    }
+               }
+
+               container.appendChild(details);
+          }
+     }
+
+     // Add toggle event listeners
+     document.querySelectorAll('.result-section, .nested-object').forEach(details => {
+          details.addEventListener('toggle', () => {
+               container.offsetHeight;
+               container.style.height = 'auto';
+          });
+     });
+
+     // Updated search functionality
+     searchBar.addEventListener('input', e => {
+          const search = e.target.value.toLowerCase().trim();
+          const sections = document.querySelectorAll('.result-section');
+
+          if (!search) {
+               // Restore default state
+               sections.forEach(section => {
+                    section.style.display = EMPTY_STRING;
+                    section.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    section.querySelectorAll('.nested-object').forEach(nested => {
+                         nested.style.display = EMPTY_STRING;
+                         nested.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    });
+                    const title = section.querySelector('summary').textContent;
+                    if (title === 'Transaction Details' || title === 'Transaction Data') {
+                         section.setAttribute('open', 'open');
+                    } else {
+                         section.removeAttribute('open');
+                    }
+               });
+               return;
+          }
+
+          // Process each top-level section
+          sections.forEach(section => {
+               let hasVisibleContent = false;
+
+               // Check direct rows in section's result-table
+               const directRows = section.querySelectorAll(':scope > .result-table > .result-row:not(.result-header)');
+               directRows.forEach(row => {
+                    const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                    const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                    const isMatch = keyText.includes(search) || valueText.includes(search);
+                    row.style.display = isMatch ? 'flex' : 'none';
+                    if (isMatch) hasVisibleContent = true;
+               });
+
+               // Check nested details
+               const nestedDetails = section.querySelectorAll('.nested-object');
+               nestedDetails.forEach(nested => {
+                    let nestedHasVisibleContent = false;
+                    // Check all rows in all result-tables within this nested detail
+                    const allTableRows = nested.querySelectorAll('.result-table .result-row:not(.result-header)');
+                    allTableRows.forEach(row => {
+                         const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                         const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                         const isMatch = keyText.includes(search) || valueText.includes(search);
+                         row.style.display = isMatch ? 'flex' : 'none';
+                         if (isMatch) nestedHasVisibleContent = true;
+                    });
+                    // Skip top-level row check for nodes like ModifiedNode 1
+                    const topRow = nested.parentElement.closest('.result-row');
+                    if (topRow && nestedHasVisibleContent) {
+                         topRow.style.display = 'flex'; // Ensure parent row is visible
+                    }
+                    nested.style.display = nestedHasVisibleContent ? EMPTY_STRING : 'none';
+                    if (nestedHasVisibleContent) {
+                         nested.setAttribute('open', 'open'); // Expand nested details
+                         hasVisibleContent = true;
+                    }
+               });
+
+               section.style.display = hasVisibleContent ? EMPTY_STRING : 'none';
+               if (hasVisibleContent) section.setAttribute('open', 'open');
+          });
+     });
+}
+
+function stripHTML(text) {
+     const div = document.createElement('div');
+     div.innerHTML = text;
+     return div.textContent || div.innerText || EMPTY_STRING;
+}
