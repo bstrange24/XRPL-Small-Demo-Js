@@ -16,7 +16,6 @@
           <form id="theForm">
                <div id="wallet-issuer-input-container"></div>
 
-               <p></p>
                <fieldset style="padding: 20px">
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
@@ -226,114 +225,68 @@
           fetch('wallet-issuer-input.html')
                .then(res => res.text())
                .then(html => {
-                    document.getElementById('wallet-issuer-input-container').innerHTML = html;
-
-                    function hideAllGenerateNewWalletButtons() {
-                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
-                         generateButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
-                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
-                         generateMnemonicButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
-                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
-                         generateNewWalletSecretButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
+                    const container = document.getElementById('wallet-issuer-input-container');
+                    if (!container) {
+                         console.error('Error: #wallet-input-container not found');
+                         return;
                     }
+                    container.innerHTML = html;
 
-                    function showAllGenerateNewWalletButtons() {
-                         const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"]');
-                         generateButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                         const generateMnemonicButtons = document.querySelectorAll('[id^="generateNewWalletMnemonic_"]');
-                         generateMnemonicButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                         const generateNewWalletSecretButtons = document.querySelectorAll('[id^="generateNewWalletSecret_"]');
-                         generateNewWalletSecretButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                    }
+                    // Wait for DOM update
+                    setTimeout(() => {
+                         function hideAllGenerateNewWalletButtons() {
+                              const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"], [id^="generateNewWalletMnemonic_"], [id^="generateNewWalletSecret_"]');
+                              generateButtons.forEach(button => (button.style.display = 'none'));
+                              const generateContainers = document.querySelectorAll('#generateButtons1, #generateButtons2, #generateButtons3');
+                              generateContainers.forEach(container => (container.style.display = 'none'));
+                         }
 
-                    function hideAllDeriveWalletButtons() {
-                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
-                         derivederiveWalletSeedButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
-                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
-                         deriveWalletMnemonicButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
-                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
-                         deriveWalletSecretButtons.forEach(button => {
-                              button.style.display = 'none';
-                         });
-                    }
+                         function showAllGenerateNewWalletButtons() {
+                              const generateButtons = document.querySelectorAll('[id^="generateNewWallet_"], [id^="generateNewWalletMnemonic_"], [id^="generateNewWalletSecret_"]');
+                              generateButtons.forEach(button => (button.style.display = 'flex'));
+                              const generateContainers = document.querySelectorAll('#generateButtons1, #generateButtons2, #generateButtons3');
+                              generateContainers.forEach(container => (container.style.display = 'flex'));
+                         }
 
-                    function showAllDeriveWalletButtons() {
-                         const derivederiveWalletSeedButtons = document.querySelectorAll('[id^="deriveWalletSeed_"]');
-                         derivederiveWalletSeedButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                         const deriveWalletMnemonicButtons = document.querySelectorAll('[id^="deriveWalletMnemonic_"]');
-                         deriveWalletMnemonicButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                         const deriveWalletSecretButtons = document.querySelectorAll('[id^="deriveWalletSecret_"]');
-                         deriveWalletSecretButtons.forEach(button => {
-                              button.style.display = 'inline-block';
-                         });
-                    }
+                         function hideAllDeriveWalletButtons() {
+                              const deriveButtons = document.querySelectorAll('[id^="deriveWalletSeed_"], [id^="deriveWalletMnemonic_"], [id^="deriveWalletSecret_"]');
+                              deriveButtons.forEach(button => (button.style.display = 'none'));
+                              const deriveContainers = document.querySelectorAll('#deriveButtons1, #deriveButtons2, #deriveButtons3');
+                              deriveContainers.forEach(container => (container.style.display = 'none'));
+                         }
 
-                    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-                    let pageLoad = 'Y';
-                    checkboxes.forEach(checkbox => {
-                         checkbox.addEventListener('change', function () {
-                              pageLoad = 'N';
-                              if (this.checked) {
-                                   // Checkbox was checked
-                                   if (this.value === 'Y') {
-                                        // Hide derive wallet buttons
-                                        hideAllDeriveWalletButtons();
-                                        showAllGenerateNewWalletButtons();
-                                   } else if (this.value === 'N') {
-                                        // Hide create wallet buttons
-                                        hideAllGenerateNewWalletButtons();
-                                        showAllDeriveWalletButtons();
-                                   }
+                         function showAllDeriveWalletButtons() {
+                              const deriveButtons = document.querySelectorAll('[id^="deriveWalletSeed_"], [id^="deriveWalletMnemonic_"], [id^="deriveWalletSecret_"]');
+                              console.log('Derive buttons found:', deriveButtons.length);
+                              deriveButtons.forEach(button => (button.style.display = 'flex'));
+                              const deriveContainers = document.querySelectorAll('#deriveButtons1, #deriveButtons2, #deriveButtons3');
+                              deriveContainers.forEach(container => (container.style.display = 'flex'));
+                         }
+
+                         const createWalletCheckbox = document.getElementById('createWallet');
+                         if (!createWalletCheckbox) {
+                              console.error('Error: #createWallet checkbox not found');
+                              return;
+                         }
+
+                         function updateButtonDisplay() {
+                              const isChecked = createWalletCheckbox.checked;
+                              console.log('Checkbox state:', isChecked ? 'Checked (show generate)' : 'Unchecked (show derive)');
+                              if (isChecked) {
+                                   showAllGenerateNewWalletButtons();
+                                   hideAllDeriveWalletButtons();
                               } else {
-                                   // Checkbox was unchecked
-                                   console.log(`${this.value} was unchecked`);
                                    hideAllGenerateNewWalletButtons();
                                    showAllDeriveWalletButtons();
-                                   // Optionally handle unchecking
-                              }
-                         });
-                    });
-
-                    if (pageLoad === 'Y') {
-                         for (const checkbox of checkboxes) {
-                              const isChecked = checkbox.checked; // true if checked, false if not
-                              const checkboxValue = checkbox.value; // e.g., "account1" or "account2"
-                              console.log(`Checkbox for ${checkboxValue}: ${isChecked ? 'Checked' : 'Not Checked'}`);
-
-                              // Optionally, perform actions based on the checked state
-                              if (isChecked) {
-                                   if (checkboxValue === 'Y') {
-                                        hideAllDeriveWalletButtons();
-                                   } else if (checkboxValue === 'N') {
-                                        console.log('Account 2 checkbox is checked, calling populate2()');
-                                        populate2();
-                                   }
                               }
                          }
-                    }
+
+                         updateButtonDisplay();
+                         createWalletCheckbox.addEventListener('change', updateButtonDisplay);
+                    }, 0);
                })
                .catch(error => {
-                    console.error('Error loading wallet-issuer-input.html:', error);
+                    console.error('Error loading wallet-input.html:', error);
                });
 
           const textarea = document.getElementById('resultField');

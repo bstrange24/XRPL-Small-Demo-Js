@@ -35,13 +35,13 @@ tr.buttons td {
      gap: 10px;
 }
 
-input[type="text"] {
+/* input[type="text"] {
      background-color: #1a1c21;
      color: #fff;
      border-radius: 10px;
      border: 1px solid white;
      padding: 4px;
-}
+} */
 
 /* input[type="checkbox"] .createWallet {
   background-color: red;
@@ -400,4 +400,445 @@ summary {
      line-height: 1.5;
      /* Optional: Ensure text is vertically centered */
      color: #4CAF50;
+}
+
+/* Wallet Info Section */
+.wallet-info {
+     margin: 20px 0;
+}
+
+summary {
+     color: white;
+     font-weight: bold;
+     font-size: 14px;
+     cursor: pointer;
+     padding: 10px;
+     background: #2a2c31;
+     border-radius: 10px;
+}
+
+.wallet-fieldset {
+     border: 1px solid #686868;
+     border-radius: 10px;
+     padding: 20px;
+     background: #1a1c21;
+}
+
+.wallet-container {
+     display: flex;
+     flex-direction: column;
+     gap: 20px;
+}
+
+.wallet-controls {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     padding: 10px 0;
+}
+
+.account-section {
+     display: flex;
+     justify-content: space-between;
+     gap: 30px;
+}
+
+.account-group h4 {
+     color: white;
+     font-size: 14px;
+     margin: 0;
+     border-bottom: 1px solid #4caf50;
+     padding-bottom: 5px;
+}
+
+.wallet-buttons {
+     display: flex;
+     flex-wrap: wrap;
+     gap: 10px;
+}
+
+.wallet-buttons button {
+     padding: 8px 12px;
+     background: #2a2c31;
+     color: white;
+     border: 1px solid #686868;
+     border-radius: 10px;
+     cursor: pointer;
+     transition: background 0.3s ease, transform 0.1s ease;
+}
+
+.wallet-buttons button:hover {
+     background: #3a3c41;
+     transform: translateY(-1px);
+}
+
+.account-inputs {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+}
+
+.field-group {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+}
+
+.label_account {
+     width: 150px;
+     color: white;
+     padding: 4px;
+     text-align: right;
+}
+
+#account1name,
+#account2name,
+#account1address,
+#account2address,
+#account1seed,
+#account2seed,
+/* #account1mnemonic, */
+/* #account2mnemonic, */
+#account1secretNumbers,
+#account2secretNumbers {
+     max-width: 450px;
+     /* Cap width at 200px */
+     flex: 1;
+     /* Allow shrinking */
+     min-width: 150px;
+     /* Ensure minimum usability */
+}
+
+/* Ensure responsive behavior */
+@media (max-width: 768px) {
+
+     #account1name,
+     #account2name,
+     #account1address,
+     #account2address,
+     #account1seed,
+     #account2seed,
+     /* #account1mnemonic, */
+     /* #account2mnemonic, */
+     #account1secretNumbers,
+     #account2secretNumbers {
+          width: 100%;
+          /* Full width on mobile */
+          max-width: none;
+          /* Remove cap on mobile */
+     }
+}
+
+#account1mnemonic,
+#account2mnemonic,
+#issuerMnemonic {
+     max-width: 450px;
+     /* Same width as before */
+     flex: 1;
+     /* Allow shrinking */
+     min-width: 150px;
+     /* Prevent excessive shrinking */
+     background: #1a1c21;
+     /* Match input */
+     color: white;
+     border: 1px solid white;
+     border-radius: 8px;
+     padding: 6px;
+     /* Match input */
+     font-size: 12px;
+     /* Match input */
+     font-family: "Work Sans", sans-serif;
+     /* Match body font */
+     resize: vertical;
+     /* Allow vertical resize */
+     height: 60px;
+     /* Mimic single-line input height */
+     line-height: 1.4;
+     /* Ensure text readability */
+     white-space: normal;
+     /* Allow text to wrap */
+     overflow-wrap: break-word;
+     /* Wrap long words */
+     transition: border-color 0.3s ease;
+}
+
+/* Ensure responsive behavior */
+@media (max-width: 768px) {
+
+     #account1mnemonic,
+     #account2mnemonic,
+     #issuerMnemonic {
+          width: 100%;
+          /* Full width on mobile */
+          max-width: none;
+          /* Remove cap on mobile */
+     }
+}
+
+#account1mnemonic:focus {
+     border-color: #4CAF50;
+     outline: none;
+}
+
+#account2mnemonic:focus {
+     border-color: #4CAF50;
+     outline: none;
+}
+
+#issuerMnemonic:focus {
+     border-color: #4CAF50;
+     outline: none;
+}
+
+input[type="text"] {
+     flex: 1;
+     background: #1a1c21;
+     color: white;
+     border: 1px solid white;
+     border-radius: 10px;
+     padding: 6px;
+     font-size: 12px;
+     transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus {
+     border-color: #4CAF50;
+     outline: none;
+}
+
+/* Checkbox Toggle */
+.switch {
+     position: relative;
+     display: inline-block;
+     width: 30px;
+     height: 12px;
+}
+
+.switch input {
+     opacity: 0;
+     width: 0;
+     height: 0;
+}
+
+.slider {
+     position: absolute;
+     cursor: pointer;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: #686868;
+     /* transition: background 0.3s ease, transform 0.3s ease; */
+     transition: background 0.3s ease;
+     /* border-radius: 10px; */
+     border-radius: 7.5px;
+}
+
+.slider:before {
+     position: absolute;
+     content: "";
+     height: 16px;
+     width: 16px;
+     left: 2px;
+     bottom: 2px;
+     background: white;
+     transition: transform 0.3s ease;
+     border-radius: 50%;
+}
+
+input:checked+.slider {
+     background: #4CAF50;
+}
+
+input:checked+.slider:before {
+     transform: translateX(20px);
+}
+
+input:focus+.slider {
+     box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+/* Tooltip (keep existing, but ensure smooth transitions) */
+.tooltip:before,
+.tooltip:after {
+     transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.account-flag-info {
+     margin: 20px 0;
+     border-radius: 10px;
+     overflow: hidden;
+}
+
+.account-flag-info summary {
+     color: white;
+     font-weight: bold;
+     font-size: 14px;
+     padding: 10px;
+     cursor: pointer;
+     transition: background 0.3s ease;
+}
+
+.account-flag-info summary:hover {
+     background: #3a3c41;
+}
+
+.account-flag-info summary::marker {
+     content: '▶ ';
+}
+
+.account-flag-info[open] summary::marker {
+     content: '▼ ';
+}
+
+.flag-fieldset {
+     border: 1px solid #686868;
+     border-radius: 10px;
+     padding: 20px;
+     background: #1a1c21;
+     margin: 0;
+}
+
+.flag-fieldset legend {
+     color: white;
+     font-size: 14px;
+     padding: 0 10px;
+     font-weight: bold;
+}
+
+.flag-table {
+     display: flex;
+     flex-direction: column;
+     gap: 2px;
+     background: #2a2c31;
+     border-radius: 8px;
+     overflow: hidden;
+}
+
+.flag-row {
+     display: flex;
+     width: 100%;
+     transition: background 0.3s ease;
+}
+
+.flag-row:hover:not(.flag-header) {
+     background: #3a3c41;
+}
+
+.flag-header {
+     font-weight: bold;
+     background: #1a1c21;
+     color: #4CAF50;
+}
+
+.flag-cell {
+     flex: 1;
+     padding: 12px;
+     color: white;
+     font-size: 13px;
+     text-align: left;
+     border-bottom: 1px solid #686868;
+}
+
+.flag-header .flag-cell {
+     border-bottom: 2px solid #4CAF50;
+     /* Thicker header underline */
+}
+
+/* Specific column widths for better readability */
+.flag-cell:nth-child(1) {
+     flex: 1.5;
+}
+
+/* Flag: Slightly wider */
+.flag-cell:nth-child(2) {
+     flex: 2.5;
+}
+
+/* Purpose: Widest */
+.flag-cell:nth-child(3) {
+     flex: 1;
+}
+
+/* Set Once?: Narrow */
+.flag-cell:nth-child(4) {
+     flex: 1.5;
+}
+
+/* Mutually Exclusive: Medium */
+.flag-cell:nth-child(5) {
+     flex: 2;
+}
+
+.account-group {
+     flex: 1;
+     min-width: 300px;
+     display: flex;
+     flex-direction: column;
+     gap: 15px;
+     padding: 15px;
+     border-radius: 10px;
+}
+
+.account-group h3 {
+     color: white;
+     font-size: 16px;
+     margin: 0;
+     border-bottom: 1px solid #4caf50;
+     padding-bottom: 5px;
+}
+
+/* Notes: Wide */
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+     .flag-table {
+          display: block;
+          /* Stack rows */
+     }
+
+     .flag-row {
+          flex-direction: column;
+          border-bottom: 1px solid #686868;
+          margin-bottom: 10px;
+     }
+
+     .flag-cell {
+          flex: none;
+          padding: 8px;
+          border-bottom: none;
+     }
+
+     .flag-header .flag-cell {
+          border-bottom: none;
+     }
+
+     /* Add labels for mobile */
+     .flag-cell::before {
+          content: attr(data-label);
+          font-weight: bold;
+          display: inline-block;
+          width: 120px;
+          color: #4CAF50;
+     }
+
+     .flag-cell:nth-child(1)::before {
+          content: "Flag: ";
+     }
+
+     .flag-cell:nth-child(2)::before {
+          content: "Purpose: ";
+     }
+
+     .flag-cell:nth-child(3)::before {
+          content: "Set Once?: ";
+     }
+
+     .flag-cell:nth-child(4)::before {
+          content: "Mutually Exclusive: ";
+     }
+
+     .flag-cell:nth-child(5)::before {
+          content: "Notes: ";
+     }
 }
