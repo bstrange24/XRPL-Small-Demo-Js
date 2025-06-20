@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
 import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, renderTransactionDetails } from './utils.js';
-import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { getAccountDetails, fetchAccountObjects } from './account.js';
 import { derive } from 'xrpl-accountlib';
 
@@ -9,8 +9,13 @@ async function sendXRP() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+
      resultField?.classList.remove('error', 'success');
-     resultField.innerHTML = ''; // Clear content
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -30,12 +35,11 @@ async function sendXRP() {
           multiSignAddress: document.getElementById('multiSignAddress'),
      };
 
-     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
           if (!field) {
                return setError(`ERROR: DOM element ${name} not found`, spinner);
           } else {
-               field.value = field.value.trim(); // Trim whitespace
+               field.value = field.value.trim();
           }
      }
 
@@ -106,7 +110,7 @@ async function sendXRP() {
                          Account: wallet.classicAddress,
                          Destination: destination.value,
                          Amount: xrpl.xrpToDrops(amount.value),
-                         SigningPubKey: '', // required for multisign
+                         SigningPubKey: EMPTY_STRING, // required for multisign
                          Sequence: account_data.result.account_data.Sequence,
                     };
 
@@ -162,8 +166,6 @@ async function sendXRP() {
                     }
 
                     resultField.innerHTML += `XRP payment finished successfully.\n\n`;
-                    // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-                    // resultField.value += parseXRPLTransaction(response.result);
                     renderTransactionDetails(response);
                     resultField.classList.add('success');
                } else {
@@ -208,8 +210,6 @@ async function sendXRP() {
                }
 
                resultField.innerHTML += `XRP payment finished successfully.\n\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
                renderTransactionDetails(response);
                resultField.classList.add('success');
           }
@@ -221,7 +221,6 @@ async function sendXRP() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving sendXRP in ${now}ms`);
@@ -231,8 +230,8 @@ async function sendXRP() {
 export async function displayDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account1secretNumbers.value;
           } else {
                accountSeedField.value = account1mnemonic.value;
@@ -246,8 +245,8 @@ export async function displayDataForAccount1() {
 export async function displayDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     if (account2seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account2seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account2secretNumbers.value;
           } else {
                accountSeedField.value = account2mnemonic.value;

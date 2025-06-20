@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput } from './utils.js';
-import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { getClient, getNet, disconnectClient, validatInput, setError, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, renderPaymentChannelDetails, renderTransactionDetails } from './utils.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { sign } from 'ripple-keypairs';
 import { derive } from 'xrpl-accountlib';
 
@@ -9,7 +9,12 @@ export async function getPaymentChannels() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -22,18 +27,16 @@ export async function getPaymentChannels() {
           totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
-     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
           if (!field) {
                return setError(`ERROR: DOM element ${name} not found`, spinner);
           } else {
-               field.value = field.value.trim(); // Trim whitespace
+               field.value = field.value.trim();
           }
      }
 
      const { seed, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
-     // Validate user inputs
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
 
      for (const [condition, message] of validations) {
@@ -54,11 +57,6 @@ export async function getPaymentChannels() {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          resultField.value = `Connected to ${environment} ${net}\n`;
-          resultField.value += `\nGetting Payment Channels\n`;
-
           const response = await client.request({
                command: 'account_objects',
                account: wallet.classicAddress,
@@ -68,35 +66,42 @@ export async function getPaymentChannels() {
 
           const channels = response.result.account_objects;
 
+          const data = {
+               sections: [{}],
+          };
+
           if (!channels || channels.length === 0) {
-               resultField.value += `\nNo payment channels found for ${wallet.classicAddress}`;
-               resultField.classList.add('success');
-               await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
-               xrpBalanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
-               return;
+               data.sections.push({
+                    title: 'Payment Channels',
+                    openByDefault: true,
+                    content: [{ key: 'Status', value: `No payment channels found for <code>${wallet.classicAddress}</code>` }],
+               });
+          } else {
+               data.sections.push({
+                    title: `Payment Channels (${channels.length})`,
+                    openByDefault: true,
+                    subItems: channels.map((channel, index) => {
+                         const { index: channelId, Destination, Amount, Balance, SettleDelay, PublicKey, Expiration } = channel;
+                         const available = xrpl.dropsToXrp(BigInt(Amount) - BigInt(Balance));
+                         return {
+                              key: `Channel ${index + 1} (ID: ${channelId.slice(0, 8)}...)`,
+                              openByDefault: false,
+                              content: [
+                                   { key: 'Channel ID', value: `<code>${channelId}</code>` },
+                                   { key: 'Destination', value: `<code>${Destination}</code>` },
+                                   { key: 'Total Amount', value: `${xrpl.dropsToXrp(Amount)} XRP` },
+                                   { key: 'Claimed Balance', value: `${xrpl.dropsToXrp(Balance)} XRP` },
+                                   { key: 'Remaining', value: `${available} XRP` },
+                                   { key: 'Settle Delay', value: `${SettleDelay}s` },
+                                   ...(Expiration ? [{ key: 'Expiration', value: new Date(Expiration * 1000).toLocaleString() }] : []),
+                                   { key: 'Public Key', value: `<code>${PublicKey}</code>` },
+                              ],
+                         };
+                    }),
+               });
           }
 
-          let output = `Payment Channels for ${wallet.classicAddress}:\n\n`;
-          for (const channel of channels) {
-               const { index, Destination, Amount, Balance, SettleDelay, PublicKey, Expiration } = channel;
-
-               const available = xrpl.dropsToXrp(BigInt(Amount) - BigInt(Balance));
-
-               output += `Channel ID: ${index}\n`;
-               output += `Destination: ${Destination}\n`;
-               output += `Total Amount: ${xrpl.dropsToXrp(Amount)} XRP\n`;
-               output += `Claimed Balance: ${xrpl.dropsToXrp(Balance)} XRP\n`;
-               output += `Remaining: ${available} XRP\n`;
-               output += `Settle Delay: ${SettleDelay}s\n`;
-               if (Expiration) {
-                    const expirationDate = new Date(Expiration * 1000).toLocaleString();
-                    output += `Expiration: ${expirationDate}\n`;
-               }
-               output += '\n';
-          }
-
-          resultField.value += output;
-          resultField.classList.add('success');
+          renderPaymentChannelDetails(data);
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
           xrpBalanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
@@ -105,7 +110,6 @@ export async function getPaymentChannels() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving getPaymentChannels in ${now}ms`);
@@ -118,6 +122,7 @@ export async function handlePaymentChannelAction() {
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -135,18 +140,16 @@ export async function handlePaymentChannelAction() {
           totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
-     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
           if (!field) {
                return setError(`ERROR: DOM element ${name} not found`, spinner);
           } else {
-               field.value = field.value.trim(); // Trim whitespace
+               field.value = field.value.trim();
           }
      }
 
      const { seed, destinationField, amount, channelIDField, settleDelayField, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
-     // Validate user inputs
      const validations = [[!validatInput(seed.value), 'Seed cannot be empty']];
 
      for (const [condition, message] of validations) {
@@ -169,19 +172,18 @@ export async function handlePaymentChannelAction() {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           if (!validatInput(settleDelayField.value)) {
                settleDelayField.value = 60;
           }
 
-          resultField.value = `Connected to ${environment} ${net}\n`;
+          if (amount.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
+               return setError('ERROR: Insufficent XRP to complete transaction', spinner);
+          }
+
+          resultField.innerHTML = `Connected to ${environment} ${net}\n`;
 
           if (action === 'create') {
-               resultField.value += `\nCreating Payment Channel\n`;
-
-               if (amount.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
-                    return setError('ERROR: Insufficent XRP to complete transaction', spinner);
-               }
+               resultField.innerHTML += `\nCreating Payment Channel\n`;
 
                const tx = await client.autofill({
                     TransactionType: 'PaymentChannelCreate',
@@ -200,9 +202,10 @@ export async function handlePaymentChannelAction() {
                const channelID = response.result.hash;
                resultField.value += `\nPayment channel created successfully.\n\n`;
                resultField.value += `Channel created with ID: ${channelID}\n`;
-               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               resultField.value += parseXRPLTransaction(response.result);
+               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               // resultField.value += parseXRPLTransaction(response.result);
 
+               renderTransactionDetails(response);
                resultField.classList.add('success');
           } else if (action === 'fund') {
                if (!validatInput(channelIDField.value)) {
@@ -229,10 +232,11 @@ export async function handlePaymentChannelAction() {
                     return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
                }
 
-               resultField.value += `Payment channel ${channelIDField.value} funded successfully.\n\n`;
-               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               resultField.value += parseXRPLTransaction(response.result);
+               resultField.innerHTML += `Payment channel ${channelIDField.value} funded successfully.\n\n`;
+               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               // resultField.value += parseXRPLTransaction(response.result);
 
+               renderTransactionDetails(response);
                resultField.classList.add('success');
           } else if (action === 'claim') {
                if (!validatInput(channelIDField.value)) {
@@ -241,7 +245,7 @@ export async function handlePaymentChannelAction() {
                if (isNaN(amount.value) || parseFloat(amount.value) <= 0) {
                     return setError('Amount must be a valid number and greater than 0', spinner);
                }
-               resultField.value += `Claiming Payment Channel\n\n`;
+               resultField.innerHTML += `Claiming Payment Channel\n\n`;
                const balanceDrops = xrpl.xrpToDrops(amount.value);
 
                // let signature;
@@ -266,16 +270,17 @@ export async function handlePaymentChannelAction() {
                     return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
                }
 
-               resultField.value += `Payment channel claimed successfully.\n\n`;
-               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               resultField.value += parseXRPLTransaction(response.result);
+               resultField.innerHTML += `Payment channel claimed successfully.\n\n`;
+               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               // resultField.value += parseXRPLTransaction(response.result);
 
+               renderTransactionDetails(response);
                resultField.classList.add('success');
           } else if (action === 'close') {
                if (!validatInput(channelIDField.value)) {
                     return setError('Channel ID cannot be empty', spinner);
                }
-               resultField.value += `Closing Payment Channel\n\n`;
+               resultField.innerHTML += `Closing Payment Channel\n\n`;
                const tx = await client.autofill({
                     TransactionType: 'PaymentChannelClaim',
                     Account: wallet.classicAddress,
@@ -288,9 +293,11 @@ export async function handlePaymentChannelAction() {
                     return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
                }
 
-               resultField.value += `Payment channel closed successfully.\n\n`;
-               resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               resultField.value += parseXRPLTransaction(response.result);
+               resultField.innerHTML += `Payment channel closed successfully.\n\n`;
+               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
+               // resultField.value += parseXRPLTransaction(response.result);
+
+               renderTransactionDetails(response);
                resultField.classList.add('success');
           }
 
@@ -301,7 +308,6 @@ export async function handlePaymentChannelAction() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving handlePaymentChannelAction in ${now}ms`);
@@ -358,18 +364,16 @@ export function generateChannelSignatureForUI() {
           totalExecutionTime: document.getElementById('totalExecutionTime'),
      };
 
-     // DOM existence check
      for (const [name, field] of Object.entries(fields)) {
           if (!field) {
                return setError(`ERROR: DOM element ${name} not found`, spinner);
           } else {
-               field.value = field.value.trim(); // Trim whitespace
+               field.value = field.value.trim();
           }
      }
 
      const { seed, destinationField, amount, channelIDField, channelClaimSignature, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
-     // Validate user inputs
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],
           [!validatInput(amount.value), 'Amount value cannot be empty'],
@@ -394,8 +398,6 @@ export function generateChannelSignatureForUI() {
           } else {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
-
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           const amountDrops = xrpl.xrpToDrops(amount.value);
           if (isNaN(amountDrops)) {
@@ -422,7 +424,6 @@ export function generateChannelSignatureForUI() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving handlePaymentChannelAction in ${now}ms`);
@@ -432,8 +433,8 @@ export function generateChannelSignatureForUI() {
 export async function displayPaymentChannelsForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account1secretNumbers.value;
           } else {
                accountSeedField.value = account1mnemonic.value;
@@ -441,15 +442,14 @@ export async function displayPaymentChannelsForAccount1() {
      } else {
           accountSeedField.value = account1seed.value;
      }
-     // accountSeedField.value = account1seed.value;
      await getPaymentChannels();
 }
 
 export async function displayPaymentChannelsForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     if (account2seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account2seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account2secretNumbers.value;
           } else {
                accountSeedField.value = account2mnemonic.value;
@@ -457,7 +457,6 @@ export async function displayPaymentChannelsForAccount2() {
      } else {
           accountSeedField.value = account2seed.value;
      }
-     // accountSeedField.value = account2seed.value;
      await getPaymentChannels();
 }
 
@@ -466,7 +465,6 @@ window.handlePaymentChannelAction = handlePaymentChannelAction;
 window.generateChannelSignatureForUI = generateChannelSignatureForUI;
 window.displayPaymentChannelsForAccount1 = displayPaymentChannelsForAccount1;
 window.displayPaymentChannelsForAccount2 = displayPaymentChannelsForAccount2;
-window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;

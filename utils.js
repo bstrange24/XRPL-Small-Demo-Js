@@ -2041,6 +2041,168 @@ export function renderAccountDetails(accountInfo, accountObjects) {
      });
 }
 
+export function renderPaymentChannelDetails(data) {
+     const container = document.getElementById('resultField');
+     if (!container) {
+          console.error('Error: #resultField not found');
+          return;
+     }
+     container.classList.remove('error', 'success');
+     container.innerHTML = '';
+
+     // Add search bar
+     const searchBar = document.createElement('input');
+     searchBar.type = 'text';
+     searchBar.id = 'resultSearch';
+     searchBar.placeholder = 'Search results...';
+     searchBar.className = 'result-search';
+     searchBar.style.boxSizing = 'border-box';
+     container.appendChild(searchBar);
+
+     // Render sections
+     for (const section of data.sections) {
+          if (!section.content && !section.subItems) continue;
+
+          const details = document.createElement('details');
+          details.className = 'result-section';
+          if (section.openByDefault) {
+               details.setAttribute('open', 'open');
+          }
+          const summary = document.createElement('summary');
+          summary.textContent = section.title;
+          details.appendChild(summary);
+
+          // Render direct content (e.g., Network in Connection Status)
+          if (section.content && section.content.length) {
+               const table = document.createElement('div');
+               table.className = 'result-table';
+               const header = document.createElement('div');
+               header.className = 'result-row result-header';
+               header.innerHTML = `
+                 <div class="result-cell key" data-key="Key">Key</div>
+                 <div class="result-cell value" data-key="Value">Value</div>
+             `;
+               table.appendChild(header);
+
+               for (const item of section.content) {
+                    const row = document.createElement('div');
+                    row.className = 'result-row';
+                    row.innerHTML = `
+                     <div class="result-cell key" data-key="Key">${item.key}</div>
+                     <div class="result-cell value" data-key="Value">${item.value}</div>
+                 `;
+                    table.appendChild(row);
+               }
+               details.appendChild(table);
+          }
+
+          // Render nested sub-items (e.g., Channels)
+          if (section.subItems && section.subItems.length) {
+               for (const subItem of section.subItems) {
+                    const subDetails = document.createElement('details');
+                    subDetails.className = 'nested-object';
+                    if (subItem.openByDefault) {
+                         subDetails.setAttribute('open', 'open');
+                    }
+                    const subSummary = document.createElement('summary');
+                    subSummary.textContent = subItem.key;
+                    subDetails.appendChild(subSummary);
+
+                    const subTable = document.createElement('div');
+                    subTable.className = 'result-table';
+                    const subHeader = document.createElement('div');
+                    subHeader.className = 'result-row result-header';
+                    subHeader.innerHTML = `
+                     <div class="result-cell key" data-key="Key">Key</div>
+                     <div class="result-cell value" data-key="Value">Value}</div>
+                 `;
+                    subTable.appendChild(subHeader);
+
+                    for (const subContent of subItem.content) {
+                         const subRow = document.createElement('div');
+                         subRow.className = 'result-row';
+                         subRow.innerHTML = `
+                         <div class="result-cell key" data-key="Key">${subContent.key}</div>
+                         <div class="result-cell value" data-key="Value">${subContent.value || ''}</div>
+                     `;
+                         subTable.appendChild(subRow);
+                    }
+                    subDetails.appendChild(subTable);
+                    details.appendChild(subDetails);
+               }
+          }
+
+          container.appendChild(details);
+     }
+
+     // Add search functionality
+     searchBar.addEventListener('input', e => {
+          const search = e.target.value.toLowerCase().trim();
+          const sections = container.querySelectorAll('.result-section');
+
+          if (!search) {
+               sections.forEach(section => {
+                    section.style.display = '';
+                    section.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    section.querySelectorAll('.nested-object').forEach(nested => {
+                         nested.style.display = 'block';
+                         nested.querySelectorAll('.result-row').forEach(row => (row.style.display = 'flex'));
+                    });
+                    const title = section.querySelector('summary').textContent;
+                    if (data.sections.find(s => s.title === title && s.openByDefault)) {
+                         section.setAttribute('open', 'open');
+                    } else {
+                         section.removeAttribute('open');
+                    }
+               });
+               return;
+          }
+
+          sections.forEach(section => {
+               let hasVisibleContent = false;
+               const directRows = section.querySelectorAll(':scope > .result-table > .result-row:not(.result-header)');
+               directRows.forEach(row => {
+                    const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                    const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                    const isMatch = keyText.includes(search) || valueText.includes(search);
+                    row.style.display = isMatch ? 'flex' : 'none';
+                    if (isMatch) hasVisibleContent = true;
+               });
+
+               const nestedDetails = section.querySelectorAll('.nested-object');
+               nestedDetails.forEach(nested => {
+                    let nestedHasVisibleContent = false;
+                    const allTableRows = nested.querySelectorAll('.result-table .result-row:not(.result-header)');
+                    allTableRows.forEach(row => {
+                         const keyText = stripHTML(row.querySelector('.key').innerHTML).toLowerCase();
+                         const valueText = stripHTML(row.querySelector('.value').innerHTML).toLowerCase();
+                         const isMatch = keyText.includes(search) || valueText.includes(search);
+                         row.style.display = isMatch ? 'flex' : 'none';
+                         if (isMatch) nestedHasVisibleContent = true;
+                    });
+                    nested.style.display = nestedHasVisibleContent ? 'block' : 'none';
+                    if (nestedHasVisibleContent) {
+                         nested.setAttribute('open', 'open');
+                         hasVisibleContent = true;
+                    }
+               });
+
+               section.style.display = hasVisibleContent ? 'block' : 'none';
+               if (hasVisibleContent) section.setAttribute('open', 'open');
+          });
+     });
+
+     // Add toggle listeners for dynamic resizing
+     container.querySelectorAll('.result-section, .nested-object').forEach(details => {
+          details.addEventListener('toggle', () => {
+               container.offsetHeight;
+               container.style.height = 'auto';
+          });
+     });
+
+     container.classList.add('success');
+}
+
 export function renderTransactionDetails(transactionResponse) {
      const container = document.getElementById('resultField');
      if (!container) {
