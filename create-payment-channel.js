@@ -121,6 +121,10 @@ export async function handlePaymentChannelAction() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
      resultField?.classList.remove('error', 'success');
      resultField.innerHTML = EMPTY_STRING;
 
@@ -200,10 +204,8 @@ export async function handlePaymentChannelAction() {
                }
 
                const channelID = response.result.hash;
-               resultField.value += `\nPayment channel created successfully.\n\n`;
-               resultField.value += `Channel created with ID: ${channelID}\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
+               resultField.innerHTML += `\nPayment channel created successfully.\n\n`;
+               resultField.innerHTML += `Channel created with ID: ${channelID}\n`;
 
                renderTransactionDetails(response);
                resultField.classList.add('success');
