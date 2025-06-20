@@ -16,7 +16,7 @@
           <form id="theForm">
                <div id="wallet-issuer-input-container"></div>
 
-               <fieldset style="padding: 20px">
+               <fieldset>
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
                          <th></th>
@@ -174,7 +174,7 @@
                          </tr>
                          <tr>
                               <td colspan="2">
-                                   <textarea id="resultField" style="width: 71%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false"></textarea>
+                                   <div id="resultField" class="result-container"></div>
                               </td>
                          </tr>
                     </table>
@@ -288,17 +288,5 @@
                .catch(error => {
                     console.error('Error loading wallet-input.html:', error);
                });
-
-          const textarea = document.getElementById('resultField');
-
-          function autoResize() {
-               textarea.style.height = 'auto'; // Reset height
-               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
-          }
-
-          textarea.addEventListener('input', autoResize);
-
-          // Optional: resize on load if there's prefilled content
-          window.addEventListener('load', autoResize);
      </script>
 </html>

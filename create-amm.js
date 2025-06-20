@@ -1,8 +1,8 @@
 import * as xrpl from 'xrpl';
-import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode, getXrplReserve } from './utils.js';
+import { getClient, disconnectClient, validatInput, populate1, populate2, populate3, populateTakerGetsTakerPayFields, parseXRPLTransaction, getNet, getOnlyTokenBalance, getCurrentLedger, parseXRPLAccountObjects, setError, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, encodeCurrencyCode, decodeCurrencyCode, getXrplReserve, renderAMMPoolDetails, renderTransactionDetails } from './utils.js';
 import { fetchAccountObjects } from './account.js';
 import { getTokenBalance } from './send-currency.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
 
 export async function getAMMPoolInfo() {
@@ -10,7 +10,12 @@ export async function getAMMPoolInfo() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -43,14 +48,14 @@ export async function getAMMPoolInfo() {
      const { accountName, accountAddress, accountSeed, xrpBalance, weWantCurrency, weWantIssuer, weWantAmount, weSpendCurrency, weSpendIssuer, weSpendAmount, lpTokenBalance, tradingFee, withdrawlLpTokenFromPool, totalExecutionTime } = fields;
 
      const validations = [
-          [!validatInput(accountName.value), 'Account Name can not be empty'],
-          [!validatInput(accountAddress.value), 'Account Address can not be empty'],
+          [!validatInput(accountName.value), 'Account Name cannot be empty'],
+          [!validatInput(accountAddress.value), 'Account Address cannot be empty'],
           [!xrpl.isValidAddress(accountAddress.value), 'Invalid Account address'],
-          [!validatInput(accountSeed.value), 'Account seed amount can not be empty'],
-          [!validatInput(xrpBalance.value), 'XRP balance can not be empty'],
-          [!validatInput(weWantCurrency.value), 'Taker Gets currency can not be empty'],
+          [!validatInput(accountSeed.value), 'Account seed cannot be empty'],
+          [!validatInput(xrpBalance.value), 'XRP balance cannot be empty'],
+          [!validatInput(weWantCurrency.value), 'Taker Gets currency cannot be empty'],
           [weWantCurrency.value.length < 3, 'Invalid Taker Gets currency. Length must be greater than 3'],
-          [!validatInput(weSpendCurrency.value), 'Taker Pays currency can not be empty'],
+          [!validatInput(weSpendCurrency.value), 'Taker Pays currency cannot be empty'],
           [weSpendCurrency.value.length < 3, 'Invalid Taker Pays currency. Length must be greater than 3'],
           [!validatInput(weWantAmount.value), 'Taker Gets amount cannot be empty'],
           [isNaN(weWantAmount.value), 'Taker Gets amount must be a valid number'],
@@ -68,115 +73,187 @@ export async function getAMMPoolInfo() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nGet AMM Pool Info.\n\n`;
+          // Check server version
+          const serverInfo = await client.request({ method: 'server_info' });
+          const serverVersion = serverInfo.result.info.build_version;
+          console.log('Server Version: ' + serverVersion);
 
+          // Initialize wallet
           let wallet;
           if (accountSeed.value.split(' ').length > 1) {
-               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromMnemonic(accountSeed.value, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           } else if (accountSeed.value.includes(',')) {
                const derive_account_with_secret_numbers = derive.secretNumbers(accountSeed.value);
-               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromSeed(accountSeed.value, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
+          // Prepare assets
           let asset, asset2;
           if (weWantCurrency.value === XRP_CURRENCY) {
                asset = { currency: XRP_CURRENCY };
           } else {
-               if (weWantCurrency.value.length > 3) {
-                    const endcodedCurrency = encodeCurrencyCode(weWantCurrency.value);
-                    asset = { currency: endcodedCurrency, issuer: weWantIssuer.value };
-               } else {
-                    asset = { currency: weWantCurrency.value, issuer: weWantIssuer.value };
-               }
+               const currency = weWantCurrency.value.length > 3 ? encodeCurrencyCode(weWantCurrency.value) : weWantCurrency.value;
+               asset = { currency, issuer: weWantIssuer.value };
           }
           if (weSpendCurrency.value === XRP_CURRENCY) {
                asset2 = { currency: XRP_CURRENCY };
           } else {
-               if (weSpendCurrency.value.length > 3) {
-                    const endcodedCurrency = encodeCurrencyCode(weSpendCurrency.value);
-                    asset2 = { currency: endcodedCurrency, issuer: weWantIssuer.value };
+               const currency = weSpendCurrency.value.length > 3 ? encodeCurrencyCode(weSpendCurrency.value) : weSpendCurrency.value;
+               asset2 = { currency, issuer: weSpendIssuer.value };
+          }
+
+          // Prepare data for rendering
+          const data = {
+               sections: [],
+          };
+
+          // Fetch AMM pool info
+          let poolData;
+          try {
+               const ammInfo = await client.request({
+                    command: 'amm_info',
+                    asset,
+                    asset2,
+               });
+               poolData = ammInfo.result;
+
+               // Format Asset 1
+               const asset1Content = [];
+               if (poolData.amm.amount.currency === undefined) {
+                    asset1Content.push({ key: 'Asset', value: 'XRP' });
+                    const amount = poolData.amm.amount.value || poolData.amm.amount;
+                    asset1Content.push({ key: 'Amount (drops)', value: amount });
+                    asset1Content.push({ key: 'Amount (XRP)', value: xrpl.dropsToXrp(amount) });
                } else {
-                    asset2 = { currency: weSpendCurrency.value, issuer: weSpendIssuer.value };
+                    asset1Content.push({ key: 'Asset', value: poolData.amm.amount.currency });
+                    if (poolData.amm.amount.issuer) {
+                         asset1Content.push({ key: 'Issuer', value: `<code>${poolData.amm.amount.issuer}</code>` });
+                    }
+                    asset1Content.push({ key: 'Amount', value: poolData.amm.amount.value || poolData.amm.amount });
                }
-          }
 
-          const ammInfo = await client.request({
-               command: 'amm_info',
-               asset: asset,
-               asset2: asset2,
-          });
-
-          // Format pool details
-          const poolData = ammInfo.result;
-          resultField.value += `AMM Pool Details:\n`;
-          if (poolData.amm.amount.currency === undefined) {
-               resultField.value += `Asset 1: XRP\n\tAmount in drops: ${poolData.amm.amount.value || poolData.amm.amount}`;
-               if (poolData.amm.amount.value) {
-                    resultField.value += `\n\tAmount in XRP: ${xrpl.dropsToXrp(poolData.amm.amount.value)}\n`;
+               // Format Asset 2
+               const asset2Content = [];
+               if (poolData.amm.amount2.currency === undefined) {
+                    asset2Content.push({ key: 'Asset', value: 'XRP' });
+                    const amount = poolData.amm.amount2.value || poolData.amm.amount2;
+                    asset2Content.push({ key: 'Amount (drops)', value: amount });
+                    asset2Content.push({ key: 'Amount (XRP)', value: xrpl.dropsToXrp(amount) });
+               } else {
+                    asset2Content.push({ key: 'Asset', value: poolData.amm.amount2.currency });
+                    if (poolData.amm.amount2.issuer) {
+                         asset2Content.push({ key: 'Issuer', value: `<code>${poolData.amm.amount2.issuer}</code>` });
+                    }
+                    asset2Content.push({ key: 'Amount', value: poolData.amm.amount2.value || poolData.amm.amount2 });
                }
-               if (poolData.amm.amount) {
-                    resultField.value += `\n\tAmount in XRP: ${xrpl.dropsToXrp(poolData.amm.amount)}\n`;
-               }
-          } else {
-               resultField.value += `Asset 1: ${poolData.amm.amount.currency} ${poolData.amm.amount.issuer ? `\n\tIssuer: ${poolData.amm.amount.issuer}` : ''}\n\tAmount: ${poolData.amm.amount.value || poolData.amm.amount}\n`;
-          }
 
-          if (poolData.amm.amount2.currency === undefined) {
-               resultField.value += `Asset 2: XRP\n\tAmount in drops: ${poolData.amm.amount2.value || poolData.amm.amount2}`;
-               if (poolData.amm.amount2.value) {
-                    resultField.value += `\n\tAmount in XRP: ${xrpl.dropsToXrp(poolData.amm.amount2.value)}\n`;
-               }
-               if (poolData.amm.amount2) {
-                    resultField.value += `\n\tAmount in XRP: ${xrpl.dropsToXrp(poolData.amm.amount2)}\n`;
-               }
-          } else {
-               resultField.value += `Asset 2: ${poolData.amm.amount2.currency} ${poolData.amm.amount2.issuer ? `\n\tIssuer: ${poolData.amm.amount2.issuer}` : ''}\n\tAmount: ${poolData.amm.amount2.value || poolData.amm.amount2}\n`;
-          }
+               // AMM Pool Details section
+               data.sections.push({
+                    title: 'AMM Pool Details',
+                    openByDefault: true,
+                    subItems: [
+                         {
+                              key: 'Asset 1',
+                              openByDefault: true,
+                              content: asset1Content,
+                         },
+                         {
+                              key: 'Asset 2',
+                              openByDefault: true,
+                              content: asset2Content,
+                         },
+                         {
+                              key: 'Pool Info',
+                              openByDefault: true,
+                              content: [
+                                   { key: 'Trading Fee', value: `${poolData.amm.trading_fee / 10000}%` },
+                                   { key: 'AMM Account', value: `<code>${poolData.amm.account}</code>` },
+                              ],
+                         },
+                    ],
+               });
 
-          tradingFee.value = `${poolData.amm.trading_fee / 10000}`;
-          resultField.value += `\nTrading Fee: ${poolData.amm.trading_fee / 10000}%\n`;
-          resultField.value += `\nLP Token: ${poolData.amm.lp_token.currency}\n\tBalance: ${poolData.amm.lp_token.value}\n`;
-          resultField.value += `\nAMM Account:\n\t${poolData.amm.account}\n`;
+               // Update trading fee field
+               tradingFee.value = `${poolData.amm.trading_fee / 10000}`;
 
-          const accountLines = await client.request({
-               command: 'account_lines',
-               account: wallet.classicAddress,
-               ledger_index: 'current',
-          });
-          const lpTokenLine = accountLines.result.lines.find(line => line.currency === poolData.amm.lp_token.currency && line.account === poolData.amm.lp_token.issuer);
-          lpTokenBalance.value = lpTokenLine ? lpTokenLine.balance : '0';
+               // Fetch LP Token balance
+               const accountLines = await client.request({
+                    command: 'account_lines',
+                    account: wallet.classicAddress,
+                    ledger_index: 'current',
+               });
+               const lpTokenLine = accountLines.result.lines.find(line => line.currency === poolData.amm.lp_token.currency && line.account === poolData.amm.lp_token.issuer);
+               lpTokenBalance.value = lpTokenLine ? lpTokenLine.balance : '0';
 
-          resultField.classList.add('success');
-     } catch (error) {
-          console.error('Error:', error);
-          let errorMessage = '';
-          if (error.message.includes('Account not found')) {
+               // LP Token section
+               data.sections.push({
+                    title: 'LP Token',
+                    openByDefault: true,
+                    content: [
+                         { key: 'Currency', value: poolData.amm.lp_token.currency },
+                         { key: 'Balance', value: poolData.amm.lp_token.value },
+                         { key: 'User Balance', value: lpTokenBalance.value },
+                    ],
+               });
+          } catch (error) {
+               console.error('AMM Info Error:', error);
+               data.sections.push({
+                    title: 'AMM Pool Details',
+                    openByDefault: true,
+                    content: [
+                         {
+                              key: 'Status',
+                              value: error.message.includes('Account not found') ? 'No AMM pool exists for this asset pair. Try creating one with "Create AMM Pool".' : `Error fetching AMM pool info: ${error.message}`,
+                         },
+                    ],
+               });
                lpTokenBalance.value = '';
                withdrawlLpTokenFromPool.value = '';
-               errorMessage += 'ERROR: No AMM pool exists for this asset pair. Try creating one with "Create AMM Pool".';
-          } else {
-               errorMessage = `ERROR: ${error.message || 'Unknown error'}`;
           }
-          setError(errorMessage);
+
+          // Server Info section
+          // data.sections.push({
+          //      title: 'Server Info',
+          //      openByDefault: false,
+          //      content: [{ key: 'Environment', value: environment }, { key: 'Network', value: net }, { key: 'Server Version', value: serverVersion }, ...(parseFloat(serverVersion) < 1.9 ? [{ key: 'Warning', value: 'Server version may not fully support AMM operations (requires rippled 1.9.0 or higher)' }] : [])],
+          // });
+
+          console.log('data: ', data);
+          // Render data
+          renderAMMPoolDetails(data);
+
+          // Update XRP balance
+          xrpBalance.value = await client.getXrpBalance(wallet.classicAddress);
+     } catch (error) {
+          console.error('Error:', error);
+          setError(`ERROR: ${error.message || 'Unknown error'}`, spinner);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving getAMMPoolInfo in ${now}ms`);
      }
 }
 
-async function createAMMPool() {
+export async function createAMMPool() {
      console.log('Entering createAMMPool');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -249,9 +326,7 @@ async function createAMMPool() {
                wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          resultField.value = `Connected to ${environment} ${net}\nCreating AMM Pool\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCreating AMM Pool\n\n`;
 
           // Prepare asset and asset2
           let asset, asset2;
@@ -371,11 +446,12 @@ async function createAMMPool() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          renderTransactionDetails(tx);
+          resultField.classList.add('success');
 
           resultField.classList.add('success');
 
@@ -415,19 +491,23 @@ async function createAMMPool() {
           setError(errorMessage);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving createAMMPool in ${now}ms`);
      }
 }
 
-async function depositToAMM() {
+export async function depositToAMM() {
      console.log('Entering depositToAMM');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -491,7 +571,7 @@ async function depositToAMM() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nDeposit token into AMM Pool.\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nDeposit token into AMM Pool.\n\n`;
 
           let wallet;
           if (accountSeed.value.split(' ').length > 1) {
@@ -572,12 +652,14 @@ async function depositToAMM() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Deposited: ${isDepositIntoBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${XRP_CURRENCY}` : isDepositIntoFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isDepositIntoSecondPoolOnly.checked ? `${weSpendAmount.value} ${XRP_CURRENCY}` : 'No deposit option selected'}\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.innerHTML += `Deposited: ${isDepositIntoBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${XRP_CURRENCY}` : isDepositIntoFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isDepositIntoSecondPoolOnly.checked ? `${weSpendAmount.value} ${XRP_CURRENCY}` : 'No deposit option selected'}\n`;
+
+          renderTransactionDetails(tx);
+          resultField.classList.add('success');
 
           resultField.classList.add('success');
 
@@ -602,19 +684,23 @@ async function depositToAMM() {
           setError(errorMessage);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving getAMMPoolInfo in ${now}ms`);
      }
 }
 
-async function withdrawFromAMM() {
+export async function withdrawFromAMM() {
      console.log(`Entering withdrawFromAMM`);
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -689,9 +775,7 @@ async function withdrawFromAMM() {
                wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
-          resultField.value = `Connected to ${environment} ${net}\nWithdrawing from AMM Pool\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nWithdrawing from AMM Pool\n\n`;
 
           // Prepare asset and asset2
           let asset = weWantCurrency.value === XRP_CURRENCY ? { currency: XRP_CURRENCY } : { currency: weWantCurrency.value, issuer: weWantIssuer.value };
@@ -759,14 +843,13 @@ async function withdrawFromAMM() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${weSpendCurrency.value}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${weSpendCurrency.value}` : 'No withdrawal option selected'}\n`;
-          resultField.value += `\nAssets remaining in pool: ${ammResponse.result.amm.amount.value} ${weWantCurrency.value} ${xrpl.dropsToXrp(ammResponse.result.amm.amount2)} XRP\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
-
+          resultField.innerHTML += `Withdrew: ${isWithdrawFromBothPools.checked ? `${weWantAmount.value} ${weWantCurrency.value} + ${weSpendAmount.value} ${weSpendCurrency.value}` : isWithdrawFromFirstPoolOnly.checked ? `${weWantAmount.value} ${weWantCurrency.value}` : isWithdrawFromSecondPoolOnly.checked ? `${weSpendAmount.value} ${weSpendCurrency.value}` : 'No withdrawal option selected'}\n`;
+          resultField.innerHTML += `\nAssets remaining in pool: ${ammResponse.result.amm.amount.value} ${weWantCurrency.value} ${xrpl.dropsToXrp(ammResponse.result.amm.amount2)} XRP\n\n`;
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
@@ -781,19 +864,23 @@ async function withdrawFromAMM() {
           setError(errorMessage);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving withdrawFromAMM in ${now}ms`);
      }
 }
 
-async function deleteAMMPool() {
+export async function deleteAMMPool() {
      console.log('Entering deleteAMMPool');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -861,7 +948,7 @@ async function deleteAMMPool() {
 
           // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
-          resultField.value = `Connected to ${environment} ${net}\nDeleting AMM Pool\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nDeleting AMM Pool\n\n`;
 
           // Prepare asset and asset2
           let asset, asset2;
@@ -927,7 +1014,7 @@ async function deleteAMMPool() {
 
           let tx;
           if (lpTokenLine && parseFloat(lpTokenLine.balance) > 0) {
-               resultField.value += `LP tokens detected (${lpTokenLine.balance}). Withdrawing liquidity\n`;
+               resultField.innerHTML += `LP tokens detected (${lpTokenLine.balance}). Withdrawing liquidity\n`;
                // Withdraw all LP tokens
                const ammWithdraw = {
                     TransactionType: 'AMMWithdraw',
@@ -954,10 +1041,13 @@ async function deleteAMMPool() {
 
                const resultCode = tx.result.meta.TransactionResult;
                if (resultCode !== TES_SUCCESS) {
-                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
 
-               resultField.value += `Liquidity withdrawn: ${prepareTxHashForOutput(tx.result.hash)}\n`;
+               resultField.innerHTML += `Liquidity withdrawn\n`;
+               renderTransactionDetails(tx);
+               resultField.classList.add('success');
           }
 
           // Double check if the AMM still exists after withdrawal
@@ -971,7 +1061,7 @@ async function deleteAMMPool() {
           } catch (e) {
                if (e.data?.error === 'no_amm' || e.data?.error === 'actNotFound') {
                     ammStillExists = false;
-                    resultField.value += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
+                    resultField.innerHTML += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
                } else {
                     throw e; // Rethrow other errors
                }
@@ -1012,15 +1102,15 @@ async function deleteAMMPool() {
 
                const resultCode = tx.result.meta.TransactionResult;
                if (resultCode !== TES_SUCCESS) {
-                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
-               resultField.value += `AMM Pool Deleted:\n`;
+               resultField.innerHTML += `AMM Pool Deleted:\n`;
           }
 
-          resultField.value += `\nAssets returned to ${wallet.classicAddress}.\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.innerHTML += `\nAssets returned to ${wallet.classicAddress}.\n`;
 
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
@@ -1035,19 +1125,23 @@ async function deleteAMMPool() {
           setError(errorMessage);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving deleteAMMPool in ${now}ms`);
      }
 }
 
-async function swapViaAMM() {
+export async function swapViaAMM() {
      console.log('Entering swapViaAMM');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -1136,7 +1230,7 @@ async function swapViaAMM() {
                }
           } catch (e) {
                if (e.data?.error === 'no_amm' || e.data?.error === 'actNotFound') {
-                    resultField.value += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
+                    resultField.innerHTML += `AMM pool has already been auto-deleted after last LP withdrawal.\n`;
                } else {
                     throw e;
                }
@@ -1171,13 +1265,13 @@ async function swapViaAMM() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `\nSwap was successful.\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.innerHTML += `\nSwap was successful.\n`;
 
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
      } catch (error) {
           console.error('Error:', error);
@@ -1192,14 +1286,13 @@ async function swapViaAMM() {
           setError(errorMessage);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving swapViaAMM in ${now}ms`);
      }
 }
 
-async function checkRippling(client, issuer, currency) {
+export async function checkRippling(client, issuer, currency) {
      if (!issuer || currency === XRP_CURRENCY) {
           return true;
      }
@@ -1216,7 +1309,7 @@ async function checkRippling(client, issuer, currency) {
      return true;
 }
 
-async function checkCurrency(client, address, currency, issuer, amount) {
+export async function checkCurrency(client, address, currency, issuer, amount) {
      if (currency === XRP_CURRENCY) {
           return;
      }
@@ -1238,7 +1331,7 @@ async function checkCurrency(client, address, currency, issuer, amount) {
      }
 }
 
-async function checkBalancesAndTrustLines(client, address, weWantCurrency, weWantIssuer, weWantAmount, weSpendIssuer, weSpendAmount, weSpendCurrency) {
+export async function checkBalancesAndTrustLines(client, address, weWantCurrency, weWantIssuer, weWantAmount, weSpendIssuer, weSpendAmount, weSpendCurrency) {
      const accountInfo = await client.request({
           command: 'account_info',
           account: address,
@@ -1257,7 +1350,7 @@ async function checkBalancesAndTrustLines(client, address, weWantCurrency, weWan
      await checkCurrency(client, address, weSpendCurrency, weSpendIssuer, weSpendAmount);
 }
 
-async function getXrpReserveRequirements(client, address) {
+export async function getXrpReserveRequirements(client, address) {
      const accountInfo = await client.request({
           command: 'account_info',
           account: address,
@@ -1295,7 +1388,7 @@ export async function getCurrencyBalance(currencyCode) {
      }
 }
 
-async function prepareAssetForAmmInfo(weWantCurrency, weWantIssuer, weSpendCurrency, weSpendIssuer) {
+export async function prepareAssetForAmmInfo(weWantCurrency, weWantIssuer, weSpendCurrency, weSpendIssuer) {
      let asset, asset2;
 
      if (weWantCurrency === XRP_CURRENCY) {
@@ -1324,7 +1417,7 @@ async function prepareAssetForAmmInfo(weWantCurrency, weWantIssuer, weSpendCurre
      return asset, asset2;
 }
 
-async function getXrpBalance() {
+export async function getXrpBalance() {
      try {
           const client = await getClient();
           const accountAddressField = document.getElementById('accountAddressField');
@@ -1352,7 +1445,6 @@ window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
 window.populateTakerGetsTakerPayFields = populateTakerGetsTakerPayFields;
-window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;

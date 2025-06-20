@@ -246,7 +246,7 @@ async function updateMetaData() {
           transferRateField: document.getElementById('transferRateField'),
           isMessageKey: document.getElementById('isMessageKey'),
           domainField: document.getElementById('domainField'),
-          memo: document.getElementById('memoField'),
+          // memo: document.getElementById('memoField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           totalExecutionTime: document.getElementById('totalExecutionTime'),
@@ -261,7 +261,7 @@ async function updateMetaData() {
           }
      }
 
-     const { tickSizeField, transferRateField, isMessageKey, domainField, memo, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { tickSizeField, transferRateField, isMessageKey, domainField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
 
      const { seedField, balanceField } = resolveAccountFields();
      const accountSeedField = resolveAccountSeedField();
@@ -290,18 +290,18 @@ async function updateMetaData() {
           });
 
           let updatedData = false;
-          const memoText = memo.value;
-          if (memoText) {
-               updatedData = true;
-               tx.Memos = [
-                    {
-                         Memo: {
-                              MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
-                              MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
-                         },
-                    },
-               ];
-          }
+          // const memoText = memo.value;
+          // if (memoText) {
+          //      updatedData = true;
+          //      tx.Memos = [
+          //           {
+          //                Memo: {
+          //                     MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
+          //                     MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
+          //                },
+          //           },
+          //      ];
+          // }
 
           const tickSizeFieldTagText = tickSizeField.value;
           if (tickSizeFieldTagText) {
@@ -760,10 +760,10 @@ function clearUiIAccountMetaData() {
           domainField.value = EMPTY_STRING;
      }
 
-     const memoField = document.getElementById('memoField');
-     if (memoField) {
-          memoField.value = EMPTY_STRING;
-     }
+     // const memoField = document.getElementById('memoField');
+     // if (memoField) {
+     //      memoField.value = EMPTY_STRING;
+     // }
 }
 
 function getFlagName(value) {
