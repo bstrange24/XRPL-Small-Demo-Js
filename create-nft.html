@@ -10,6 +10,159 @@
           <script type="module" src="create-nft.js"></script>
           <script type="module" src="local-storage.js"></script>
           <script type="module" src="utils.js"></script>
+          <style>
+               /* NFT Info Section */
+               .nft-info {
+                    margin: 20px 0;
+                    border-radius: 10px;
+                    overflow: hidden;
+               }
+
+               .nft-info summary {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 14px;
+                    padding: 10px;
+                    cursor: pointer;
+                    transition: background 0.3s ease;
+               }
+
+               .nft-info summary:hover {
+                    background: #3a3c41;
+               }
+
+               .nft-info summary::marker {
+                    content: '▶ ';
+               }
+
+               .nft-info[open] summary::marker {
+                    content: '▼ ';
+               }
+
+               .nft-fieldset {
+                    border: 1px solid #686868;
+                    border-radius: 10px;
+                    padding: 20px;
+                    background: #1a1c21;
+                    margin: 0;
+               }
+
+               .nft-fieldset legend {
+                    color: white;
+                    font-size: 14px;
+                    padding: 0 10px;
+                    font-weight: bold;
+               }
+
+               .nft-table {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
+                    background: #2a2c31;
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin-bottom: 20px;
+               }
+
+               .nft-row {
+                    display: flex;
+                    width: 100%;
+                    transition: background 0.3s ease;
+               }
+
+               .nft-row:hover:not(.nft-header) {
+                    background: #3a3c41;
+               }
+
+               .nft-header {
+                    font-weight: bold;
+                    background: #1a1c21;
+                    color: #4caf50;
+               }
+
+               .nft-cell {
+                    flex: 1;
+                    padding: 12px;
+                    color: white;
+                    font-size: 13px;
+                    text-align: left;
+                    border-bottom: 1px solid #686868;
+               }
+
+               .nft-header .nft-cell {
+                    border-bottom: 2px solid #4caf50;
+               }
+
+               /* Specific column widths */
+               .nft-cell:nth-child(1) {
+                    flex: 2; /* Flag Name: Medium */
+               }
+               .nft-cell:nth-child(2) {
+                    flex: 1.5; /* Hex Value: Narrower */
+               }
+               .nft-cell:nth-child(3) {
+                    flex: 1.5; /* Decimal Value: Narrower */
+               }
+               .nft-cell:nth-child(4) {
+                    flex: 4; /* Description: Widest */
+               }
+
+               /* Style code tags for emphasis */
+               .nft-cell code {
+                    background: #3a3c41;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                    color: #4caf50;
+               }
+
+               /* Note styling */
+               .nft-note {
+                    color: white;
+                    font-size: 13px;
+                    margin-top: 10px;
+                    font-style: italic;
+               }
+
+               /* Responsive Design */
+               @media (max-width: 768px) {
+                    .nft-table {
+                         display: unset;
+                    }
+                    .nft-row {
+                         flex-direction: column;
+                         border-bottom: 1px solid #686868;
+                         margin-bottom: 10px;
+                    }
+                    .nft-cell {
+                         flex: none;
+                         padding: 8px;
+                         border-bottom: none;
+                    }
+                    .nft-header .nft-cell {
+                         border-bottom: none;
+                    }
+                    .nft-cell::before {
+                         content: attr(data-label);
+                         font-weight: bold;
+                         display: inline-block;
+                         width: 120px;
+                         color: #4caf50;
+                    }
+                    .nft-cell:nth-child(1)::before {
+                         content: 'Flag Name: ';
+                    }
+                    .nft-cell:nth-child(2)::before {
+                         content: 'Hex Value: ';
+                    }
+                    .nft-cell:nth-child(3)::before {
+                         content: 'Decimal Value: ';
+                    }
+                    .nft-cell:nth-child(4)::before {
+                         content: 'Description: ';
+                    }
+               }
+          </style>
      </head>
 
      <body>
@@ -268,27 +421,44 @@
                     </table>
                </fieldset>
 
-               <details>
-                    <summary style="color: white; font-size: 14px; padding-top: 20px; cursor: pointer">NFT Flag Info</summary>
-                    <fieldset>
-                         <table style="float: left; color: white">
-                              <th></th>
-                              <tr style="vertical-align: top">
-                                   <td>
-                                        <textarea class="nftMemoField" style="padding: 20px" id="nftMemoField" placeholder="Optional memo">
-Flag Name          | Hex Value  | Decimal Value | Description                                              
------------------- | ---------- | ------------- | ---------------------------------------------------------
-tfBurnable         | 0x00000001 |       1       | Allows anyone to burn the NFT if they hold it.           
-tfOnlyXRP          | 0x00000002 |       2       | NFT can only be bought/sold using XRP (no issued tokens).
-tfTransferable     | 0x00000008 |       8       | Allows the NFT to be transferred to others.              
-tfMutable          | 0x00000010 |      10       | The URI field of the minted NFToken can be updated using the NFTokenModify transaction.
-
-Note: Each NFT offer reserves 0.2 XRP on your account until accepted or canceled.     
-                                        </textarea>
-                                        <br />
-                                   </td>
-                              </tr>
-                         </table>
+               <details class="nft-info">
+                    <summary>NFT Flag Info</summary>
+                    <fieldset class="nft-fieldset">
+                         <div class="nft-table">
+                              <!-- Header Row -->
+                              <div class="nft-row nft-header">
+                                   <div class="nft-cell" data-label="Flag Name">Flag Name</div>
+                                   <div class="nft-cell" data-label="Hex Value">Hex Value</div>
+                                   <div class="nft-cell" data-label="Decimal Value">Decimal Value</div>
+                                   <div class="nft-cell" data-label="Description">Description</div>
+                              </div>
+                              <!-- Data Rows -->
+                              <div class="nft-row">
+                                   <div class="nft-cell" data-label="Flag Name">tfBurnable</div>
+                                   <div class="nft-cell" data-label="Hex Value"><code>0x00000001</code></div>
+                                   <div class="nft-cell" data-label="Decimal Value"><code>1</code></div>
+                                   <div class="nft-cell" data-label="Description">Allows anyone to burn the NFT if they hold it.</div>
+                              </div>
+                              <div class="nft-row">
+                                   <div class="nft-cell" data-label="Flag Name">tfOnlyXRP</div>
+                                   <div class="nft-cell" data-label="Hex Value"><code>0x00000002</code></div>
+                                   <div class="nft-cell" data-label="Decimal Value"><code>2</code></div>
+                                   <div class="nft-cell" data-label="Description">NFT can only be bought/sold using XRP (no issued tokens).</div>
+                              </div>
+                              <div class="nft-row">
+                                   <div class="nft-cell" data-label="Flag Name">tfTransferable</div>
+                                   <div class="nft-cell" data-label="Hex Value"><code>0x00000008</code></div>
+                                   <div class="nft-cell" data-label="Decimal Value"><code>8</code></div>
+                                   <div class="nft-cell" data-label="Description">Allows the NFT to be transferred to others.</div>
+                              </div>
+                              <div class="nft-row">
+                                   <div class="nft-cell" data-label="Flag Name">tfMutable</div>
+                                   <div class="nft-cell" data-label="Hex Value"><code>0x00000010</code></div>
+                                   <div class="nft-cell" data-label="Decimal Value"><code>16</code></div>
+                                   <div class="nft-cell" data-label="Description">The URI field of the minted NFToken can be updated using the NFTokenModify transaction.</div>
+                              </div>
+                         </div>
+                         <p class="nft-note">Note: Each NFT offer reserves 0.2 XRP on your account until accepted or canceled.</p>
                     </fieldset>
                </details>
           </form>
