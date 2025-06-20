@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, renderTransactionDetails } from './utils.js';
+import { getClient, getNet, disconnectClient, parseXRPLTransaction, validatInput, setError, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, renderTransactionDetails } from './utils.js';
 import { generateCondition } from './five-bells.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
@@ -134,7 +134,6 @@ async function createConditionalEscrow() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving createConditionalEscrow in ${now}ms`);
@@ -241,7 +240,6 @@ async function finishConditionalEscrow() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving finishConditionalEscrow in ${now}ms`);
@@ -293,7 +291,6 @@ window.finishConditionalEscrow = finishConditionalEscrow;
 window.getCondition = getCondition;
 window.displayDataForAccount1 = displayDataForAccount1;
 window.displayDataForAccount2 = displayDataForAccount2;
-window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;

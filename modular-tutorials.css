@@ -101,7 +101,7 @@ input:read-only {
 }
 
 #resultField {
-     width: 80%;
+     width: 60%;
      resize: none;
      font-size: 12px;
      padding: 15px;
@@ -658,7 +658,7 @@ input:focus+.slider {
      color: white;
      font-size: 13px;
      text-align: left;
-     border-bottom: 1px solid #686868;
+     /* border-bottom: 1px solid #686868; */
 }
 
 .flag-header .flag-cell {
@@ -710,7 +710,7 @@ input:focus+.slider {
 
      .flag-row {
           flex-direction: column;
-          border-bottom: 1px solid #686868;
+          /* border-bottom: 1px solid #686868; */
           margin-bottom: 10px;
      }
 
@@ -815,6 +815,7 @@ input:focus+.slider {
 .result-row {
      display: flex;
      transition: background 0.3s ease;
+     border-bottom: 1px solid #686868;
 }
 
 .result-row:hover:not(.result-header) {
@@ -832,7 +833,7 @@ input:focus+.slider {
      padding: 8px;
      font-size: 12px;
      text-align: left;
-     border-bottom: 1px solid #686868;
+     /* border-bottom: 1px solid #686868; */
 }
 
 .result-header .result-cell {
@@ -885,6 +886,7 @@ input:focus+.slider {
 
 .nested-object .result-table {
      margin-top: 10px;
+     margin-bottom: 10px;
 }
 
 .result-cell code {
@@ -902,14 +904,14 @@ input:focus+.slider {
 
      .result-row {
           flex-direction: column;
-          border-bottom: 1px solid #686868;
+          /* border-bottom: 1px solid #686868; */
           margin-bottom: 8px;
      }
 
      .result-cell {
           flex: none;
           padding: 8px;
-          border-bottom: none;
+          /* border-bottom: none; */
      }
 
      .result-header .result-cell {
@@ -950,6 +952,17 @@ input:focus+.slider {
 *:before,
 *:after {
      box-sizing: border-box;
+}
+
+.object-group {
+     margin-left: 10px;
+     /* Slight indent to distinguish from top-level sections */
+     margin-top: 10px;
+}
+
+.flag-true {
+     color: #f28c38;
+     /* Vibrant orange for true flags */
 }
 
 .result-search {
@@ -1015,6 +1028,7 @@ mark {
      background: #1a1c21;
      border-radius: 8px;
      overflow: hidden;
+     padding-top: 8px;
 }
 
 .result-section[style*="display: none"],
@@ -1027,7 +1041,10 @@ mark {
      color: white;
      font-weight: bold;
      font-size: 14px;
-     padding: 12px;
+     /* padding: 12px; */
+     padding-left: 12px;
+     padding-right: 12px;
+     padding-bottom: 12px;
      cursor: pointer;
      transition: background 0.3s ease;
 }

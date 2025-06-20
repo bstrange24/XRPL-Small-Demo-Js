@@ -304,16 +304,5 @@
                .catch(error => {
                     console.error('Error loading wallet-input.html:', error);
                });
-          const textarea = document.getElementById('resultField');
-
-          function autoResize() {
-               textarea.style.height = 'auto'; // Reset height
-               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
-          }
-
-          textarea.addEventListener('input', autoResize);
-
-          // Optional: resize on load if there's prefilled content
-          window.addEventListener('load', autoResize);
      </script>
 </html>

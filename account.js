@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate, renderAccountDetails, decodeHex, renderTransactionDetails } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate, renderAccountDetails, decodeHex, renderTransactionDetails } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, flagList, flagMap, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
 
@@ -114,7 +114,6 @@ export async function getAccountInfo() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving getAccountInfo in ${now}ms`);
@@ -223,7 +222,6 @@ async function updateFlags() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving updateFlags in ${now}ms`);
@@ -246,7 +244,6 @@ async function updateMetaData() {
           transferRateField: document.getElementById('transferRateField'),
           isMessageKey: document.getElementById('isMessageKey'),
           domainField: document.getElementById('domainField'),
-          // memo: document.getElementById('memoField'),
           ownerCountField: document.getElementById('ownerCountField'),
           totalXrpReservesField: document.getElementById('totalXrpReservesField'),
           totalExecutionTime: document.getElementById('totalExecutionTime'),
@@ -290,18 +287,6 @@ async function updateMetaData() {
           });
 
           let updatedData = false;
-          // const memoText = memo.value;
-          // if (memoText) {
-          //      updatedData = true;
-          //      tx.Memos = [
-          //           {
-          //                Memo: {
-          //                     MemoType: Buffer.from('text/plain', 'utf8').toString('hex'),
-          //                     MemoData: Buffer.from(memoText, 'utf8').toString('hex'),
-          //                },
-          //           },
-          //      ];
-          // }
 
           const tickSizeFieldTagText = tickSizeField.value;
           if (tickSizeFieldTagText) {
@@ -359,7 +344,6 @@ async function updateMetaData() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving updateMetaData in ${now}ms`);
@@ -487,7 +471,6 @@ async function setDepositAuthAccounts(authorizeFlag) {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving setDepositAuthAccounts in ${now}ms`);
@@ -579,8 +562,7 @@ async function setMultiSign(enableMultiSignFlag) {
           }
 
           resultField.value += `SignerListSet transaction successful\n\n`;
-          // resultField.value += prepareTxHashForOutput(signerListResponse.result.hash) + '\n';
-          // resultField.value += parseXRPLTransaction(signerListResponse.result);
+
           renderTransactionDetails(signerListResponse);
           resultField.classList.add('success');
 
@@ -591,7 +573,6 @@ async function setMultiSign(enableMultiSignFlag) {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          // autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving setMultiSign in ${now}ms`);
@@ -822,7 +803,6 @@ window.getTransaction = getTransaction;
 window.convertToEstTime = convertToEstTime;
 window.displayDataForAccount1 = displayDataForAccount1;
 window.displayDataForAccount2 = displayDataForAccount2;
-// window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;

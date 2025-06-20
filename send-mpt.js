@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, autoResize, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, getEnvironment, populate1, populate2, populate3, setError, parseXRPLTransaction, parseXRPLAccountObjects, getTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves } from './utils.js';
 import { derive } from 'xrpl-accountlib';
 
 async function getMPTs() {
@@ -82,7 +82,6 @@ async function getMPTs() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           console.log('Leaving getMPTs');
      }
 }
@@ -168,7 +167,6 @@ async function sendMPT() {
           setError(`ERROR: ${error.message || 'Unknown error'}`);
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           console.log('Leaving sendMPT');
      }
 }
@@ -220,7 +218,6 @@ window.getTransaction = getTransaction;
 window.populate1 = populate1;
 window.populate2 = populate2;
 window.populate3 = populate3;
-window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;
