@@ -155,7 +155,7 @@
           <form id="theForm">
                <div id="wallet-input-container"></div>
 
-               <fieldset style="padding: 20px">
+               <fieldset>
                     <legend style="color: white">Transaction Information</legend>
                     <table style="float: left">
                          <th></th>
@@ -248,106 +248,105 @@
                     </table>
 
                     <table style="float: left">
-                         <th>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination account address where the escrow is sent.">
-                                             <label for="destinationField">Destination</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="destinationField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Destination tag to be used when sending to an exchange (i.e. Coinbase).">
-                                             <label for="destinationTagField">Destination Tag</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="destinationTagField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Escrow finish time.">
-                                             <label for="escrowFinishTimeField">Escrow Finish Time</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="escrowFinishTimeField" size="40" placeholder="Enter time" />
-                                        <select class="timeUnit" id="escrowFinishTimeUnit">
-                                             <option value="seconds">Seconds</option>
-                                             <option value="minutes">Minutes</option>
-                                             <option value="hours">Hours</option>
-                                             <option value="days">Days</option>
-                                        </select>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Escrow cancel time.">
-                                             <label for="escrowCancelTimeField">Escrow Cancel Time</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="escrowCancelTimeField" size="40" placeholder="Enter time" />
-                                        <select class="timeUnit" id="escrowCancelTimeUnit">
-                                             <option value="seconds">Seconds</option>
-                                             <option value="minutes">Minutes</option>
-                                             <option value="hours">Hours</option>
-                                             <option value="days">Days</option>
-                                        </select>
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Escrow sequence number, used when finishing the escrow.">
-                                             <label for="escrowSequenceNumberField">Escrow Sequence Number</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="escrowSequenceNumberField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Escrow owner, the account that created the escrow.">
-                                             <label for="escrowOwnerField">Escrow Owner</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="escrowOwnerField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Current Time in EST">
-                                             <label for="currentTimeField">Current Time in EST</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <input type="text" id="currentTimeField" size="40" />
-                                        <br />
-                                   </td>
-                              </tr>
-                              <tr style="vertical-align: top">
-                                   <td style="text-align: right">
-                                        <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
-                                             <label for="memoField">Memo</label>
-                                        </span>
-                                   </td>
-                                   <td>
-                                        <textarea style="width: 300px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
-                                        <br />
-                                   </td>
-                              </tr>
-                         </th>
+                         <th></th>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Destination account address where the escrow is sent.">
+                                        <label for="destinationField">Destination</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="destinationField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Destination tag to be used when sending to an exchange (i.e. Coinbase).">
+                                        <label for="destinationTagField">Destination Tag</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="destinationTagField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Escrow finish time.">
+                                        <label for="escrowFinishTimeField">Escrow Finish Time</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="escrowFinishTimeField" size="40" placeholder="Enter time" />
+                                   <select class="timeUnit" id="escrowFinishTimeUnit">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                   </select>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Escrow cancel time.">
+                                        <label for="escrowCancelTimeField">Escrow Cancel Time</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="escrowCancelTimeField" size="40" placeholder="Enter time" />
+                                   <select class="timeUnit" id="escrowCancelTimeUnit">
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                   </select>
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Escrow sequence number, used when finishing the escrow.">
+                                        <label for="escrowSequenceNumberField">Escrow Sequence Number</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="escrowSequenceNumberField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Escrow owner, the account that created the escrow.">
+                                        <label for="escrowOwnerField">Escrow Owner</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="escrowOwnerField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Current Time in EST">
+                                        <label for="currentTimeField">Current Time in EST</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="currentTimeField" size="40" />
+                                   <br />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Optional Memo to be sent with the payment.">
+                                        <label for="memoField">Memo</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <textarea style="width: 280px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
+                                   <br />
+                              </td>
+                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>

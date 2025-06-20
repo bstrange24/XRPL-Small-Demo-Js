@@ -72,7 +72,7 @@
                               </td>
                               <td>
                                    <!-- Replace the input with a select dropdown -->
-                                   <select class="timeUnit" id="issuerField" style="width: 305px; height: 25px">
+                                   <select class="timeUnit" id="issuerField" style="width: 280px; height: 25px">
                                         <!-- Options will be added dynamically -->
                                    </select>
                                    <p></p>
@@ -131,7 +131,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <select class="timeUnit" id="currencyField" style="width: 305px; height: 25px" onchange="toggleIssuerField()">
+                                   <select class="timeUnit" id="currencyField" style="width: 280px; height: 25px" onchange="toggleIssuerField()">
                                         <option value="XRP">XRP</option>
                                         <option value="RLUSD">RLUSD</option>
                                         <option value="USD">USD</option>
@@ -186,7 +186,7 @@
                                    </span>
                               </td>
                               <td>
-                                   <textarea style="width: 300px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
+                                   <textarea style="width: 280px" class="memoField" id="memoField" placeholder="Optional memo"></textarea>
                                    <br />
                               </td>
                          </tr>
@@ -217,7 +217,7 @@
                          </tr>
                          <tr>
                               <td colspan="2">
-                                   <textarea id="resultField" style="width: 71%; overflow: hidden; resize: none; font-size: 12px; padding: 10px" spellcheck="false" readonly></textarea>
+                                   <div id="resultField" class="result-container"></div>
                               </td>
                          </tr>
                     </table>
@@ -368,17 +368,5 @@
                .catch(error => {
                     console.error('Error loading wallet-input.html:', error);
                });
-
-          const textarea = document.getElementById('resultField');
-
-          function autoResize() {
-               textarea.style.height = 'auto'; // Reset height
-               textarea.style.height = textarea.scrollHeight + 'px'; // Set to scrollHeight
-          }
-
-          textarea.addEventListener('input', autoResize);
-
-          // Optional: resize on load if there's prefilled content
-          window.addEventListener('load', autoResize);
      </script>
 </html>

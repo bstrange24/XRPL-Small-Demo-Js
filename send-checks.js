@@ -1,14 +1,128 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode } from './utils.js';
-import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { getClient, getNet, disconnectClient, validatInput, getXrpBalance, setError, parseXRPLAccountObjects, parseXRPLTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, decodeCurrencyCode, renderAccountDetails, renderCheckDetails, renderTransactionDetails } from './utils.js';
+import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
 
-async function sendCheck() {
+export async function getChecks() {
+     console.log('Entering getChecks');
+     const startTime = Date.now();
+
+     const resultField = document.getElementById('resultField');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
+
+     const spinner = document.getElementById('spinner');
+     if (spinner) spinner.style.display = 'block';
+
+     const fields = {
+          address: document.getElementById('accountAddressField'),
+          ownerCount: document.getElementById('ownerCountField'),
+          totalXrpReserves: document.getElementById('totalXrpReservesField'),
+          totalExecutionTime: document.getElementById('totalExecutionTime'),
+          xrpBalanceField: document.getElementById('xrpBalanceField'),
+     };
+
+     // DOM existence check
+     for (const [name, field] of Object.entries(fields)) {
+          if (!field) {
+               return setError(`ERROR: DOM element ${name} not found`, spinner);
+          } else {
+               field.value = field.value.trim();
+          }
+     }
+
+     const { address, ownerCount, totalXrpReserves, totalExecutionTime, xrpBalanceField } = fields;
+
+     // Validate input values
+     const validations = [[!validatInput(address.value), 'Address cannot be empty']];
+
+     for (const [condition, message] of validations) {
+          if (condition) return setError(`ERROR: ${message}`, spinner);
+     }
+
+     try {
+          const { net, environment } = getNet();
+          const client = await getClient();
+
+          const check_objects = await client.request({
+               id: 5,
+               command: 'account_objects',
+               account: address.value,
+               type: 'check',
+               ledger_index: 'validated',
+          });
+
+          console.log('Response', check_objects);
+
+          // Prepare data for renderAccountDetails
+          const data = {
+               sections: [{}],
+          };
+
+          if (check_objects.result.account_objects.length <= 0) {
+               data.sections.push({
+                    title: 'Checks',
+                    openByDefault: true,
+                    content: [{ key: 'Status', value: `No checks found for <code>${address.value}</code>` }],
+               });
+          } else {
+               data.sections.push({
+                    title: `Checks (${check_objects.result.account_objects.length})`,
+                    openByDefault: true,
+                    subItems: check_objects.result.account_objects.map((check, counter) => {
+                         const { Destination, Amount, SendMax, Expiration, InvoiceID, DestinationTag, SourceTag, LedgerEntryType, PreviousTxnID, index } = check;
+                         // Use Amount if available, otherwise fall back to SendMax
+                         const amountValue = Amount || SendMax;
+                         const amountDisplay = amountValue ? (typeof amountValue === 'string' ? `${xrpl.dropsToXrp(amountValue)} XRP` : `${amountValue.value} ${amountValue.currency} (<code>${amountValue.issuer}</code>)`) : 'N/A';
+                         return {
+                              key: `Check ${counter + 1} (ID: ${PreviousTxnID.slice(0, 8)}...)`,
+                              openByDefault: false,
+                              content: [
+                                   { key: 'Check ID / Ledger Index', value: `<code>${index}</code>` },
+                                   { key: 'Previous Txn ID', value: `<code>${PreviousTxnID}</code>` },
+                                   { key: 'Ledger Entry Type', value: LedgerEntryType },
+                                   { key: 'Destination', value: `<code>${Destination}</code>` },
+                                   { key: Amount ? 'Amount' : 'SendMax', value: amountDisplay },
+                                   ...(Expiration ? [{ key: 'Expiration', value: new Date(Expiration * 1000).toLocaleString() }] : []),
+                                   ...(InvoiceID ? [{ key: 'Invoice ID', value: `<code>${InvoiceID}</code>` }] : []),
+                                   ...(DestinationTag ? [{ key: 'Destination Tag', value: String(DestinationTag) }] : []),
+                                   ...(SourceTag ? [{ key: 'Source Tag', value: String(SourceTag) }] : []),
+                              ],
+                         };
+                    }),
+               });
+          }
+
+          // Render data
+          renderCheckDetails(data);
+
+          await updateOwnerCountAndReserves(client, address.value, ownerCount, totalXrpReserves);
+          xrpBalanceField.value = (await client.getXrpBalance(address.value)) - totalXrpReserves.value;
+     } catch (error) {
+          console.error('Error:', error);
+          setError('ERROR: ' + (error.message || 'Unknown error'));
+     } finally {
+          if (spinner) spinner.style.display = 'none';
+          totalExecutionTime.value = Date.now() - startTime;
+          console.log(`Leaving getChecks in ${totalExecutionTime.value}ms`);
+     }
+}
+
+export async function sendCheck() {
      console.log('Entering sendCheck');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -56,8 +170,8 @@ async function sendCheck() {
           if (condition) return setError(`ERROR: ${message}`, spinner);
      }
 
-     let checkExpirationTime = '';
-     if (expirationTime.value != '') {
+     let checkExpirationTime = EMPTY_STRING;
+     if (expirationTime.value != EMPTY_STRING) {
           if (isNaN(parseFloat(expirationTime.value)) || expirationTime.value <= 0) {
                return setError('ERROR: Expiration time must be a valid number greater than zero', spinner);
           }
@@ -67,7 +181,7 @@ async function sendCheck() {
      }
 
      // Check for positive number (greater than 0)
-     if (tokenBalance && tokenBalance.value !== '') {
+     if (tokenBalance && tokenBalance.value !== EMPTY_STRING) {
           const balance = Number(tokenBalance.value);
 
           if (isNaN(balance)) {
@@ -79,7 +193,7 @@ async function sendCheck() {
           }
      }
 
-     if (issuerField && tokenBalance.value != '' && Number(tokenBalance.value) > 0 && issuerField.value === '') {
+     if (issuerField && tokenBalance.value != EMPTY_STRING && Number(tokenBalance.value) > 0 && issuerField.value === EMPTY_STRING) {
           return setError('ERROR: Issuer can not be empty when sending a token for a check', spinner);
      }
 
@@ -87,7 +201,7 @@ async function sendCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -98,8 +212,6 @@ async function sendCheck() {
           } else {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
-
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           if (currency.value === XRP_CURRENCY) {
                if (amount.value > (await client.getXrpBalance(wallet.address)) - totalXrpReserves.value) {
@@ -126,7 +238,7 @@ async function sendCheck() {
                Destination: destination.value,
           });
 
-          if (memo && memo.value != '') {
+          if (memo && memo.value != EMPTY_STRING) {
                tx.Memos = [
                     {
                          Memo: {
@@ -137,7 +249,7 @@ async function sendCheck() {
                ];
           }
 
-          if (expirationTime && checkExpirationTime != '') {
+          if (expirationTime && checkExpirationTime != EMPTY_STRING) {
                tx.Expiration = checkExpirationTime;
           }
 
@@ -150,12 +262,13 @@ async function sendCheck() {
 
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               renderTransactionDetails(response);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Check sent successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(response.result);
+          resultField.innerHTML += `Check sent successfully.\n\n`;
+
+          renderTransactionDetails(response);
           resultField.classList.add('success');
 
           if (currency.value !== XRP_CURRENCY) {
@@ -169,95 +282,23 @@ async function sendCheck() {
           setError('ERROR: ' + (error.message || 'Unknown error'));
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving sendCheck in ${now}ms`);
      }
 }
 
-async function getChecks() {
-     console.log('Entering getChecks');
-     const startTime = Date.now();
-
-     const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
-
-     const spinner = document.getElementById('spinner');
-     if (spinner) spinner.style.display = 'block';
-
-     const fields = {
-          address: document.getElementById('accountAddressField'),
-          ownerCount: document.getElementById('ownerCountField'),
-          totalXrpReserves: document.getElementById('totalXrpReservesField'),
-          totalExecutionTime: document.getElementById('totalExecutionTime'),
-     };
-
-     // DOM existence check
-     for (const [name, field] of Object.entries(fields)) {
-          if (!field) {
-               return setError(`ERROR: DOM element ${name} not found`, spinner);
-          } else {
-               field.value = field.value.trim(); // Trim whitespace
-          }
-     }
-
-     const { address, ownerCount, totalXrpReserves } = fields;
-
-     // Validate input values
-     const validations = [[!validatInput(address.value), 'Address cannot be empty']];
-
-     for (const [condition, message] of validations) {
-          if (condition) return setError(`ERROR: ${message}`, spinner);
-     }
-
-     try {
-          const { net, environment } = getNet();
-          const client = await getClient();
-
-          resultField.value = `Connected to ${environment} ${net}\nGetting Checks\n\n`;
-
-          const check_objects = await client.request({
-               id: 5,
-               command: 'account_objects',
-               account: address.value,
-               ledger_index: 'validated',
-               type: 'check',
-          });
-
-          console.log('Response', check_objects);
-
-          if (check_objects.result.account_objects.length <= 0) {
-               resultField.value += `No checks found for ${address.value}`;
-               await updateOwnerCountAndReserves(client, address.value, ownerCount, totalXrpReserves);
-               xrpBalanceField.value = (await client.getXrpBalance(address.value)) - totalXrpReserves.value;
-               resultField.classList.add('success');
-               return;
-          }
-
-          resultField.value += parseXRPLAccountObjects(check_objects.result);
-          resultField.classList.add('success');
-
-          await updateOwnerCountAndReserves(client, address.value, ownerCount, totalXrpReserves);
-          xrpBalanceField.value = (await client.getXrpBalance(address.value)) - totalXrpReserves.value;
-     } catch (error) {
-          console.error('Error:', error);
-          setError('ERROR: ' + (error.message || 'Unknown error'));
-     } finally {
-          if (spinner) spinner.style.display = 'none';
-          autoResize();
-          const now = Date.now() - startTime;
-          totalExecutionTime.value = now;
-          console.log(`Leaving getCheck in ${now}ms`);
-     }
-}
-
-async function cashCheck() {
+export async function cashCheck() {
      console.log('Entering cashCheck');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -306,7 +347,7 @@ async function cashCheck() {
      }
 
      // Check for positive number (greater than 0)
-     if (tokenBalance && tokenBalance.value !== '') {
+     if (tokenBalance && tokenBalance.value !== EMPTY_STRING) {
           const balance = Number(tokenBalance.value);
 
           if (isNaN(balance)) {
@@ -318,7 +359,7 @@ async function cashCheck() {
           }
      }
 
-     if (issuerField && tokenBalance.value != '' && Number(tokenBalance.value) > 0 && issuerField.value === '') {
+     if (issuerField && tokenBalance.value != EMPTY_STRING && Number(tokenBalance.value) > 0 && issuerField.value === EMPTY_STRING) {
           return setError('ERROR: Issuer can not be empty when sending a token for a check', spinner);
      }
 
@@ -337,8 +378,6 @@ async function cashCheck() {
           } else {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
-
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           // Build amount object depending on currency
           const amountToCash =
@@ -365,12 +404,13 @@ async function cashCheck() {
 
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               renderTransactionDetails(response);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Check cashed successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(response.result);
+          resultField.innerHTML += `Check cashed successfully.\n\n`;
+
+          renderTransactionDetails(response);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCount, totalXrpReserves);
@@ -380,19 +420,23 @@ async function cashCheck() {
           setError('ERROR: ' + (error.message || 'Unknown error'));
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving cashCheck in ${now}ms`);
      }
 }
 
-async function cancelCheck() {
+export async function cancelCheck() {
      console.log('Entering cancelCheck');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -443,8 +487,6 @@ async function cancelCheck() {
                wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(seed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
           const tx = await client.autofill({
                TransactionType: 'CheckCancel',
                Account: wallet.classicAddress,
@@ -457,12 +499,13 @@ async function cancelCheck() {
 
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               renderTransactionDetails(response);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Check cancelled successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(response.result);
+          resultField.innerHTML += `Check cancelled successfully.\n\n`;
+
+          renderTransactionDetails(response);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCount, totalXrpReserves);
@@ -472,7 +515,6 @@ async function cancelCheck() {
           setError('ERROR: ' + (error.message || 'Unknown error'));
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving cancelCheck in ${now}ms`);
@@ -540,7 +582,7 @@ export async function getTokenBalance() {
           console.log('gatewayBalances', gatewayBalances);
 
           let tokenTotal = 0;
-          issuerField.innerHTML = '';
+          issuerField.innerHTML = EMPTY_STRING;
 
           Object.entries(gatewayBalances.result.assets).forEach(([issuer, assets]) => {
                console.log(`Issuer: ${issuer}`);
@@ -573,7 +615,6 @@ export async function getTokenBalance() {
           setError('ERROR: ' + (error.message || 'Unknown error'));
      } finally {
           if (spinner) spinner.style.display = 'none';
-          autoResize();
           const now = Date.now() - startTime;
           totalExecutionTime.value = now;
           console.log(`Leaving getTokenBalance in ${now}ms`);
@@ -583,8 +624,8 @@ export async function getTokenBalance() {
 async function displayCheckDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account1secretNumbers.value;
           } else {
                accountSeedField.value = account1mnemonic.value;
@@ -593,10 +634,10 @@ async function displayCheckDataForAccount1() {
           accountSeedField.value = account1seed.value;
      }
      destinationField.value = account2address.value;
-     amountField.value = '';
-     memoField.value = '';
-     expirationTimeField.value = '';
-     checkIdField.value = '';
+     amountField.value = EMPTY_STRING;
+     memoField.value = EMPTY_STRING;
+     expirationTimeField.value = EMPTY_STRING;
+     checkIdField.value = EMPTY_STRING;
      currencyField.value = XRP_CURRENCY;
      await getXrpBalance();
      await getChecks();
@@ -605,8 +646,8 @@ async function displayCheckDataForAccount1() {
 async function displayCheckDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     if (account2seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account2seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account2secretNumbers.value;
           } else {
                accountSeedField.value = account2mnemonic.value;
@@ -615,10 +656,10 @@ async function displayCheckDataForAccount2() {
           accountSeedField.value = account2seed.value;
      }
      destinationField.value = account1address.value;
-     amountField.value = '';
-     memoField.value = '';
-     expirationTimeField.value = '';
-     checkIdField.value = '';
+     amountField.value = EMPTY_STRING;
+     memoField.value = EMPTY_STRING;
+     expirationTimeField.value = EMPTY_STRING;
+     checkIdField.value = EMPTY_STRING;
      currencyField.value = XRP_CURRENCY;
      await getXrpBalance();
      await getChecks();
@@ -632,7 +673,6 @@ window.getTransaction = getTransaction;
 window.getTokenBalance = getTokenBalance;
 window.displayCheckDataForAccount1 = displayCheckDataForAccount1;
 window.displayCheckDataForAccount2 = displayCheckDataForAccount2;
-window.autoResize = autoResize;
 window.disconnectClient = disconnectClient;
 window.gatherAccountInfo = gatherAccountInfo;
 window.clearFields = clearFields;
