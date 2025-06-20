@@ -338,13 +338,14 @@ async function updateMetaData() {
 
                const resultCode = response.result.meta.TransactionResult;
                if (resultCode !== TES_SUCCESS) {
-                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+                    renderTransactionDetails(response);
+                    resultField.classList.add('error');
                }
 
                resultField.innerHTML += `Account fields successfully updated.\n\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
+
                renderTransactionDetails(response);
+               resultField.classList.add('success');
 
                await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
                balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
@@ -470,12 +471,12 @@ async function setDepositAuthAccounts(authorizeFlag) {
 
           const resultCode = response.result.meta?.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+               renderTransactionDetails(response);
+               resultField.classList.add('error');
           }
 
           resultField.value += `Deposit Auth finished successfully.\n\n`;
-          // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-          // resultField.value += parseXRPLTransaction(response.result);
+
           renderTransactionDetails(response);
           resultField.classList.add('success');
 

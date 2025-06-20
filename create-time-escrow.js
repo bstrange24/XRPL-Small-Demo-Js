@@ -246,7 +246,8 @@ export async function createTimeBasedEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
           resultField.innerHTML += `Escrow created successfully.\n\n`;
@@ -349,7 +350,8 @@ export async function finishTimeBasedEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
           resultField.innerHTML += `Escrow finsihed successfully.\n\n`;
@@ -454,7 +456,8 @@ export async function cancelEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
           resultField.innerHTML += `Escrow cancelled successfully.\n\n`;

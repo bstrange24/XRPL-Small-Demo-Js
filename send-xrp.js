@@ -162,7 +162,8 @@ async function sendXRP() {
 
                     const resultCode = response.result.meta.TransactionResult;
                     if (resultCode !== TES_SUCCESS) {
-                         return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+                         renderTransactionDetails(response);
+                         resultField.classList.add('error');
                     }
 
                     resultField.innerHTML += `XRP payment finished successfully.\n\n`;
@@ -206,7 +207,8 @@ async function sendXRP() {
 
                const resultCode = response.result.meta.TransactionResult;
                if (resultCode !== TES_SUCCESS) {
-                    return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(response.result)}`, spinner);
+                    renderTransactionDetails(response);
+                    resultField.classList.add('error');
                }
 
                resultField.innerHTML += `XRP payment finished successfully.\n\n`;

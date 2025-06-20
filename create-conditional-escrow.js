@@ -1,7 +1,7 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput } from './utils.js';
+import { getClient, getNet, disconnectClient, parseXRPLTransaction, validatInput, setError, autoResize, gatherAccountInfo, clearFields, distributeAccountInfo, updateOwnerCountAndReserves, addTime, convertXRPLTime, prepareTxHashForOutput, renderTransactionDetails } from './utils.js';
 import { generateCondition } from './five-bells.js';
-import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS } from './constants.js';
+import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
 
 async function createConditionalEscrow() {
@@ -9,7 +9,12 @@ async function createConditionalEscrow() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
      resultField?.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -65,7 +70,7 @@ async function createConditionalEscrow() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nCreating conditional escrow.\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCreating conditional escrow.\n\n`;
 
           let wallet;
           if (accountSeed.value.split(' ').length > 1) {
@@ -76,8 +81,6 @@ async function createConditionalEscrow() {
           } else {
                wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
-
-          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
 
           if (amountField.value > (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value) {
                return setError('ERROR: Insufficent XRP to complete transaction', spinner);
@@ -115,12 +118,13 @@ async function createConditionalEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Escrow created successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.innerHTML += `Escrow created successfully.\n\n`;
+
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
@@ -142,7 +146,12 @@ async function finishConditionalEscrow() {
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
      resultField?.classList.remove('error', 'success');
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -200,8 +209,6 @@ async function finishConditionalEscrow() {
                wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
           }
 
-          // const wallet = xrpl.Wallet.fromSeed(accountSeed.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
-
           const prepared = await client.autofill({
                TransactionType: 'EscrowFinish',
                Account: accountAddress.value,
@@ -218,12 +225,13 @@ async function finishConditionalEscrow() {
 
           const resultCode = tx.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
-               return setError(`ERROR: Transaction failed: ${resultCode}\n${parseXRPLTransaction(tx.result)}`, spinner);
+               renderTransactionDetails(tx);
+               resultField.classList.add('error');
           }
 
-          resultField.value += `Escrow finished successfully.\n\n`;
-          resultField.value += prepareTxHashForOutput(tx.result.hash) + '\n';
-          resultField.value += parseXRPLTransaction(tx.result);
+          resultField.innerHTML += `Escrow finished successfully.\n\n`;
+
+          renderTransactionDetails(tx);
           resultField.classList.add('success');
 
           await updateOwnerCountAndReserves(client, wallet.address, ownerCountField, totalXrpReservesField);
@@ -249,8 +257,8 @@ async function getCondition() {
 export async function displayDataForAccount1() {
      accountNameField.value = account1name.value;
      accountAddressField.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account1secretNumbers.value;
           } else {
                accountSeedField.value = account1mnemonic.value;
@@ -266,8 +274,8 @@ export async function displayDataForAccount1() {
 export async function displayDataForAccount2() {
      accountNameField.value = account2name.value;
      accountAddressField.value = account2address.value;
-     if (account2seed.value === '') {
-          if (account2mnemonic.value === '') {
+     if (account2seed.value === EMPTY_STRING) {
+          if (account2mnemonic.value === EMPTY_STRING) {
                accountSeedField.value = account2secretNumbers.value;
           } else {
                accountSeedField.value = account2mnemonic.value;

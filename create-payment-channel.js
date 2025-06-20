@@ -200,7 +200,8 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
 
                const channelID = response.result.hash;
@@ -231,12 +232,11 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
 
                resultField.innerHTML += `Payment channel ${channelIDField.value} funded successfully.\n\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
 
                renderTransactionDetails(response);
                resultField.classList.add('success');
@@ -269,12 +269,11 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
 
                resultField.innerHTML += `Payment channel claimed successfully.\n\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
 
                renderTransactionDetails(response);
                resultField.classList.add('success');
@@ -292,12 +291,11 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    return setError(`ERROR: ${response.result.meta.TransactionResult}`, spinner);
+                    renderTransactionDetails(tx);
+                    resultField.classList.add('error');
                }
 
                resultField.innerHTML += `Payment channel closed successfully.\n\n`;
-               // resultField.value += prepareTxHashForOutput(response.result.hash) + '\n';
-               // resultField.value += parseXRPLTransaction(response.result);
 
                renderTransactionDetails(response);
                resultField.classList.add('success');
