@@ -175,6 +175,16 @@
                          </tr>
                          <tr style="vertical-align: top">
                               <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of assets in pool 1.">
+                                        <label for="assetPool1Balance">Asset in Pool 1</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="assetPool1Balance" size="40" />
+                              </td>
+                         </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
                                    <span class="tooltip" tooltip-data="Set the fee for trading this token in the AMM">
                                         <label for="tradingFeeField">Trading Fee %</label>
                                    </span>
@@ -284,6 +294,16 @@
                                    <input type="text" id="weSpendTokenBalanceField" size="40" />
                               </td>
                          </tr>
+                         <tr style="vertical-align: top">
+                              <td style="text-align: right">
+                                   <span class="tooltip" tooltip-data="Amounts of assets in pool 2.">
+                                        <label for="assetPool2Balance">Asset in Pool 2</label>
+                                   </span>
+                              </td>
+                              <td>
+                                   <input type="text" id="assetPool2Balance" size="40" />
+                              </td>
+                         </tr>
                     </table>
 
                     <div id="spinner" style="display: none" class="spinner"></div>
@@ -343,6 +363,7 @@
                document.getElementById('weSpendIssuerField').value = weWantIssuerFieldTemp;
                document.getElementById('weSpendAmountField').value = weWantAmountFieldTemp;
                document.getElementById('weSpendTokenBalanceField').value = weWantTokenBalanceTemp;
+               getAMMPoolInfo();
           }
 
           document.getElementById('isDepositIntoBothPools').addEventListener('change', function () {

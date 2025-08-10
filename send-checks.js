@@ -201,7 +201,7 @@ export async function sendCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.innerHTML = `Connected to ${environment} ${net}\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nSending Check.\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -263,7 +263,7 @@ export async function sendCheck() {
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(response);
-               resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Check sent successfully.\n\n`;
@@ -367,7 +367,7 @@ export async function cashCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCashing Check.\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -405,7 +405,7 @@ export async function cashCheck() {
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(response);
-               resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Check cashed successfully.\n\n`;
@@ -475,7 +475,7 @@ export async function cancelCheck() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.value = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCancelling Check\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -500,7 +500,7 @@ export async function cancelCheck() {
           const resultCode = response.result.meta.TransactionResult;
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(response);
-               resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Check cancelled successfully.\n\n`;

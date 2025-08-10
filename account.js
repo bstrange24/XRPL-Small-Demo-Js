@@ -1,5 +1,5 @@
 import * as xrpl from 'xrpl';
-import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, prepareTxHashForOutput, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate, renderAccountDetails, decodeHex, renderTransactionDetails } from './utils.js';
+import { getClient, getNet, disconnectClient, validatInput, parseAccountFlagsDetails, parseXRPLAccountObjects, setError, parseXRPLTransaction, gatherAccountInfo, clearFields, distributeAccountInfo, getTransaction, updateOwnerCountAndReserves, getOnlyTokenBalance, convertToEstTime, convertUserInputToInt, convertUserInputToFloat, getTransferRate, renderAccountDetails, decodeHex, renderTransactionDetails, renderFlagTransactions, getFlagName } from './utils.js';
 import { ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SUCCESS, flagList, flagMap, EMPTY_STRING } from './constants.js';
 import { derive } from 'xrpl-accountlib';
 
@@ -9,7 +9,7 @@ export async function getAccountInfo() {
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
-     resultField.innerHTML = '';
+     resultField.innerHTML = EMPTY_STRING;
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -120,12 +120,16 @@ export async function getAccountInfo() {
      }
 }
 
-async function updateFlags() {
+export async function updateFlags() {
      console.log('Entering updateFlags');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
-     resultField?.classList.remove('error', 'success');
+     if (!resultField) {
+          console.error('ERROR: resultField not found');
+          return;
+     }
+     resultField.classList.remove('error', 'success');
      resultField.innerHTML = ''; // Clear content
 
      const spinner = document.getElementById('spinner');
@@ -153,12 +157,18 @@ async function updateFlags() {
 
           let wallet;
           if (accountSeedField.value.split(' ').length > 1) {
-               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromMnemonic(accountSeedField.value, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           } else if (accountSeedField.value.includes(',')) {
                const derive_account_with_secret_numbers = derive.secretNumbers(accountSeedField.value);
-               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromSeed(derive_account_with_secret_numbers.secret.familySeed, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           } else {
-               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, { algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION });
+               wallet = xrpl.Wallet.fromSeed(accountSeedField.value, {
+                    algorithm: environment === MAINNET ? ed25519_ENCRYPTION : secp256k1_ENCRYPTION,
+               });
           }
 
           resultField.innerHTML = `Connected to ${environment} ${net}\nUpdating Account Data\n\n`;
@@ -173,25 +183,47 @@ async function updateFlags() {
 
           const { setFlags, clearFlags } = getFlagUpdates(accountInfo.account_flags);
 
-          if (setFlags.length == 0 && clearFlags.length == 0) {
+          if (setFlags.length === 0 && clearFlags.length === 0) {
                resultField.innerHTML += '\nSet Flags and Clear Flags length is 0. No flags selected for update';
+               return;
           }
+
+          const transactions = [];
+          let hasError = false;
 
           for (const flagValue of setFlags) {
                const response = await submitFlagTransaction(client, wallet, { SetFlag: parseInt(flagValue) });
+               transactions.push({
+                    type: 'SetFlag',
+                    flag: getFlagName(flagValue),
+                    result: response.message.result,
+               });
                if (!response.success) {
-                    return setError(response.message, spinner);
+                    hasError = true;
                }
-               resultField.value += `\n\nSet Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
 
           for (const flagValue of clearFlags) {
                const response = await submitFlagTransaction(client, wallet, { ClearFlag: parseInt(flagValue) });
+               transactions.push({
+                    type: 'ClearFlag',
+                    flag: getFlagName(flagValue),
+                    result: response.message.result,
+               });
                if (!response.success) {
-                    return setError(response.message, spinner);
+                    hasError = true;
                }
-               resultField.value += `\n\nClear Flag ${getFlagName(flagValue)} Result:\n${response.message}`;
           }
+
+          if (hasError) {
+               resultField.classList.add('error');
+          } else {
+               resultField.classList.add('success');
+          }
+
+          // Render all successful transactions
+          renderFlagTransactions(transactions, resultField);
+          resultField.classList.add('success');
 
           // Fetch account objects
           const { result: accountObjects } = await client.request({
@@ -200,7 +232,7 @@ async function updateFlags() {
                ledger_index: 'validated',
           });
 
-          console.log('accountObjects', accountObjects);
+          console.debug('accountObjects', accountObjects);
 
           const { result: updatedAccountInfo } = await client.request({
                method: 'account_info',
@@ -208,18 +240,17 @@ async function updateFlags() {
                ledger_index: 'validated',
           });
 
-          console.log('updatedAccountInfo', updatedAccountInfo);
+          console.debug('updatedAccountInfo', updatedAccountInfo);
 
-          renderAccountDetails(updatedAccountInfo, accountObjects);
-          resultField.classList.add('success');
-
+          // Render updated account details
+          // renderAccountDetails(updatedAccountInfo, accountObjects);
           refreshUiIAccountMetaData(updatedAccountInfo);
 
           await updateOwnerCountAndReserves(client, wallet.classicAddress, ownerCountField, totalXrpReservesField);
           balanceField.value = (await client.getXrpBalance(wallet.classicAddress)) - totalXrpReservesField.value;
      } catch (error) {
           console.error('Error:', error);
-          setError(`ERROR: ${error.message || 'Unknown error'}`);
+          setError(`ERROR: ${error.message || 'Unknown error'}`, spinner);
      } finally {
           if (spinner) spinner.style.display = 'none';
           const now = Date.now() - startTime;
@@ -228,13 +259,13 @@ async function updateFlags() {
      }
 }
 
-async function updateMetaData() {
+export async function updateMetaData() {
      console.log('Entering updateMetaData');
      const startTime = Date.now();
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
-     resultField.innerHTML = ''; // Clear content
+     resultField.innerHTML = EMPTY_STRING; // Clear content
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -325,6 +356,7 @@ async function updateMetaData() {
                if (resultCode !== TES_SUCCESS) {
                     renderTransactionDetails(response);
                     resultField.classList.add('error');
+                    return;
                }
 
                resultField.innerHTML += `Account fields successfully updated.\n\n`;
@@ -350,14 +382,14 @@ async function updateMetaData() {
      }
 }
 
-async function setDepositAuthAccounts(authorizeFlag) {
+export async function setDepositAuthAccounts(authorizeFlag) {
      console.log('Entering setDepositAuthAccounts');
      const startTime = Date.now();
      console.log('Authorize Flag:', authorizeFlag);
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
-     resultField.innerHTML = ''; // Clear content
+     resultField.innerHTML = EMPTY_STRING; // Clear content
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -457,6 +489,7 @@ async function setDepositAuthAccounts(authorizeFlag) {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(response);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.value += `Deposit Auth finished successfully.\n\n`;
@@ -477,14 +510,14 @@ async function setDepositAuthAccounts(authorizeFlag) {
      }
 }
 
-async function setMultiSign(enableMultiSignFlag) {
+export async function setMultiSign(enableMultiSignFlag) {
      console.log('Entering setMultiSign');
      const startTime = Date.now();
      console.log('Enable Multi Sign Flag:', enableMultiSignFlag);
 
      const resultField = document.getElementById('resultField');
      resultField?.classList.remove('error', 'success');
-     resultField.innerHTML = ''; // Clear content
+     resultField.innerHTML = EMPTY_STRING; // Clear content
 
      const spinner = document.getElementById('spinner');
      if (spinner) spinner.style.display = 'block';
@@ -558,7 +591,9 @@ async function setMultiSign(enableMultiSignFlag) {
 
           const signerListResponse = await client.submitAndWait(signerListTx, { wallet: wallet });
           if (signerListResponse.result.meta.TransactionResult !== TES_SUCCESS) {
-               return setError(`ERROR: Failed to set signer list: ${signerListResponse.result.meta.TransactionResult}`, spinner);
+               renderTransactionDetails(signerListResponse);
+               resultField.classList.add('error');
+               return;
           }
 
           resultField.value += `SignerListSet transaction successful\n\n`;
@@ -653,21 +688,14 @@ async function submitFlagTransaction(client, wallet, flagPayload) {
 
      try {
           const response = await client.submitAndWait(tx, { wallet });
-          const txResult = response.result.meta?.TransactionResult;
-          if (txResult !== TES_SUCCESS) {
-               return {
-                    success: false,
-                    message: `ERROR: ${txResult}\n${parseXRPLTransaction(response.result)}`,
-               };
-          }
-          console.log(`Leaving submitFlagTransaction in ${Date.now() - startTime}ms`);
           return {
                success: true,
-               message: parseXRPLTransaction(response.result),
+               message: response,
           };
      } catch (err) {
-          console.log(`Leaving submitFlagTransaction in ${Date.now() - startTime}ms`);
           return { success: false, message: `ERROR submitting flag: ${err.message}` };
+     } finally {
+          console.log(`Leaving submitFlagTransaction in ${Date.now() - startTime}ms`);
      }
 }
 
@@ -705,22 +733,38 @@ export async function getTrustLines(account, client) {
 function refreshUiIAccountMetaData(accountInfo) {
      const tickSizeField = document.getElementById('tickSizeField');
      if (tickSizeField) {
-          if (accountInfo.account_data.TickSize && accountInfo.account_data.TickSize != '') {
+          if (accountInfo.account_data.TickSize && accountInfo.account_data.TickSize != EMPTY_STRING) {
                tickSizeField.value = accountInfo.account_data.TickSize;
+          } else {
+               tickSizeField.value = '';
           }
      }
 
      const transferRateField = document.getElementById('transferRateField');
      if (transferRateField) {
-          if (accountInfo.account_data.TransferRate && accountInfo.account_data.TransferRate != '') {
-               transferRateField.value = (accountInfo.account_data.TransferRate / 1_000_000_000).toFixed(9);
+          if (accountInfo.account_data.TransferRate && accountInfo.account_data.TransferRate != EMPTY_STRING) {
+               // transferRateField.value = (accountInfo.account_data.TransferRate / 1_000_000_000).toFixed(9);
+               transferRateField.value = ((accountInfo.account_data.TransferRate / 1_000_000_000 - 1) * 100).toFixed(3);
+          } else {
+               transferRateField.value = '';
           }
      }
 
      const domainField = document.getElementById('domainField');
      if (domainField) {
-          if (accountInfo.account_data.Domain && accountInfo.account_data.Domain != '') {
+          if (accountInfo.account_data.Domain && accountInfo.account_data.Domain != EMPTY_STRING) {
                domainField.value = decodeHex(accountInfo.account_data.Domain);
+          } else {
+               domainField.value = '';
+          }
+     }
+
+     const isMessageKeyField = document.getElementById('isMessageKey');
+     if (isMessageKeyField) {
+          if (accountInfo.account_data.MessageKey && accountInfo.account_data.MessageKey != '') {
+               isMessageKeyField.checked = true;
+          } else {
+               isMessageKeyField.checked = false;
           }
      }
 }
@@ -747,10 +791,6 @@ function clearUiIAccountMetaData() {
      // }
 }
 
-function getFlagName(value) {
-     return flagList.find(f => f.value === value)?.name || `Flag ${value}`;
-}
-
 function resolveAccountSeedField() {
      const selected = getSelectedAccount();
      return document.getElementById(selected === 'account1' ? 'accountSeed1Field' : 'accountSeed2Field') || document.getElementById('accountSeedField');
@@ -766,8 +806,8 @@ export function resolveAccountFields() {
 export async function displayDataForAccount1() {
      accountName1Field.value = account1name.value;
      accountAddress1Field.value = account1address.value;
-     if (account1seed.value === '') {
-          if (account1mnemonic.value === '') {
+     if (account1seed.value === EMPTY_STRING) {
+          if (account1mnemonic.value === EMPTY_STRING) {
                accountSeed1Field.value = account1secretNumbers.value;
           } else {
                accountSeed1Field.value = account1mnemonic.value;
@@ -782,8 +822,8 @@ export async function displayDataForAccount2() {
      accountName2Field.value = account2name.value;
      accountAddress2Field.value = account2address.value;
 
-     if (account2seed.value === '') {
-          if (account2mnemonic.value === '') {
+     if (account2seed.value === EMPTY_STRING) {
+          if (account2mnemonic.value === EMPTY_STRING) {
                accountSeed2Field.value = account2secretNumbers.value;
           } else {
                accountSeed2Field.value = account2mnemonic.value;

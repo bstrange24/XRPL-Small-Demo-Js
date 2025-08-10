@@ -200,8 +200,8 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    renderTransactionDetails(tx);
-                    resultField.classList.add('error');
+                    renderTransactionDetails(response);
+                    return;
                }
 
                const channelID = response.result.hash;
@@ -232,8 +232,8 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    renderTransactionDetails(tx);
-                    resultField.classList.add('error');
+                    renderTransactionDetails(response);
+                    return;
                }
 
                resultField.innerHTML += `Payment channel ${channelIDField.value} funded successfully.\n\n`;
@@ -269,8 +269,8 @@ export async function handlePaymentChannelAction() {
 
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
-                    renderTransactionDetails(tx);
-                    resultField.classList.add('error');
+                    renderTransactionDetails(response);
+                    return;
                }
 
                resultField.innerHTML += `Payment channel claimed successfully.\n\n`;
@@ -292,7 +292,7 @@ export async function handlePaymentChannelAction() {
                const response = await client.submitAndWait(tx, { wallet });
                if (response.result.meta.TransactionResult !== TES_SUCCESS) {
                     renderTransactionDetails(tx);
-                    resultField.classList.add('error');
+                    return;
                }
 
                resultField.innerHTML += `Payment channel closed successfully.\n\n`;
@@ -357,7 +357,6 @@ export function generateChannelSignatureForUI() {
 
      const fields = {
           seed: document.getElementById('accountSeedField'),
-          destinationField: document.getElementById('destinationField'),
           amount: document.getElementById('amountField'),
           channelIDField: document.getElementById('channelIDField'),
           channelClaimSignature: document.getElementById('channelClaimSignature'),
@@ -372,7 +371,7 @@ export function generateChannelSignatureForUI() {
           }
      }
 
-     const { seed, destinationField, amount, channelIDField, channelClaimSignature, xrpBalanceField, ownerCountField, totalXrpReservesField, totalExecutionTime } = fields;
+     const { seed, amount, channelIDField, channelClaimSignature, totalExecutionTime } = fields;
 
      const validations = [
           [!validatInput(seed.value), 'Seed cannot be empty'],

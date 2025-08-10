@@ -1,7 +1,7 @@
 import * as xrpl from 'xrpl';
 
-const DESTINATION_ADDRESS = 'rETbLUGdjTo2PScLT5xCUZ8ov7B9zHnRqo';
-const WALLET_COUNT = 15;
+const DESTINATION_ADDRESS = 'rNXyc6XWeCZL2VJ8jmyzyecgkZ5dmbQFZP';
+const WALLET_COUNT = 1;
 
 async function createAndDrainWallet(client, index) {
      // Create funded wallet
@@ -103,46 +103,46 @@ async function main() {
 
 main().catch(console.error);
 
-// const DESTINATION_ADDRESS = 'rNh6WUEkBPsggrp8cmW3g6A89fs4e65Trq';
+// const DESTINATION_ADDRESS = 'rw2aDBUFzB8FErAjF4ZdnrzRVoM55TbQTy';
 
 // async function main() {
-//   const client = new xrpl.Client('wss://s.altnet.rippletest.net:51233');
-//   await client.connect();
+//      const client = new xrpl.Client('wss://s.altnet.rippletest.net:51233');
+//      await client.connect();
 
-//   // Create new funded testnet wallet
-//   console.log("Generating funded wallet");
-//   const fundResult = await client.fundWallet();
-//   const wallet = fundResult.wallet;
+//      // Create new funded testnet wallet
+//      console.log('Generating funded wallet');
+//      const fundResult = await client.fundWallet();
+//      const wallet = fundResult.wallet;
 
-//   console.log("Wallet created:");
-//   console.log("Address:", wallet.address);
-//   console.log("Seed:", wallet.seed);
+//      console.log('Wallet created:');
+//      console.log('Address:', wallet.address);
+//      console.log('Seed:', wallet.seed);
 
-//   // Fetch balance
-//   const balance = await client.getXrpBalance(wallet.address);
-//   console.log("XRP Balance:", balance);
+//      // Fetch balance
+//      const balance = await client.getXrpBalance(wallet.address);
+//      console.log('XRP Balance:', balance);
 
-//   // Calculate amount to send (minus fee buffer)
-//   const fee = "1200000"; // drops
-//   const dropsToSend = (parseFloat(balance) * 1_000_000 - parseInt(fee)).toFixed(0); // in drops
+//      // Calculate amount to send (minus fee buffer)
+//      const fee = '1200000'; // drops
+//      const dropsToSend = (parseFloat(balance) * 1_000_000 - parseInt(fee)).toFixed(0); // in drops
 
-//   // Prepare payment transaction
-//   const tx = {
-//     TransactionType: "Payment",
-//     Account: wallet.address,
-//     Destination: DESTINATION_ADDRESS,
-//     Amount: dropsToSend.toString(),
-//     Fee: fee,
-//   };
+//      // Prepare payment transaction
+//      const tx = {
+//           TransactionType: 'Payment',
+//           Account: wallet.address,
+//           Destination: DESTINATION_ADDRESS,
+//           Amount: dropsToSend.toString(),
+//           Fee: fee,
+//      };
 
-//   const prepared = await client.autofill(tx);
-//   const signed = wallet.sign(prepared);
-//   const result = await client.submitAndWait(signed.tx_blob);
+//      const prepared = await client.autofill(tx);
+//      const signed = wallet.sign(prepared);
+//      const result = await client.submitAndWait(signed.tx_blob);
 
-//   console.log("Transaction result:", result.result.meta.TransactionResult);
-//   console.log("Explorer link:", `https://testnet.xrpl.org/transactions/${signed.hash}`);
+//      console.log('Transaction result:', result.result.meta.TransactionResult);
+//      console.log('Explorer link:', `https://testnet.xrpl.org/transactions/${signed.hash}`);
 
-//   await client.disconnect();
+//      await client.disconnect();
 // }
 
 // main().catch(console.error);

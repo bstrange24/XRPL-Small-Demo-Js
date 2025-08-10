@@ -150,8 +150,7 @@ export async function createTicket() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          let results = `Connected to ${environment} ${net}\n\n`;
-          resultField.value = results;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCreating Ticket\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -168,8 +167,6 @@ export async function createTicket() {
                Account: wallet.classicAddress,
                TicketCount: parseInt(ticketCount.value),
           });
-
-          resultField.innerHTML = `Creating ${ticketCount.value} Ticket(s)\n`;
 
           console.log(`tx ${JSON.stringify(tx, null, 2)}`);
           const response = await client.submitAndWait(tx, { wallet });
@@ -274,7 +271,7 @@ export async function useTicket() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.innerHTML = `Connected to ${environment} ${net}\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nUsing Ticket\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {
@@ -386,7 +383,7 @@ export async function cancelTicket() {
           const { net, environment } = getNet();
           const client = await getClient();
 
-          resultField.innerHTML = `Connected to ${environment} ${net}\nReleasing Ticket\n\n`;
+          resultField.innerHTML = `Connected to ${environment} ${net}\nCancelling Ticket\n\n`;
 
           let wallet;
           if (seed.value.split(' ').length > 1) {

@@ -196,6 +196,7 @@ export async function mintNFT() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `NFT mint finished successfully.\n\n`;
@@ -316,6 +317,7 @@ export async function mintBatchNFT() {
                          resultField.innerHTML += `ERROR: Minting NFT ${i + 1} failed: ${singleTx.result.meta.TransactionResult}\n`;
                          renderTransactionDetails(tx);
                          resultField.classList.add('error');
+                         return;
                     }
                     transactionResults.push(singleTx);
                }
@@ -326,6 +328,7 @@ export async function mintBatchNFT() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Successfully minted ${nftCount} NFTs.\n\n`;
@@ -416,6 +419,7 @@ export async function burnNFT() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `NFT burned successfully.\n\n`;
@@ -707,6 +711,7 @@ export async function setAuthorizedMinter() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Authorized minter set successfully.\n\n`;
@@ -849,6 +854,7 @@ export async function buyNFT() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `NFT buy finished successfully.\n\n`;
@@ -945,6 +951,7 @@ export async function cancelBuyOffer() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Sell offer canceled successfully.\n\n`;
@@ -1053,6 +1060,7 @@ export async function sellNFT() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `NFT sell offer created successfully.\n\n`;
@@ -1145,6 +1153,7 @@ export async function cancelSellOffer() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `Sell offer canceled successfully.\n\n`;
@@ -1241,6 +1250,7 @@ export async function updateNFTMetadata() {
           if (resultCode !== TES_SUCCESS) {
                renderTransactionDetails(tx);
                resultField.classList.add('error');
+               return;
           }
 
           resultField.innerHTML += `NFT metadata updated successfully.\n\n`;

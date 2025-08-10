@@ -889,6 +889,59 @@ input:focus+.slider {
      margin-bottom: 10px;
 }
 
+.error-result {
+     color: #e57373;
+     /* Soft red for error text */
+}
+
+.error-transaction {
+     border-left: 3px solid #e57373;
+     /* Red border for failed transaction section */
+     background-color: rgba(229, 115, 115, 0.1);
+     /* Subtle red background */
+}
+
+.error-transaction summary {
+     color: #e57373;
+     /* Red summary text */
+     font-weight: bold;
+}
+
+.error-icon {
+     color: #e57373;
+     margin-left: 5px;
+     font-size: 16px;
+}
+
+.error-message {
+     color: #e57373;
+     font-weight: bold;
+     padding: 8px;
+     margin: 8px 0;
+     border: 1px solid #e57373;
+     border-radius: 4px;
+     background-color: rgba(229, 115, 115, 0.2);
+}
+
+.error-transaction {
+     border-left: 3px solid #e57373;
+     background-color: rgba(229, 115, 115, 0.1);
+     animation: flash-error 1s ease-in-out 2;
+     /* Flash twice */
+}
+
+@keyframes flash-error {
+
+     0%,
+     100% {
+          background-color: rgba(229, 115, 115, 0.1);
+     }
+
+     50% {
+          background-color: rgba(229, 115, 115, 0.3);
+     }
+}
+
 .result-cell code {
      background: #3a3c41;
      padding: 2px 4px;

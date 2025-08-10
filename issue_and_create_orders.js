@@ -9,7 +9,7 @@ function sleep(ms) {
 //   Usage
 //   node issue_and_create_orders.js X T P B S G OB
 //   Sell
-//   node issue_and_create_orders.js X X P X X X X
+//   node issue_and_create_orders.js X X X B S X X
 //
 
 const CURRENCY = 'DOG';
