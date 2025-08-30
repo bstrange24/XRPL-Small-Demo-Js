@@ -4,6 +4,7 @@
      // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
      "version": "0.2.0",
      "configurations": [
+
           {
                "type": "node",
                "request": "launch",
@@ -12,7 +13,7 @@
                     "<node_internals>/**"
                ],
                // "program": "${workspaceFolder}\\get-xrp-usd-prod.js",
-               "program": "${workspaceFolder}\\parse_tx_response.js",
+               "program": "${workspaceFolder}\\amm.js",
                "outFiles": [
                     "${workspaceFolder}/**/*.js"
                ],

@@ -220,7 +220,7 @@ async function sendXRPtoNewWallet(fundingWallet, wallet) {
 
      try {
           const client = await getClient();
-          const sendAmount = 90;
+          const sendAmount = 9;
           const prepared_tx = await client.autofill({
                TransactionType: 'Payment',
                Account: fundingWallet.classicAddress,

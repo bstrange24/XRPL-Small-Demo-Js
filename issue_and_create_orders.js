@@ -7,17 +7,27 @@ function sleep(ms) {
 }
 
 //   Usage
-//   node issue_and_create_orders.js X T P B S G OB
+//   node issue_and_create_orders.js X T P B S G OB X X
 //   Sell
-//   node issue_and_create_orders.js X X X B S X X
-//
+//   node issue_and_create_orders.js X X X B S X X X X
+//   Trustline and Issue
+//   node issue_and_create_orders.js X T P X X X X X X
+//   Trustlines and Account objects
+//   node issue_and_create_orders.js X T X X X X X A X
+//   Account objects
+//   node issue_and_create_orders.js X X X X X X X A X
+//   Gateway Balance
+//   node issue_and_create_orders.js X X X X X X X X GW
+//   Get AMM
+//   node issue_and_create_orders.js X X X X X X X X X AMM
 
-const CURRENCY = 'DOG';
-const NET = 'wss://s.altnet.rippletest.net:51233/';
-// const NET = 'wss://s.devnet.rippletest.net:51233/';
+const CURRENCY = 'BOB';
+// const NET = 'wss://s.altnet.rippletest.net:51233/';
+const NET = 'wss://s.devnet.rippletest.net:51233/';
 
-const COLD_WALLET_SEED = 'shNTx357ynZ5qHoJ4opfdjLeX3fDY';
-const HOT_WALLET_SEED = 'snsvu5L9LBhhs6DZZPtu9kEim7mKc';
+const WARM_WALLET_SEED = 'sEdSQjAbb9SorYGv2wfprPmn82hmox8';
+const HOT_WALLET_SEED = 'sEdTvKhkXNdfiMrC37fTWozcQzeEv8L';
+const COLD_WALLET_SEED = 'sEd7WnRBiSdhM1pV1YYB5XZ5wuT5X3e';
 
 async function main() {
      const args = process.argv.slice(2); // Ignore node path and script name
@@ -28,18 +38,25 @@ async function main() {
      const createSellOffer = args.includes('S');
      const getOffers = args.includes('G');
      const getOrderBook = args.includes('OB');
+     const getAccountInfo = args.includes('A');
+     const getGateWayBalance = args.includes('GW');
+     const getAMM = args.includes('AMM');
 
      const client = new xrpl.Client(NET);
      await client.connect();
      console.log('Connected to XRPL Testnet');
 
-     // Issuer wallet (cold)
-     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
+     // Cold Wallet (issuing address)
+     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
      console.log('Cold wallet address:', cold_wallet.address);
 
-     // Static hot wallet (buyer)
-     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
+     // Hot Wallet (operational address)
+     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
      console.log('Hot wallet address:', hot_wallet.address);
+
+     // Account 1 (warm wallet)
+     const warm_wallet = xrpl.Wallet.fromSeed(WARM_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
+     console.log('Warm wallet address:', hot_wallet.address);
 
      console.log('process.argv' + process.argv);
 
@@ -82,11 +99,12 @@ async function main() {
                     LimitAmount: {
                          currency: CURRENCY,
                          issuer: cold_wallet.address,
-                         value: '1000000',
+                         value: '100000000',
                     },
                };
-               await client.submitAndWait(trustSetTx, { wallet: hot_wallet });
+               const response = await client.submitAndWait(trustSetTx, { wallet: hot_wallet });
                console.log('Trustline set.');
+               console.log(`response: ${JSON.stringify(response, null, '\t')}`);
           }
 
           console.log('sendTokenPayment: ' + sendTokenPayment);
@@ -104,8 +122,8 @@ async function main() {
                          value: '100000',
                     },
                };
-               const result = await client.submitAndWait(payment, { wallet: cold_wallet });
-               console.log('Issued 100000 BOB to hot wallet:', result.result.meta.TransactionResult);
+               const response = await client.submitAndWait(payment, { wallet: cold_wallet });
+               console.log(`Issued 100000 ${CURRENCY} to hot wallet: ${JSON.stringify(response, null, '\t')}`);
                await sleep(1000);
           }
 
@@ -300,6 +318,7 @@ async function main() {
 
           const h_wallet_addr = hot_wallet.address;
           const c_wallet_addr = cold_wallet.address;
+          const w_wallet_addr = warm_wallet.address;
           // const h_wallet_addr = 'r3oUj2qJw7WmMJreCjJmyBA7wUTvxUmDNv';
           // const c_wallet_addr = 'r4dF7pnCdVXvbQAf3i1Yktcb8YMp6gkpr7';
           const account1_wallet_addr = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH';
@@ -322,6 +341,153 @@ async function main() {
                     account: account1_wallet_addr,
                });
                console.log('Offers placed by account1 wallet:', account1WalletOffers.result.offers.length);
+          }
+
+          if (getAccountInfo) {
+               const hotWalletOffers = await client.request({
+                    command: 'account_objects',
+                    account: h_wallet_addr,
+               });
+               console.log(`hot wallet account_objects: ${JSON.stringify(hotWalletOffers, null, '\t')}`);
+
+               const coldWalletOffers = await client.request({
+                    command: 'account_objects',
+                    account: c_wallet_addr,
+               });
+               console.log(`cold wallet account_objects: ${JSON.stringify(coldWalletOffers, null, '\t')}`);
+
+               const warmWalletOffers = await client.request({
+                    command: 'account_objects',
+                    account: w_wallet_addr,
+               });
+               console.log(`warm wallet account_objects: ${JSON.stringify(warmWalletOffers, null, '\t')}`);
+          }
+
+          if (getGateWayBalance) {
+               const hotWalletGetGateWayBalance = await client.request({
+                    command: 'gateway_balances',
+                    account: h_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               console.log(`hot wallet account_objects: ${JSON.stringify(hotWalletGetGateWayBalance, null, '\t')}`);
+
+               const coldWalletGetGateWayBalance = await client.request({
+                    command: 'gateway_balances',
+                    account: c_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               console.log(`cold wallet account_objects: ${JSON.stringify(coldWalletGetGateWayBalance, null, '\t')}`);
+
+               const warmWalletGetGateWayBalance = await client.request({
+                    command: 'gateway_balances',
+                    account: w_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               console.log(`warm wallet account_objects: ${JSON.stringify(warmWalletGetGateWayBalance, null, '\t')}`);
+
+               const warmAccountLines = await client.request({
+                    command: 'account_lines',
+                    account: w_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               console.log(`warm wallet account_lines: ${JSON.stringify(warmAccountLines, null, '\t')}`);
+
+               const warmAccountCurrencies = await client.request({
+                    command: 'account_currencies',
+                    account: w_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               console.log(`warm wallet account_currencies: ${JSON.stringify(warmAccountCurrencies, null, '\t')}`);
+
+               // const warmAccountChannels = await client.request({
+               //      command: 'account_channels',
+               //      account: w_wallet_addr,
+               //      ledger_index: 'validated',
+               // });
+               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountChannels, null, '\t')}`);
+
+               // const warmAccountNftHistory = await client.request({
+               //      command: 'nft_history',
+               //      nft_id: nft_id,
+               //      ledger_index: ledgerIndex,
+               // });
+               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountNftHistory, null, '\t')}`);
+
+               // const warmAccountNftByIssuer = await client.request({
+               //      command: 'nfts_by_issuer',
+               //      nft_id: nft_id,
+               //      issuer: issuer,
+               //      ledger_index: ledgerIndex,
+               // });
+               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountNftByIssuer, null, '\t')}`);
+
+               // const warmAccountChannelVerify = await client.request({
+               //      command: 'channel_verify',
+               //      amount: amount,
+               //      public_key: publicKey,
+               //      signature: signature,
+               //      channel_id: channelId,
+               // });
+               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountChannelVerify, null, '\t')}`);
+
+               // const hotAccountNoRippleCheck = await client.request({
+               //      command: 'noripple_check',
+               //      account: h_wallet_addr,
+               //      role: 'user',
+               // });
+               // console.log(`hot wallet account_channels: ${JSON.stringify(hotAccountNoRippleCheck, null, '\t')}`);
+
+               // const coldAccountNoRippleCheck = await client.request({
+               //      command: 'noripple_check',
+               //      account: c_wallet_addr,
+               //      role: 'gateway',
+               // });
+               // console.log(`cold wallet account_channels: ${JSON.stringify(coldAccountNoRippleCheck, null, '\t')}`);
+
+               // const warmAccountNoRippleCheck = await client.request({
+               //      command: 'noripple_check',
+               //      account: w_wallet_addr,
+               //      role: 'user',
+               // });
+               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountNoRippleCheck, null, '\t')}`);
+          }
+
+          if (getAMM) {
+               // const issuer = hot_wallet.classicAddress;
+               // const issuer = warm_wallet.classicAddress;
+               const issuer = cold_wallet.classicAddress;
+
+               const asset = {
+                    currency: 'BOB',
+                    issuer: issuer,
+               };
+               const asset2 = {
+                    currency: 'XRP',
+               };
+
+               try {
+                    const ammResponse = await client.request({
+                         command: 'amm_info',
+                         asset: asset,
+                         asset2: asset2,
+                         ledger_index: 'validated',
+                    });
+
+                    console.log('AMM Info:', JSON.stringify(ammResponse, null, 2));
+               } catch (error) {
+                    if (error.name === 'RippledError') {
+                         // ripple responded with a structured error
+                         if (error.data?.error === 'actNotFound') {
+                              console.error('No AMM pool exists yet for this asset pair.');
+                              // e.g. show user-friendly message in UI
+                         } else {
+                              console.error('RippledError:', error.data?.error_message || error.message);
+                         }
+                    } else {
+                         // some other runtime error (network, JSON, etc.)
+                         console.error('Unexpected error:', error);
+                    }
+               }
           }
      }
      await client.disconnect();
