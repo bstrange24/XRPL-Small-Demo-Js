@@ -1,0 +1,12 @@
+{
+  "CURRENCY": "CTZ",
+  "ENV": "DEVNET",
+  "TEST_NET": "wss://s.altnet.rippletest.net:51233/",
+  "DEV_NET": "wss://s.devnet.rippletest.net:51233/",
+  "WARM_WALLET_SEED": "shfXfN5Q6TnJ8mbAJrw6zhqU392Z4",
+  "HOT_WALLET_SEED": "saw4g5zDe6gTktn8PmJrHbRuhPK5h",
+  "COLD_WALLET_SEED": "spADR8o6kMrF9onePscGPizSD5uWS",
+  "ENCRYPTION": "secp256k1",
+  "ed25519_ENCRYPTION":"ed25519",
+  "secp256k1_ENCRYPTION": "secp256k1"
+}
