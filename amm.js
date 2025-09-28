@@ -21,9 +21,16 @@ import { XRP_CURRENCY, ed25519_ENCRYPTION, secp256k1_ENCRYPTION, MAINNET, TES_SU
 
 // const NET = 'wss://s.altnet.rippletest.net:51233/';
 const NET = 'wss://s.devnet.rippletest.net:51233/';
-const SEED_WARM = 'sEdTPXyyVHDxGmDRkQk5nPpmYAea8z7'; // performs swap
-const SEED_HOT = 'sEdTozppS3PwQ7GR3UZWhFY3B2iS9aw'; // deposits liquidity
-const SEED_COLD_ISSUER = 'sEdTbj6rqRpuC2yv4kHttbXVre9Hcju'; // issues USD
+// rpowzYTTUzzwzbVtz4b6CdidnBwJQUx7Et
+// sEdTjsNEUxiKvYqTux9baGYzpKTjYhH
+// rP1wWbVYHVHscb2ZSBMtpKcEnMpKSitohm
+// sEdT5mRwj2VaXpiiuX4iDJxT87hziiH
+// r4DvsrUEDzRNgMkmDSbGV5W8vj5tCZXnBN
+// sEd75uUGFGkb7z1ZaotmsVcMnbeVsjj
+
+const SEED_WARM = 'sEdTjsNEUxiKvYqTux9baGYzpKTjYhH'; // performs swap
+const SEED_HOT = 'sEdT5mRwj2VaXpiiuX4iDJxT87hziiH'; // deposits liquidity
+const SEED_COLD_ISSUER = 'sEd75uUGFGkb7z1ZaotmsVcMnbeVsjj'; // issues BOB
 
 // ---- Helpers ----
 async function connect() {
@@ -37,7 +44,7 @@ async function submitTx(client, wallet, tx) {
      const prepared = await client.autofill(tx);
      const signed = wallet.sign(prepared);
      const res = await client.submitAndWait(signed.tx_blob);
-     // console.log(`res ${JSON.stringify(res, null, '\t')}`);
+     console.log(`res ${JSON.stringify(res, null, '\t')}`);
      if (res.result.meta && typeof res.result.meta !== 'string' && res.result.meta.TransactionResult !== 'tesSUCCESS') {
           throw new Error(`TX failed: ${res.result.meta.TransactionResult}`);
      }
@@ -122,7 +129,7 @@ async function ammCreate(client, creatorWallet, amount, amount2, tradingFeeBps =
           TransactionType: 'AMMCreate',
           Account: creatorWallet.classicAddress,
           Amount: amount, // e.g. xrpDrops(5)
-          Amount2: amount2, // e.g. {currency:"USD", issuer:..., value:"5000"}
+          Amount2: amount2, // e.g. {currency:"BOB", issuer:..., value:"5000"}
           TradingFee: tradingFeeBps,
      };
      return submitTx(client, creatorWallet, tx);
@@ -185,19 +192,23 @@ export async function ammWithdraw(client, wallet, assetDef, asset2Def, options) 
      return submitTx(client, wallet, tx);
 }
 
-async function ammDepositOneAsset(client, lpWallet, assetDef, asset2Def, singleAmount, isXrpSide) {
+async function ammDepositOneAsset(client, lpWallet, xrpAsset, tokenAsset, singleAmount, isXrpSide) {
      const tx = {
           TransactionType: 'AMMDeposit',
           Account: lpWallet.classicAddress,
-          Asset: assetDef,
-          Asset2: asset2Def,
-          Flags: xrpl.AMMDepositFlags.tfOneAssetDeposit,
+          Asset: xrpAsset,
+          Asset2: tokenAsset,
+          Flags: xrpl.AMMDepositFlags.tfSingleAsset, // required!
      };
 
      if (isXrpSide) {
-          tx.Amount = singleAmount; // string (drops)
+          tx.Amount = singleAmount; // drops string
      } else {
-          tx.Amount2 = singleAmount; // IssuedCurrencyAmount
+          tx.Amount2 = {
+               currency: tokenAsset.currency,
+               issuer: tokenAsset.issuer,
+               value: singleAmount.toString(),
+          };
      }
 
      return submitTx(client, lpWallet, tx);
@@ -287,7 +298,7 @@ async function ammWithdrawByLP(client, lpWallet, assetDef, asset2Def, lpTokensOu
 }
 
 // Perform a swap via AMM using a Payment that pathfinds through the pool.
-// Example: swap XRP -> USD by sending a Payment to self with Amount in USD and SendMax in XRP.
+// Example: swap XRP -> BOB by sending a Payment to self with Amount in BOB and SendMax in XRP.
 async function swapViaPayment(client, traderWallet, outAmount, sendMax) {
      const tx = {
           TransactionType: 'Payment',
@@ -330,103 +341,97 @@ export async function getLpToken(client, asset, asset2) {
      const hot = xrpl.Wallet.fromSeed(SEED_HOT);
      const warm = xrpl.Wallet.fromSeed(SEED_WARM);
 
-     console.log('Issuer:', issuer.classicAddress);
-     console.log('HOT:    ', hot.classicAddress);
-     console.log('Warm:', warm.classicAddress);
+     console.log('Issuer:\t', issuer.classicAddress);
+     console.log('HOT:\t', hot.classicAddress);
+     console.log('Warm:\t', warm.classicAddress);
 
-     // // Define assets: XRP / USD (issued by issuer)
+     // Define assets: XRP / BOB (issued by issuer)
      const ASSET_XRP = { currency: 'XRP' };
-     const ASSET_USD = { currency: 'USD', issuer: issuer.classicAddress };
+     const ASSET_USD = { currency: 'BOB', issuer: issuer.classicAddress };
 
-     // // console.log('Enabling DefaultRipple on issuer...');
-     // await enableDefaultRipple(client, issuer);
+     // console.log('Enabling DefaultRipple on issuer...');
+     await enableDefaultRipple(client, issuer);
 
-     // // 1) Ensure trust lines for USD (HOT + Warm)
-     // console.log('Setting trust lines for USD...');
-     // await ensureTrustLine(client, hot, 'USD', issuer.classicAddress, '1000000');
-     // await ensureTrustLine(client, warm, 'USD', issuer.classicAddress, '1000000');
+     // 1) Ensure trust lines for BOB (HOT + Warm)
+     console.log('Setting trust lines for BOB...');
+     await ensureTrustLine(client, hot, 'BOB', issuer.classicAddress, '1000000');
+     await ensureTrustLine(client, warm, 'BOB', issuer.classicAddress, '1000000');
 
-     // // 2) Fund HOT & Warm with USD IOU from Issuer
-     // console.log('Issuing USD to HOT and Warm...');
-     // await sendIOU(client, issuer, hot.classicAddress, 'USD', '10000');
-     // await sendIOU(client, issuer, warm.classicAddress, 'USD', '5000');
+     // 2) Fund HOT & Warm with BOB IOU from Issuer
+     console.log('Issuing BOB to HOT and Warm...');
+     await sendIOU(client, issuer, hot.classicAddress, 'BOB', '10000');
+     await sendIOU(client, issuer, warm.classicAddress, 'BOB', '5000');
 
-     // // 3) Check for existing AMM
-     // console.log('Checking AMM for XRP/USD...');
-     // let amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
-     // if (amm) {
-     //      console.log('AMM exists. AMM Account:', amm.account);
-     // } else {
-     //      console.log('No AMM found. Creating...');
-     //      await ammCreate(client, hot, xrpDrops(5), issuedAmount('USD', issuer.classicAddress, '5000'), 500);
-     //      // Give ledger a moment & fetch info
-     //      amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
-     //      if (!amm) {
-     //           console.warn('AMM not immediately visible via asset query; trying amm_info by account if known.');
-     //      } else {
-     //           console.log('AMM created. AMM Account:', amm.amm_account);
-     //      }
-     // }
+     // 3) Check for existing AMM
+     console.log('Checking AMM for XRP/BOB...');
+     let amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
+     if (amm) {
+          console.log('AMM exists. AMM Account:', amm.account);
+     } else {
+          console.log('No AMM found. Creating...');
+          await ammCreate(client, hot, xrpDrops(5), issuedAmount('BOB', issuer.classicAddress, '5000'), 500);
+          // Give ledger a moment & fetch info
+          amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
+          if (!amm) {
+               console.warn('AMM not immediately visible via asset query; trying amm_info by account if known.');
+          } else {
+               console.log('AMM created. AMM Account:', amm.amm_account);
+          }
+     }
 
-     // // 4) Deposit two assets into AMM (HOT adds initial liquidity)
-     // // Example: deposit 5 XRP + 5000 USD
-     // console.log('Depositing liquidity (two-asset)...');
-     // await ammDepositTwoAsset(client, hot, xrpDrops(5), issuedAmount('USD', issuer.classicAddress, '5000'), ASSET_XRP, ASSET_USD);
-     // console.log('Deposit complete.');
+     // 4) Deposit two assets into AMM (HOT adds initial liquidity)
+     // Example: deposit 5 XRP + 5000 BOB
+     console.log('Depositing liquidity (two-asset)...');
+     await ammDepositTwoAsset(client, hot, xrpDrops(5), issuedAmount('BOB', issuer.classicAddress, '5000'), ASSET_XRP, ASSET_USD);
+     console.log('Deposit complete.');
 
-     // // 5) Perform a swap via AMM with a Payment (Warm swaps XRP -> USD)
-     // // Ask for 100 USD, allow up to 2 XRP (example) — adjust values to succeed
-     // console.log('Swapping via Payment (XRP -> USD)...');
-     // await swapViaPayment(client, warm, issuedAmount('USD', issuer.classicAddress, '100'), xrpDrops(10));
-     // console.log('Swap complete.');
+     // 5) Perform a swap via AMM with a Payment (Warm swaps XRP -> BOB)
+     // Ask for 100 BOB, allow up to 2 XRP (example) — adjust values to succeed
+     console.log('Swapping via Payment (XRP -> BOB)...');
+     await swapViaPayment(client, warm, issuedAmount('BOB', issuer.classicAddress, '100'), xrpDrops(10));
+     console.log('Swap complete.');
 
-     // // 6) Withdraw liquidity by HOT tokens (HOT redeems a small portion)
-     // // You can inspect HOT token balance via account_lines (currency is 40-hex HOT token).
-     // console.log('Withdrawing via HOT tokens...');
-     // const lines = await accountLines(client, hot.classicAddress);
-     // const lpTokenLine = lines.find(l => /^[A-F0-9]{40}$/i.test(l.currency));
-     // if (!lpTokenLine) {
-     //      console.warn('No HOT token line found on HOT account; cannot withdraw by HOT tokens right now.');
-     // } else {
-     //      console.log(`HOT Token Balance: ${lpTokenLine.balance} (Currency: ${lpTokenLine.currency})`);
-     //      const current = parseFloat(lpTokenLine.balance || '0');
-     //      const redeem = (current * 0.1).toFixed(4).toString(); // Use 4 decimal places
-     //      if (parseFloat(lpTokenLine.balance) < parseFloat(redeem)) {
-     //           throw new Error(`Insufficient HOT tokens: ${lpTokenLine.balance} available, ${redeem} required`);
-     //      }
-     //      console.log(`Redeeming HOT tokens: ${redeem} of ${current}`);
-     //      // Check AMM pool asset order
-     //      let amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
-     //      console.log(`amm ${JSON.stringify(amm, null, '\t')}`);
-     //      const ammIssuer = amm.lp_token.issuer;
-     //      const ammCurrency = amm.lp_token.currency;
-     //      const LP_TOKEN_IN = { currency: ammCurrency, issuer: ammIssuer, value: redeem };
+     // 6) Withdraw liquidity by HOT tokens (HOT redeems a small portion)
+     // You can inspect HOT token balance via account_lines (currency is 40-hex HOT token).
+     console.log('Withdrawing via HOT tokens...');
+     const lines = await accountLines(client, hot.classicAddress);
+     const lpTokenLine = lines.find(l => /^[A-F0-9]{40}$/i.test(l.currency));
+     if (!lpTokenLine) {
+          console.warn('No HOT token line found on HOT account; cannot withdraw by HOT tokens right now.');
+     } else {
+          console.log(`HOT Token Balance: ${lpTokenLine.balance} (Currency: ${lpTokenLine.currency})`);
+          const current = parseFloat(lpTokenLine.balance || '0');
+          const redeem = (current * 0.1).toFixed(4).toString(); // Use 4 decimal places
+          if (parseFloat(lpTokenLine.balance) < parseFloat(redeem)) {
+               throw new Error(`Insufficient HOT tokens: ${lpTokenLine.balance} available, ${redeem} required`);
+          }
+          console.log(`Redeeming HOT tokens: ${redeem} of ${current}`);
+          // Check AMM pool asset order
+          let amm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
+          console.log(`amm ${JSON.stringify(amm, null, '\t')}`);
+          const ammIssuer = amm.lp_token.issuer;
+          const ammCurrency = amm.lp_token.currency;
+          const LP_TOKEN_IN = { currency: ammCurrency, issuer: ammIssuer, value: redeem };
 
-     //      if (!amm) {
-     //           amm = await ammInfoByAssets(client, ASSET_USD, ASSET_XRP);
-     //           if (amm) {
-     //                console.log('Using USD/XRP pool order');
-     //                await ammWithdrawByLP(client, hot, ASSET_USD, ASSET_XRP, redeem, LP_TOKEN_IN);
-     //           } else {
-     //                throw new Error('AMM pool does not exist');
-     //           }
-     //      } else {
-     //           await ammWithdrawByLP(client, hot, ASSET_XRP, ASSET_USD, redeem, LP_TOKEN_IN);
-     //      }
-     //      console.log('Withdraw complete.');
-     // }
+          if (!amm) {
+               amm = await ammInfoByAssets(client, ASSET_USD, ASSET_XRP);
+               if (amm) {
+                    console.log('Using BOB/XRP pool order');
+                    await ammWithdrawByLP(client, hot, ASSET_USD, ASSET_XRP, redeem, LP_TOKEN_IN);
+               } else {
+                    throw new Error('AMM pool does not exist');
+               }
+          } else {
+               await ammWithdrawByLP(client, hot, ASSET_XRP, ASSET_USD, redeem, LP_TOKEN_IN);
+          }
+          console.log('Withdraw complete.');
+     }
 
      // Example asset definitions
-     // Example asset definitions
-     // const xrpAsset: xrpl.Currency = { currency: 'XRP' };
-     // const usdAsset: xrpl.Currency = {
-     //      currency: 'USD',
-     //      issuer: 'rwcdkLpcRpPnULPEMf5HtkLKmCAtfD8rFm',
-     // };
      const xrpAsset = { currency: 'XRP' };
      const usdAsset = {
-          currency: 'USD',
-          issuer: 'rwcdkLpcRpPnULPEMf5HtkLKmCAtfD8rFm',
+          currency: 'BOB',
+          issuer: 'r4DvsrUEDzRNgMkmDSbGV5W8vj5tCZXnBN',
      };
 
      const { lpTokenDef, lpBalance } = await getLpTokenAndBalance(client, hot.classicAddress, xrpAsset, usdAsset);
@@ -434,60 +439,60 @@ export async function getLpToken(client, asset, asset2) {
      console.log('LP Token:', lpTokenDef);
      console.log('My LP Balance:', lpBalance);
 
-     // // // Example usage (inside an async function):
-     // await ammDepositOneAsset(client, wallet, xrpAsset, usdAsset, '5000000', true); // Deposit 5 XRP only
-     // await ammWithdrawOneAsset(client, wallet, xrpAsset, usdAsset, lpTokenObj, false); // Withdraw only USD side
+     // // Example usage (inside an async function):
+     // await ammDepositOneAsset(client, warm, xrpAsset, usdAsset, '5000000', true); // Deposit 5 XRP only
+     // await ammWithdrawOneAsset(client, warm, xrpAsset, usdAsset, lpTokenObj, false); // Withdraw only BOB side
 
-     // // Deposit 5 XRP + 10 USD
-     // await ammDeposit(client, wallet, xrpAsset, usdAsset, {
-     //      amount: '5000000', // 5 XRP in drops
-     //      amount2: { currency: 'USD', issuer: 'rwcdkLpcRpPnULPEMf5HtkLKmCAtfD8rFm', value: '10' },
-     // });
+     // Deposit 5 XRP + 10 BOB
+     await ammDeposit(client, warm, xrpAsset, usdAsset, {
+          amount: '5000000', // 5 XRP in drops
+          amount2: { currency: 'BOB', issuer: 'r4DvsrUEDzRNgMkmDSbGV5W8vj5tCZXnBN', value: '10' },
+     });
 
-     // // Deposit only 2 XRP
-     // await ammDeposit(client, wallet, xrpAsset, usdAsset, {
-     //      singleSide: 'xrp',
-     //      amount: '2000000',
-     // });
+     // Deposit only 2 XRP
+     await ammDeposit(client, warm, xrpAsset, usdAsset, {
+          singleSide: 'xrp',
+          amount: '2000000',
+     });
 
-     // // Withdraw both sides
-     // await ammWithdraw(client, wallet, xrpAsset, usdAsset, {
-     //      lpTokenIn: lpTokenObj,
-     // });
+     // Withdraw both sides
+     await ammWithdraw(client, warm, xrpAsset, usdAsset, {
+          lpTokenIn: lpTokenObj,
+     });
 
-     // // Withdraw only USD worth of LP
-     // await ammWithdraw(client, wallet, xrpAsset, usdAsset, {
-     //      lpTokenIn: lpTokenObj,
-     //      oneSide: true,
-     //      amount2: { currency: 'USD', issuer: 'rwcdkLpcRpPnULPEMf5HtkLKmCAtfD8rFm', value: '5' },
-     // });
+     // Withdraw only BOB worth of LP
+     await ammWithdraw(client, warm, xrpAsset, usdAsset, {
+          lpTokenIn: lpTokenObj,
+          oneSide: true,
+          amount2: { currency: 'BOB', issuer: 'r4DvsrUEDzRNgMkmDSbGV5W8vj5tCZXnBN', value: '5' },
+     });
 
-     // // Final check
-     // const finalAmm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
-     // if (finalAmm) {
-     //      console.log('AMM status:', {
-     //           account: finalAmm.account,
-     //           amount: finalAmm.amount,
-     //           amount2: finalAmm.amount2,
-     //           lp_token: finalAmm.lp_token,
-     //           trading_fee: finalAmm.trading_fee,
-     //      });
-     // } else {
-     //      console.log('AMM not found via assets query at the end.');
-     // }
+     // Final check
+     const finalAmm = await ammInfoByAssets(client, ASSET_XRP, ASSET_USD);
+     if (finalAmm) {
+          console.log('AMM status:', {
+               account: finalAmm.account,
+               amount: finalAmm.amount,
+               amount2: finalAmm.amount2,
+               lp_token: finalAmm.lp_token,
+               trading_fee: finalAmm.trading_fee,
+          });
+     } else {
+          console.log('AMM not found via assets query at the end.');
+     }
 
-     // const finalAmm1 = await ammInfoByAssets(client, ASSET_USD, ASSET_XRP);
-     // if (finalAmm1) {
-     //      console.log('AMM status:', {
-     //           account: finalAmm1.account,
-     //           amount: finalAmm1.amount,
-     //           amount2: finalAmm1.amount2,
-     //           lp_token: finalAmm1.lp_token,
-     //           trading_fee: finalAmm1.trading_fee,
-     //      });
-     // } else {
-     //      console.log('AMM not found via assets query at the end.');
-     // }
+     const finalAmm1 = await ammInfoByAssets(client, ASSET_USD, ASSET_XRP);
+     if (finalAmm1) {
+          console.log('AMM status:', {
+               account: finalAmm1.account,
+               amount: finalAmm1.amount,
+               amount2: finalAmm1.amount2,
+               lp_token: finalAmm1.lp_token,
+               trading_fee: finalAmm1.trading_fee,
+          });
+     } else {
+          console.log('AMM not found via assets query at the end.');
+     }
 
      await client.disconnect();
      console.log('Done.');

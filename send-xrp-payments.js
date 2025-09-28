@@ -1,6 +1,6 @@
 import * as xrpl from 'xrpl';
 
-const DESTINATION_ADDRESS = 'rNXyc6XWeCZL2VJ8jmyzyecgkZ5dmbQFZP';
+const DESTINATION_ADDRESS = 'rDfsi2CY1DJEYaHSCH6t4MJyBpUXt3Wse1';
 const WALLET_COUNT = 1;
 
 async function createAndDrainWallet(client, index) {
@@ -81,7 +81,8 @@ export function addTime(amount, unit = 'seconds', date = new Date()) {
 }
 
 async function main() {
-     const client = new xrpl.Client('wss://s.altnet.rippletest.net:51233');
+     const client = new xrpl.Client('wss://s.devnet.rippletest.net:51233');
+     // const client = new xrpl.Client('wss://s.altnet.rippletest.net:51233');
      await client.connect();
 
      for (let i = 0; i < WALLET_COUNT; i++) {
@@ -98,7 +99,6 @@ async function main() {
      // console.log('Mins: ' + convertXRPLTime(802276623));
      // console.log('Hours: ' + convertXRPLTime(802283161));
      // console.log('Days: ' + convertXRPLTime(802362361));
-     console.log('\n All done.');
 }
 
 main().catch(console.error);

@@ -7,27 +7,44 @@ function sleep(ms) {
 }
 
 //   Usage
-//   node issue_and_create_orders.js X T P B S G OB X X
+//   node issue_and_create_orders.js X T P B S G OB X X X X X X X X
+//   Buy
+//   node issue_and_create_orders.js X X X B X X X X X X X X X X X
 //   Sell
-//   node issue_and_create_orders.js X X X B S X X X X
+//   node issue_and_create_orders.js X X X X S X X X X X X X X X X
+//   Buy and Sell
+//   node issue_and_create_orders.js X X X B S X X X X X X X X X X
 //   Trustline and Issue
-//   node issue_and_create_orders.js X T P X X X X X X
+//   node issue_and_create_orders.js X T P X X X X X X X X X X X X
 //   Trustlines and Account objects
-//   node issue_and_create_orders.js X T X X X X X A X
+//   node issue_and_create_orders.js X T X X X X X A X X X X X X X
 //   Account objects
-//   node issue_and_create_orders.js X X X X X X X A X
+//   node issue_and_create_orders.js X X X X X X X A X X X X X X X
 //   Gateway Balance
-//   node issue_and_create_orders.js X X X X X X X X GW
+//   node issue_and_create_orders.js X X X X X X X X GW X X X X X X
 //   Get AMM
-//   node issue_and_create_orders.js X X X X X X X X X AMM
-
-const CURRENCY = 'BOB';
+//   node issue_and_create_orders.js X X X X X X X X X AMM X X X X X
+//   PermissionedDomainSet
+//   node issue_and_create_orders.js X X X X X X X X X X PDSet X X X X
+//   PermissionedDomainDelete
+//   node issue_and_create_orders.js X X X X X X X X X X X PDDel X X X
+//   Batch
+//   node issue_and_create_orders.js X X X X X X X X X X X X BAT X X
+//   Paychaneel
+//   node issue_and_create_orders.js X X X X X X X X X X X X X PC X
+//   Account Currecies
+//   node issue_and_create_orders.js X X X X X X X X X X X X X X CUR
+const CURRENCY = 'CTZ';
 // const NET = 'wss://s.altnet.rippletest.net:51233/';
 const NET = 'wss://s.devnet.rippletest.net:51233/';
+// const NET = 'ws://localhost:5006';
 
-const WARM_WALLET_SEED = 'sEdSQjAbb9SorYGv2wfprPmn82hmox8';
-const HOT_WALLET_SEED = 'sEdTvKhkXNdfiMrC37fTWozcQzeEv8L';
-const COLD_WALLET_SEED = 'sEd7WnRBiSdhM1pV1YYB5XZ5wuT5X3e';
+// raYp4pcuTokY8tWAPt7jxZ1fzpLmPbg7uJ sEdS4eJg1nvoNhD35Qh6DN3Z69seon2
+const WARM_WALLET_SEED = 'shfXfN5Q6TnJ8mbAJrw6zhqU392Z4';
+// rPiHBVoQEzbEVLA15ZcesUtU9xW6C7U4QA sEdTZqBbgk4hwXMY91Lhggc5tcJKZyq
+const HOT_WALLET_SEED = 'saw4g5zDe6gTktn8PmJrHbRuhPK5h';
+// rh1ncoTdWXz4pP2FxB6MnTFLztvQJXYHVP sEdTaVdEf44sQeVZThvsj3Q5UBCkQkT
+const COLD_WALLET_SEED = 'spADR8o6kMrF9onePscGPizSD5uWS'; //
 
 async function main() {
      const args = process.argv.slice(2); // Ignore node path and script name
@@ -41,22 +58,45 @@ async function main() {
      const getAccountInfo = args.includes('A');
      const getGateWayBalance = args.includes('GW');
      const getAMM = args.includes('AMM');
+     const getPermissionedDomainSet = args.includes('PDSet');
+     const getPermissionedDomainDelete = args.includes('PDDel');
+     const getBatch = args.includes('BAT');
+     const getPaymentChannel = args.includes('PC');
+     const getAccountCurrencies = args.includes('CUR');
+     const getMpt = args.includes('MPT');
+
+     const minPrice = 0.05; // More aggressive
+     const maxPrice = 3.0; // Wider range
+     const step = 0.3; // Larger steps
+     const baseAmount = 8;
+     const numSteps = 5;
+     const weight = 2;
+     const spreadFactor = 0.95;
+     const sellBaseAmount = 8;
+     const sellMinPrice = 0.05; // XRP/DOG (e.g., 20 DOG/XRP)
+     const sellMaxPrice = 3.0; // XRP/DOG (e.g., 0.3333 DOG/XRP)
+     const sellNumSteps = 10;
+     const sellWeight = 2; // Controls amount scaling
+     const sellSpreadFactor = 1.05; // 5% above best bid
 
      const client = new xrpl.Client(NET);
      await client.connect();
      console.log('Connected to XRPL Testnet');
 
      // Cold Wallet (issuing address)
-     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
+     // const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
+     const cold_wallet = xrpl.Wallet.fromSeed(COLD_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
      console.log('Cold wallet address:', cold_wallet.address);
 
      // Hot Wallet (operational address)
-     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
+     const hot_wallet = xrpl.Wallet.fromSeed(HOT_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
+     // const hot_wallet = xrpl.Wallet.fromMnemonic(HOT_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
      console.log('Hot wallet address:', hot_wallet.address);
 
      // Account 1 (warm wallet)
-     const warm_wallet = xrpl.Wallet.fromSeed(WARM_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
-     console.log('Warm wallet address:', hot_wallet.address);
+     // const warm_wallet = xrpl.Wallet.fromSeed(WARM_WALLET_SEED, { algorithm: ed25519_ENCRYPTION });
+     const warm_wallet = xrpl.Wallet.fromSeed(WARM_WALLET_SEED, { algorithm: secp256k1_ENCRYPTION });
+     console.log('Warm wallet address:', warm_wallet.address);
 
      console.log('process.argv' + process.argv);
 
@@ -127,62 +167,50 @@ async function main() {
                await sleep(1000);
           }
 
-          const minPrice = 0.05; // More aggressive
-          const maxPrice = 3.0; // Wider range
-          const step = 0.3; // Larger steps
-          const baseAmount = 8;
-          const numSteps = 10;
-          const weight = 2;
-          const spreadFactor = 0.95;
-
           console.log('createBuyOffer: ' + createBuyOffer);
           if (createBuyOffer) {
-               console.log(`\n=== Placing BUY Offers (XRP → ${CURRENCY}) ===`);
-               const dogXrpBook = await client.request({
-                    command: 'book_offers',
-                    taker_gets: { currency: CURRENCY, issuer: cold_wallet.address },
-                    taker_pays: { currency: 'XRP' },
-               });
-               const bestAsk = dogXrpBook.result.offers.length ? (typeof dogXrpBook.result.offers[0].TakerPays === 'string' ? parseFloat(dogXrpBook.result.offers[0].TakerPays) / 1e6 / parseFloat(dogXrpBook.result.offers[0].TakerGets.value) : parseFloat(dogXrpBook.result.offers[0].TakerPays.value) / parseFloat(dogXrpBook.result.offers[0].TakerGets)) : 0.1;
-               console.log(`Current XRP/${CURRENCY} ask: ${bestAsk}`);
+               try {
+                    console.log(`\n=== Placing BUY Offers (XRP → ${CURRENCY}) ===`);
+                    const dogXrpBook = await client.request({
+                         command: 'book_offers',
+                         taker_gets: { currency: CURRENCY, issuer: hot_wallet.address },
+                         taker_pays: { currency: 'XRP' },
+                    });
+                    const bestAsk = dogXrpBook.result.offers.length ? (typeof dogXrpBook.result.offers[0].TakerPays === 'string' ? parseFloat(dogXrpBook.result.offers[0].TakerPays) / 1e6 / parseFloat(dogXrpBook.result.offers[0].TakerGets.value) : parseFloat(dogXrpBook.result.offers[0].TakerPays.value) / parseFloat(dogXrpBook.result.offers[0].TakerGets)) : 0.1;
+                    console.log(`Current XRP/${CURRENCY} ask: ${bestAsk}`);
 
-               for (let i = 0; i < numSteps; i++) {
-                    let price = minPrice * Math.pow(maxPrice / minPrice, i / (numSteps - 1));
-                    if (bestAsk) price = Math.min(price, bestAsk * spreadFactor);
-                    price = Math.max(price, minPrice);
-                    const amountBOB = (baseAmount * (1 + (weight * (maxPrice - price)) / (maxPrice - minPrice)) * (0.9 + Math.random() * 0.2)).toFixed(6);
-                    const totalXRP = (amountBOB * price).toFixed(6);
-                    const takerGets = xrpl.xrpToDrops(totalXRP);
-                    const takerPays = {
-                         currency: CURRENCY,
-                         issuer: cold_wallet.address,
-                         value: amountBOB,
-                    };
+                    for (let i = 0; i < numSteps; i++) {
+                         console.log(`Looping...`);
+                         let price = minPrice * Math.pow(maxPrice / minPrice, i / (numSteps - 1));
+                         if (bestAsk) price = Math.min(price, bestAsk * spreadFactor);
+                         price = Math.max(price, minPrice);
+                         const amountBOB = (baseAmount * (1 + (weight * (maxPrice - price)) / (maxPrice - minPrice)) * (0.9 + Math.random() * 0.2)).toFixed(6);
+                         const totalXRP = (amountBOB * price).toFixed(6);
+                         const takerGets = xrpl.xrpToDrops(totalXRP);
+                         const takerPays = {
+                              currency: CURRENCY,
+                              issuer: hot_wallet.address,
+                              value: amountBOB,
+                         };
 
-                    const offer = {
-                         TransactionType: 'OfferCreate',
-                         Account: hot_wallet.address,
-                         TakerGets: takerGets,
-                         TakerPays: takerPays,
-                         Flags: 0,
-                    };
+                         console.log(`Creating offer...`);
+                         const offer = {
+                              TransactionType: 'OfferCreate',
+                              Account: warm_wallet.address,
+                              TakerGets: takerGets,
+                              TakerPays: takerPays,
+                              Flags: 0,
+                         };
 
-                    try {
-                         const res = await client.submitAndWait(offer, { wallet: hot_wallet });
+                         const res = await client.submitAndWait(offer, { wallet: warm_wallet });
                          console.log(`Buy: ${amountBOB} ${CURRENCY} @ ${price.toFixed(4)} XRP/${CURRENCY} → ${res.result.meta.TransactionResult}`);
-                    } catch (err) {
-                         console.error(`Buy offer failed at ${price.toFixed(4)} XRP/${CURRENCY}:`, err.message);
+
+                         await sleep(1000);
                     }
-                    await sleep(1000);
+               } catch (err) {
+                    console.error(`Buy offer failed at ${price.toFixed(4)} XRP/${CURRENCY}:`, err.message);
                }
           }
-
-          const sellBaseAmount = 8;
-          const sellMinPrice = 0.05; // XRP/DOG (e.g., 20 DOG/XRP)
-          const sellMaxPrice = 3.0; // XRP/DOG (e.g., 0.3333 DOG/XRP)
-          const sellNumSteps = 10;
-          const sellWeight = 2; // Controls amount scaling
-          const sellSpreadFactor = 1.05; // 5% above best bid
 
           console.log('createSellOffer: ' + createSellOffer);
           if (createSellOffer) {
@@ -319,50 +347,97 @@ async function main() {
           const h_wallet_addr = hot_wallet.address;
           const c_wallet_addr = cold_wallet.address;
           const w_wallet_addr = warm_wallet.address;
-          // const h_wallet_addr = 'r3oUj2qJw7WmMJreCjJmyBA7wUTvxUmDNv';
-          // const c_wallet_addr = 'r4dF7pnCdVXvbQAf3i1Yktcb8YMp6gkpr7';
-          const account1_wallet_addr = 'rhuaX1t5XP4mSzW5pXSUbpVoqUjadV3HcH';
           console.log('getOffers: ' + getOffers);
           if (getOffers) {
-               const hotWalletOffers = await client.request({
-                    command: 'account_offers',
-                    account: h_wallet_addr,
-               });
-               console.log('Offers placed by hot wallet:', hotWalletOffers.result.offers);
+               // const hotWalletOffers = await client.request({
+               //      command: 'account_offers',
+               //      account: h_wallet_addr,
+               // });
+               // console.log('Offers placed by hot wallet:', hotWalletOffers.result.offers);
 
-               const coldWalletOffers = await client.request({
-                    command: 'account_offers',
-                    account: c_wallet_addr,
-               });
-               console.log('Offers placed by cold wallet:', coldWalletOffers.result.offers.length);
+               // const coldWalletOffers = await client.request({
+               //      command: 'account_offers',
+               //      account: c_wallet_addr,
+               // });
+               // console.log('Offers placed by cold wallet:', coldWalletOffers.result.offers.length);
 
                const account1WalletOffers = await client.request({
                     command: 'account_offers',
-                    account: account1_wallet_addr,
+                    account: w_wallet_addr,
                });
+
                console.log('Offers placed by account1 wallet:', account1WalletOffers.result.offers.length);
+               console.log('Sequence Numbers:');
+               for (const offer of account1WalletOffers.result.offers) {
+                    console.log(offer['seq'] + ',');
+               }
           }
 
+          console.log('getAccountCurrencies: ' + getAccountCurrencies);
+          if (getAccountCurrencies) {
+               const hotWalletAccountCurrencies = await client.request({
+                    command: 'account_currencies',
+                    account: h_wallet_addr,
+               });
+               // console.log(`hot wallet account_currencies: ${JSON.stringify(hotWalletAccountCurrencies, null, '\t')}`);
+
+               const coldWalletAccountCurrencies = await client.request({
+                    command: 'account_currencies',
+                    account: c_wallet_addr,
+               });
+               // console.log(`cold wallet account_currencies: ${JSON.stringify(coldWalletAccountCurrencies, null, '\t')}`);
+
+               const warmWalletAccountCurrencies = await client.request({
+                    command: 'account_currencies',
+                    account: w_wallet_addr,
+                    type: 'permissioned_domain',
+               });
+               // console.log(`warm wallet account_currencies: ${JSON.stringify(warmWalletAccountCurrencies, null, '\t')}`);
+
+               const result = await client.request({ command: 'feature' });
+               const features = result.result.features;
+               console.log(`features: `, features);
+               // The amendment ID you want to check (example: fix1512)
+               const targetAmendment = 'fixNFTokenMinter';
+
+               // Find the amendment by name
+               const amendmentEntry = Object.entries(features).find(([id, feature]) => feature.name === targetAmendment);
+
+               if (amendmentEntry) {
+                    const [id, feature] = amendmentEntry;
+                    console.log(`\t${targetAmendment} found!`);
+                    console.log('\tFeature ID:', id);
+                    console.log('\tEnabled:', feature.enabled);
+                    console.log('\tVoting:', feature.voting);
+                    console.log('\tApproved:', feature.approved);
+               } else {
+                    console.log(`\t${targetAmendment} not found on this server.`);
+               }
+          }
+
+          console.log('getAccountInfo: ' + getAccountInfo);
           if (getAccountInfo) {
-               const hotWalletOffers = await client.request({
+               const hotWalletAccountObjects = await client.request({
                     command: 'account_objects',
                     account: h_wallet_addr,
                });
-               console.log(`hot wallet account_objects: ${JSON.stringify(hotWalletOffers, null, '\t')}`);
+               console.log(`hot wallet account_objects: ${JSON.stringify(hotWalletAccountObjects, null, '\t')}`);
 
-               const coldWalletOffers = await client.request({
+               const coldWalletAccountObjects = await client.request({
                     command: 'account_objects',
                     account: c_wallet_addr,
                });
-               console.log(`cold wallet account_objects: ${JSON.stringify(coldWalletOffers, null, '\t')}`);
+               console.log(`cold wallet account_objects: ${JSON.stringify(coldWalletAccountObjects, null, '\t')}`);
 
-               const warmWalletOffers = await client.request({
+               const warmWalletAccountObjects = await client.request({
                     command: 'account_objects',
                     account: w_wallet_addr,
+                    type: 'permissioned_domain',
                });
-               console.log(`warm wallet account_objects: ${JSON.stringify(warmWalletOffers, null, '\t')}`);
+               console.log(`warm wallet account_objects: ${JSON.stringify(warmWalletAccountObjects, null, '\t')}`);
           }
 
+          console.log('getGateWayBalance: ' + getGateWayBalance);
           if (getGateWayBalance) {
                const hotWalletGetGateWayBalance = await client.request({
                     command: 'gateway_balances',
@@ -374,6 +449,7 @@ async function main() {
                const coldWalletGetGateWayBalance = await client.request({
                     command: 'gateway_balances',
                     account: c_wallet_addr,
+                    // hotwallet: [h_wallet_addr],
                     ledger_index: 'validated',
                });
                console.log(`cold wallet account_objects: ${JSON.stringify(coldWalletGetGateWayBalance, null, '\t')}`);
@@ -381,6 +457,7 @@ async function main() {
                const warmWalletGetGateWayBalance = await client.request({
                     command: 'gateway_balances',
                     account: w_wallet_addr,
+                    // hotwallet: [h_wallet_addr],
                     ledger_index: 'validated',
                });
                console.log(`warm wallet account_objects: ${JSON.stringify(warmWalletGetGateWayBalance, null, '\t')}`);
@@ -390,14 +467,28 @@ async function main() {
                     account: w_wallet_addr,
                     ledger_index: 'validated',
                });
-               console.log(`warm wallet account_lines: ${JSON.stringify(warmAccountLines, null, '\t')}`);
+               // console.log(`warm wallet account_lines: ${JSON.stringify(warmAccountLines, null, '\t')}`);
+
+               const hotAccountLines = await client.request({
+                    command: 'account_lines',
+                    account: h_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               // console.log(`warm wallet account_lines: ${JSON.stringify(hotAccountLines, null, '\t')}`);
+
+               const coldAccountLines = await client.request({
+                    command: 'account_lines',
+                    account: c_wallet_addr,
+                    ledger_index: 'validated',
+               });
+               // console.log(`warm wallet account_lines: ${JSON.stringify(coldAccountLines, null, '\t')}`);
 
                const warmAccountCurrencies = await client.request({
                     command: 'account_currencies',
                     account: w_wallet_addr,
                     ledger_index: 'validated',
                });
-               console.log(`warm wallet account_currencies: ${JSON.stringify(warmAccountCurrencies, null, '\t')}`);
+               // console.log(`warm wallet account_currencies: ${JSON.stringify(warmAccountCurrencies, null, '\t')}`);
 
                // const warmAccountChannels = await client.request({
                //      command: 'account_channels',
@@ -430,40 +521,43 @@ async function main() {
                // });
                // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountChannelVerify, null, '\t')}`);
 
-               // const hotAccountNoRippleCheck = await client.request({
-               //      command: 'noripple_check',
-               //      account: h_wallet_addr,
-               //      role: 'user',
-               // });
-               // console.log(`hot wallet account_channels: ${JSON.stringify(hotAccountNoRippleCheck, null, '\t')}`);
+               const warmAccountNoRippleCheck = await client.request({
+                    command: 'noripple_check',
+                    account: w_wallet_addr,
+                    role: 'user',
+               });
+               // console.log(`warm wallet account NoRippleCheck: ${JSON.stringify(warmAccountNoRippleCheck.result.problems, null, '\t')}`);
 
-               // const coldAccountNoRippleCheck = await client.request({
-               //      command: 'noripple_check',
-               //      account: c_wallet_addr,
-               //      role: 'gateway',
-               // });
-               // console.log(`cold wallet account_channels: ${JSON.stringify(coldAccountNoRippleCheck, null, '\t')}`);
+               const hotAccountNoRippleCheck = await client.request({
+                    command: 'noripple_check',
+                    account: h_wallet_addr,
+                    role: 'user',
+               });
+               // console.log(`hot wallet account NoRippleCheck: ${JSON.stringify(hotAccountNoRippleCheck.result.problems, null, '\t')}`);
 
-               // const warmAccountNoRippleCheck = await client.request({
-               //      command: 'noripple_check',
-               //      account: w_wallet_addr,
-               //      role: 'user',
-               // });
-               // console.log(`warm wallet account_channels: ${JSON.stringify(warmAccountNoRippleCheck, null, '\t')}`);
+               const coldAccountNoRippleCheck = await client.request({
+                    command: 'noripple_check',
+                    account: c_wallet_addr,
+                    role: 'gateway',
+               });
+               // console.log(`cold wallet account NoRippleCheck: ${JSON.stringify(coldAccountNoRippleCheck.result.problems, null, '\t')}`);
           }
 
+          console.log('getAMM: ' + getAMM);
           if (getAMM) {
                // const issuer = hot_wallet.classicAddress;
                // const issuer = warm_wallet.classicAddress;
                const issuer = cold_wallet.classicAddress;
 
                const asset = {
-                    currency: 'BOB',
+                    currency: 'CTZ',
                     issuer: issuer,
                };
                const asset2 = {
                     currency: 'XRP',
                };
+               console.log('asset:', JSON.stringify(asset, null, 2));
+               console.log('asset2:', JSON.stringify(asset2, null, 2));
 
                try {
                     const ammResponse = await client.request({
@@ -473,7 +567,7 @@ async function main() {
                          ledger_index: 'validated',
                     });
 
-                    console.log('AMM Info:', JSON.stringify(ammResponse, null, 2));
+                    console.log('AMM Info:', JSON.stringify(ammResponse.result.amm, null, 2));
                } catch (error) {
                     if (error.name === 'RippledError') {
                          // ripple responded with a structured error
@@ -488,6 +582,129 @@ async function main() {
                          console.error('Unexpected error:', error);
                     }
                }
+          }
+
+          console.log('getPermissionedDomainSet: ' + getPermissionedDomainSet);
+          if (getPermissionedDomainSet) {
+               // Ensure trustline exists
+               const permissionedDomainSetTx = {
+                    TransactionType: 'PermissionedDomainSet',
+                    Account: 'rHFcP3ZCmcpsijUsmJsQmCUuaH15PZzK3p',
+                    Fee: '10',
+                    AcceptedCredentials: [
+                         {
+                              Credential: {
+                                   Issuer: 'rfnjWoXho5JZnaCEwPUvJHzFp7KSwqxXEA',
+                                   CredentialType: '4B594343726564656E7469616C',
+                              },
+                         },
+                    ],
+               };
+               const response = await client.submitAndWait(permissionedDomainSetTx, { wallet: warm_wallet });
+               console.log('getPermissionedDomainSet set.');
+               console.log(`response: ${JSON.stringify(response, null, '\t')}`);
+          }
+
+          console.log('getPermissionedDomainDelete: ' + getPermissionedDomainDelete);
+          if (getPermissionedDomainDelete) {
+               // Ensure trustline exists
+               const permissionedDomainSetTx = {
+                    TransactionType: 'PermissionedDomainDelete',
+                    Account: 'rHFcP3ZCmcpsijUsmJsQmCUuaH15PZzK3p',
+                    Fee: '10',
+                    DomainID: 'EEA77C2944F6569D1EB0AF23C24AE0D26D2E3F6A0299804EFEEF80EDDC0BE729',
+               };
+               const response = await client.submitAndWait(permissionedDomainSetTx, { wallet: warm_wallet });
+               console.log('getPermissionedDomainSet Delete.');
+               console.log(`response: ${JSON.stringify(response, null, '\t')}`);
+          }
+
+          console.log('getBatch: ' + getBatch);
+          if (getBatch) {
+               const batchTx1 = {
+                    TransactionType: 'Batch',
+                    Account: warm_wallet.classicAddress,
+                    Flags: 65536,
+                    RawTransactions: [
+                         {
+                              RawTransaction: {
+                                   TransactionType: 'NFTokenMint',
+                                   Account: warm_wallet.classicAddress,
+                                   URI: '697066733A2F2F6261667962656964663567656B753637357365726C76757463696263356E35666A6E7A7161637634336D6A666372683475723668636E34786B77342E6D657461646174612E6A736F6E',
+                                   NFTokenTaxon: 0,
+                                   Fee: '0',
+                                   SigningPubKey: '',
+                              },
+                         },
+                         {
+                              RawTransaction: {
+                                   TransactionType: 'NFTokenMint',
+                                   Account: warm_wallet.classicAddress,
+                                   URI: '697066733A2F2F6261667962656964663567656B753637357365726C76757463696263356E35666A6E7A7161637634336D6A666372683475723668636E34786B77342E6D657461646174612E6A736F6E',
+                                   NFTokenTaxon: 0,
+                                   Fee: '0',
+                                   SigningPubKey: '',
+                              },
+                         },
+                    ],
+                    Fee: '40',
+               };
+               const batchTx2 = {
+                    TransactionType: 'Batch',
+                    Account: warm_wallet.classicAddress, //'rUserBSM7T3b6nHX3Jjua62wgX9unH8s9b',
+                    Flags: 65536,
+                    RawTransactions: [
+                         {
+                              RawTransaction: {
+                                   TransactionType: 'Payment',
+                                   Flags: 1073741824,
+                                   Account: warm_wallet.classicAddress,
+                                   Destination: 'rfnjWoXho5JZnaCEwPUvJHzFp7KSwqxXEA',
+                                   Amount: '10',
+                                   SigningPubKey: '',
+                                   Fee: '0',
+                              },
+                         },
+                         {
+                              RawTransaction: {
+                                   TransactionType: 'Payment',
+                                   Flags: 1073741824,
+                                   Account: warm_wallet.classicAddress,
+                                   Destination: 'rRDgDZvdt1XiJqyCynaeEC5a4kD8TGhcb',
+                                   Amount: '10',
+                                   SigningPubKey: '',
+                                   Fee: '0',
+                              },
+                         },
+                    ],
+                    Fee: '50',
+                    SigningPubKey: warm_wallet.SigningPubKey,
+               };
+               const response = await client.submitAndWait(batchTx2, { wallet: warm_wallet });
+               console.log('batchTx.');
+               console.log(`response: ${JSON.stringify(response, null, '\t')}`);
+          }
+
+          console.log('getPaymentChannel: ' + getPaymentChannel);
+          if (getPaymentChannel) {
+               const channelVerify = await client.request({
+                    command: 'channel_verify',
+                    channel_id: '69DA73410D5C22ABCBDD6E4F10491F3D088C8A2D4C714CB9E7A3E97AD55EFF6F',
+                    signature: '3045022100B9CAE00E3DFD49DDEF4FD33CF39E6FA29DB1A4CDAC080B70520CC46821E94E300220756C13104A24A042CAAF2FB3F2AF064ABD10D6AAED07BC9B4CBB86C4FD783548',
+                    public_key: '0358785A571CAEEA41B60EDEAC1633A2D7714BAFD60AA8132148E5797F1B9F3FBB',
+                    amount: '1000000',
+               });
+               console.log(`Channel Verify: ${JSON.stringify(channelVerify, null, '\t')}`);
+
+               const channelAuthorize = await client.request({
+                    // id: 'channel_authorize_example_id1',
+                    command: 'channel_authorize',
+                    channel_id: '3CD1EF85AEE151CFCB3CFAFA06BFE73E23B85144B12A8DC0E4AB8033DC580C75',
+                    seed: WARM_WALLET_SEED,
+                    key_type: 'secp256k1',
+                    amount: '1000000',
+               });
+               console.log(`Channel Verify: ${JSON.stringify(channelAuthorize, null, '\t')}`);
           }
      }
      await client.disconnect();
