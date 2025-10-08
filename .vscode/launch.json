@@ -13,7 +13,7 @@
                     "<node_internals>/**"
                ],
                // "program": "${workspaceFolder}\\get-xrp-usd-prod.js",
-               "program": "${workspaceFolder}\\amendments.js",
+               "program": "${workspaceFolder}\\amm.js",
                "outFiles": [
                     "${workspaceFolder}/**/*.js"
                ],

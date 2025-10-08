@@ -56,7 +56,7 @@ async function main() {
      // console.log('Disabled Features:', disabledSupported);
 
      const enabledSupported = filterFeatures(features, { enabled: true, supported: true });
-     // console.log('Enabled Features:', enabledSupported);
+     console.log('Enabled Features:', enabledSupported);
      const formattedEnabledSupporte = formatFeatures(enabledSupported);
      // console.log('Enabled Features:', formattedEnabledSupporte);
 
@@ -65,11 +65,11 @@ async function main() {
 
      // Get all enabled features
      const enabledFeatures = Object.entries(features).filter(([id, feature]) => feature.enabled === true);
-     // console.log('Enabled features:', enabledFeatures);
+     console.log('Enabled features:', enabledFeatures);
 
      // Get all disabled features
      const disabledFeatures = Object.entries(features).filter(([id, feature]) => feature.enabled === false);
-     // console.log('Disabled features:', disabledFeatures);
+     console.log('Disabled features:', disabledFeatures);
 
      // Get features that are supported but not enabled
      const supportedButDisabled = Object.entries(features).filter(([id, feature]) => feature.supported === true && feature.enabled === false);

@@ -2,5 +2,6 @@
      "sonarlint.connectedMode.project": {
           "connectionId": "bstrange24",
           "projectKey": "bstrange24_XRP_Project"
-     }
+     },
+     "liveServer.settings.port": 5501
 }
